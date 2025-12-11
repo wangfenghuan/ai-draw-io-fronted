@@ -18,6 +18,10 @@ export type ProviderName =
     | "openrouter"
     | "deepseek"
     | "siliconflow"
+    | "glm"
+    | "qwen"
+    | "doubao"
+    | "qiniu"
 
 interface ModelConfig {
     model: any
@@ -42,6 +46,10 @@ const ALLOWED_CLIENT_PROVIDERS: ProviderName[] = [
     "openrouter",
     "deepseek",
     "siliconflow",
+    "glm",
+    "qwen",
+    "doubao",
+    "qiniu",
 ]
 
 // Bedrock provider options for Anthropic beta features
@@ -356,6 +364,10 @@ const PROVIDER_ENV_VARS: Record<ProviderName, string | null> = {
     openrouter: "OPENROUTER_API_KEY",
     deepseek: "DEEPSEEK_API_KEY",
     siliconflow: "SILICONFLOW_API_KEY",
+    glm: "GLM_API_KEY",
+    qwen: "QWEN_API_KEY",
+    doubao: "DOUBAO_API_KEY",
+    qiniu: "QINIU_API_KEY",
 }
 
 /**
@@ -399,7 +411,7 @@ function validateProviderCredentials(provider: ProviderName): void {
  * Get the AI model based on environment variables
  *
  * Environment variables:
- * - AI_PROVIDER: The provider to use (bedrock, openai, anthropic, google, azure, ollama, openrouter, deepseek, siliconflow)
+ * - AI_PROVIDER: The provider to use (bedrock, openai, anthropic, google, azure, ollama, openrouter, deepseek, siliconflow, glm, qwen, doubao, qiniu)
  * - AI_MODEL: The model ID/name for the selected provider
  *
  * Provider-specific env vars:
@@ -415,6 +427,14 @@ function validateProviderCredentials(provider: ProviderName): void {
  * - DEEPSEEK_BASE_URL: DeepSeek endpoint (optional)
  * - SILICONFLOW_API_KEY: SiliconFlow API key
  * - SILICONFLOW_BASE_URL: SiliconFlow endpoint (optional, defaults to https://api.siliconflow.com/v1)
+ * - GLM_API_KEY: GLM API key
+ * - GLM_BASE_URL: GLM endpoint (optional, defaults to https://open.bigmodel.cn/api/paas/v4)
+ * - QWEN_API_KEY: Qwen API key
+ * - QWEN_BASE_URL: Qwen endpoint (optional)
+ * - DOUBAO_API_KEY: Doubao API key
+ * - DOUBAO_BASE_URL: Doubao/Ark endpoint (optional, defaults to https://ark.cn-beijing.volces.com/api/v3)
+ * - QINIU_API_KEY: Qiniu API key
+ * - QINIU_BASE_URL: Qiniu endpoint (optional, defaults to https://api.qiniucdn.com/v1)
  */
 export function getAIModel(overrides?: ClientOverrides): ModelConfig {
     // Check if client is providing their own provider override
@@ -641,9 +661,65 @@ export function getAIModel(overrides?: ClientOverrides): ModelConfig {
             break
         }
 
+        case "glm": {
+            const apiKey = overrides?.apiKey || process.env.GLM_API_KEY
+            const baseURL =
+                overrides?.baseUrl ||
+                process.env.GLM_BASE_URL ||
+                "https://open.bigmodel.cn/api/paas/v4"
+            const glmProvider = createOpenAI({
+                apiKey,
+                baseURL,
+            })
+            model = glmProvider.chat(modelId)
+            break
+        }
+
+        case "qwen": {
+            const apiKey = overrides?.apiKey || process.env.QWEN_API_KEY
+            const baseURL =
+                overrides?.baseUrl ||
+                process.env.QWEN_BASE_URL ||
+                "https://dashscope.aliyun.com/compatible-mode/v1"
+            const qwenProvider = createOpenAI({
+                apiKey,
+                baseURL,
+            })
+            model = qwenProvider.chat(modelId)
+            break
+        }
+
+        case "doubao": {
+            const apiKey = overrides?.apiKey || process.env.DOUBAO_API_KEY
+            const baseURL =
+                overrides?.baseUrl ||
+                process.env.DOUBAO_BASE_URL ||
+                "https://ark.cn-beijing.volces.com/api/v3"
+            const doubaoProvider = createOpenAI({
+                apiKey,
+                baseURL,
+            })
+            model = doubaoProvider.chat(modelId)
+            break
+        }
+
+        case "qiniu": {
+            const apiKey = overrides?.apiKey || process.env.QINIU_API_KEY
+            const baseURL =
+                overrides?.baseUrl ||
+                process.env.QINIU_BASE_URL ||
+                "https://api.qiniucdn.com/v1"
+            const qiniuProvider = createOpenAI({
+                apiKey,
+                baseURL,
+            })
+            model = qiniuProvider.chat(modelId)
+            break
+        }
+
         default:
             throw new Error(
-                `Unknown AI provider: ${provider}. Supported providers: bedrock, openai, anthropic, google, azure, ollama, openrouter, deepseek, siliconflow`,
+                `Unknown AI provider: ${provider}. Supported providers: bedrock, openai, anthropic, google, azure, ollama, openrouter, deepseek, siliconflow, glm, qwen, doubao, qiniu`,
             )
     }
 

@@ -48,7 +48,7 @@ export default function AboutCN() {
                                 关于
                             </Link>
                             <a
-                                href="https://github.com/DayuanJiang/next-ai-draw-io"
+                                href="https://github.com/wangfenghuan/w-next-ai-drawio"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-gray-600 hover:text-gray-900 transition-colors"
@@ -85,13 +85,6 @@ export default function AboutCN() {
                                 className="text-blue-600 font-semibold"
                             >
                                 中文
-                            </Link>
-                            <span className="text-gray-400">|</span>
-                            <Link
-                                href="/about/ja"
-                                className="text-gray-600 hover:text-blue-600"
-                            >
-                                日本語
                             </Link>
                         </div>
                     </div>
@@ -422,7 +415,7 @@ export default function AboutCN() {
                     <p className="text-gray-700 mt-2">
                         如需支持或咨询，请在{" "}
                         <a
-                            href="https://github.com/DayuanJiang/next-ai-draw-io"
+                            href="https://github.com/wangfenghuan/w-next-ai-drawio"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline"

@@ -71,11 +71,11 @@ export function SaveDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Save Diagram</DialogTitle>
+                    <DialogTitle>保存图表</DialogTitle>
                 </DialogHeader>
                 <div className="space-y-4">
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Format</label>
+                        <label className="text-sm font-medium">格式</label>
                         <Select
                             value={format}
                             onValueChange={(v) => setFormat(v as ExportFormat)}
@@ -96,13 +96,13 @@ export function SaveDialog({
                         </Select>
                     </div>
                     <div className="space-y-2">
-                        <label className="text-sm font-medium">Filename</label>
+                        <label className="text-sm font-medium">文件名</label>
                         <div className="flex items-stretch">
                             <Input
                                 value={filename}
                                 onChange={(e) => setFilename(e.target.value)}
                                 onKeyDown={handleKeyDown}
-                                placeholder="Enter filename"
+                                placeholder="输入文件名"
                                 autoFocus
                                 onFocus={(e) => e.target.select()}
                                 className="rounded-r-none border-r-0 focus-visible:z-10"
@@ -118,9 +118,9 @@ export function SaveDialog({
                         variant="outline"
                         onClick={() => onOpenChange(false)}
                     >
-                        Cancel
+                        取消
                     </Button>
-                    <Button onClick={handleSave}>Save</Button>
+                    <Button onClick={handleSave}>保存</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

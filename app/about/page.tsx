@@ -4,7 +4,7 @@ import Link from "next/link"
 import { FaGithub } from "react-icons/fa"
 
 export const metadata: Metadata = {
-    title: "About - Next AI Draw.io",
+    title: "About - W-Next AI Drawio",
     description:
         "AI-Powered Diagram Creation Tool - Chat, Draw, Visualize. Create AWS, GCP, and Azure architecture diagrams with natural language.",
     keywords: [
@@ -39,7 +39,7 @@ export default function About() {
                             href="/"
                             className="text-xl font-bold text-gray-900 hover:text-gray-700"
                         >
-                            Next AI Draw.io
+                            W-Next AI Drawio
                         </Link>
                         <nav className="flex items-center gap-6 text-sm">
                             <Link
@@ -55,7 +55,7 @@ export default function About() {
                                 About
                             </Link>
                             <a
-                                href="https://github.com/DayuanJiang/next-ai-draw-io"
+                                href="https://github.com/wangfenghuan/w-next-ai-drawio"
                                 target="_blank"
                                 rel="noopener noreferrer"
                                 className="text-gray-600 hover:text-gray-900 transition-colors"
@@ -74,10 +74,10 @@ export default function About() {
                     {/* Title */}
                     <div className="text-center mb-8">
                         <h1 className="text-4xl font-bold text-gray-900 mb-2">
-                            Next AI Draw.io
+                            W-Next AI Drawio
                         </h1>
                         <p className="text-xl text-gray-600 font-medium">
-                            AI-Powered Diagram Creation Tool - Chat, Draw,
+                            Multi-Provider AI Diagram Generator - Chat, Draw,
                             Visualize
                         </p>
                         <div className="flex justify-center gap-4 mt-4 text-sm">
@@ -93,13 +93,6 @@ export default function About() {
                                 className="text-gray-600 hover:text-blue-600"
                             >
                                 中文
-                            </Link>
-                            <span className="text-gray-400">|</span>
-                            <Link
-                                href="/about/ja"
-                                className="text-gray-600 hover:text-blue-600"
-                            >
-                                日本語
                             </Link>
                         </div>
                     </div>
@@ -442,8 +435,8 @@ export default function About() {
                             Support &amp; Contact
                         </h2>
                         <iframe
-                            src="https://github.com/sponsors/DayuanJiang/button"
-                            title="Sponsor DayuanJiang"
+                            src="https://github.com/sponsors/wangfenghuan/button"
+                            title="Sponsor wangfenghuan"
                             height="32"
                             width="114"
                             style={{ border: 0, borderRadius: 6 }}
@@ -452,7 +445,7 @@ export default function About() {
                     <p className="text-gray-700">
                         If you find this project useful, please consider{" "}
                         <a
-                            href="https://github.com/sponsors/DayuanJiang"
+                            href="https://github.com/sponsors/wangfenghuan"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline"
@@ -464,7 +457,7 @@ export default function About() {
                     <p className="text-gray-700 mt-2">
                         For support or inquiries, please open an issue on the{" "}
                         <a
-                            href="https://github.com/DayuanJiang/next-ai-draw-io"
+                            href="https://github.com/wangfenghuan/next-ai-draw-io"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="text-blue-600 hover:underline"
@@ -490,7 +483,7 @@ export default function About() {
             <footer className="bg-white border-t border-gray-200 mt-16">
                 <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
                     <p className="text-center text-gray-600 text-sm">
-                        Next AI Draw.io - Open Source AI-Powered Diagram
+                        W-Next AI Drawio - Open Source AI-Powered Diagram
                         Generator
                     </p>
                 </div>

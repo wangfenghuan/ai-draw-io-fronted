@@ -153,15 +153,13 @@ export function SettingsDialog({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent className="sm:max-w-md">
                 <DialogHeader>
-                    <DialogTitle>Settings</DialogTitle>
-                    <DialogDescription>
-                        Configure your application settings.
-                    </DialogDescription>
+                    <DialogTitle>设置</DialogTitle>
+                    <DialogDescription>配置你的应用设置。</DialogDescription>
                 </DialogHeader>
                 <div className="space-y-4 py-2">
                     {accessCodeRequired && (
                         <div className="space-y-2">
-                            <Label htmlFor="access-code">Access Code</Label>
+                            <Label htmlFor="access-code">访问码</Label>
                             <div className="flex gap-2">
                                 <Input
                                     id="access-code"
@@ -171,18 +169,18 @@ export function SettingsDialog({
                                         setAccessCode(e.target.value)
                                     }
                                     onKeyDown={handleKeyDown}
-                                    placeholder="Enter access code"
+                                    placeholder="输入访问码"
                                     autoComplete="off"
                                 />
                                 <Button
                                     onClick={handleSave}
                                     disabled={isVerifying || !accessCode.trim()}
                                 >
-                                    {isVerifying ? "..." : "Save"}
+                                    {isVerifying ? "..." : "保存"}
                                 </Button>
                             </div>
                             <p className="text-[0.8rem] text-muted-foreground">
-                                Required to use this application.
+                                使用本应用需要访问码。
                             </p>
                             {error && (
                                 <p className="text-[0.8rem] text-destructive">
@@ -192,15 +190,14 @@ export function SettingsDialog({
                         </div>
                     )}
                     <div className="space-y-2">
-                        <Label>AI Provider Settings</Label>
+                        <Label>AI 提供商设置</Label>
                         <p className="text-[0.8rem] text-muted-foreground">
-                            Use your own API key to bypass usage limits. Your
-                            key is stored locally in your browser and is never
-                            stored on the server.
+                            使用你自己的 API
+                            密钥来绕过使用限制。你的密钥仅存储在浏览器本地，永远不会存储在服务器上。
                         </p>
                         <div className="space-y-3 pt-2">
                             <div className="space-y-2">
-                                <Label htmlFor="ai-provider">Provider</Label>
+                                <Label htmlFor="ai-provider">提供商</Label>
                                 <Select
                                     value={provider || "default"}
                                     onValueChange={(value) => {
@@ -214,11 +211,11 @@ export function SettingsDialog({
                                     }}
                                 >
                                     <SelectTrigger id="ai-provider">
-                                        <SelectValue placeholder="Use Server Default" />
+                                        <SelectValue placeholder="使用服务器默认" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="default">
-                                            Use Server Default
+                                            使用服务器默认
                                         </SelectItem>
                                         <SelectItem value="openai">
                                             OpenAI
@@ -240,6 +237,16 @@ export function SettingsDialog({
                                         </SelectItem>
                                         <SelectItem value="siliconflow">
                                             SiliconFlow
+                                        </SelectItem>
+                                        <SelectItem value="glm">GLM</SelectItem>
+                                        <SelectItem value="qwen">
+                                            Qwen
+                                        </SelectItem>
+                                        <SelectItem value="doubao">
+                                            Doubao
+                                        </SelectItem>
+                                        <SelectItem value="qiniu">
+                                            Qiniu (七牛云)
                                         </SelectItem>
                                     </SelectContent>
                                 </Select>
@@ -270,13 +277,24 @@ export function SettingsDialog({
                                                         : provider ===
                                                             "deepseek"
                                                           ? "e.g., deepseek-chat"
-                                                          : "Model ID"
+                                                          : provider === "glm"
+                                                            ? "e.g., glm-4-plus (or glm-4-0520, glm-4-6)"
+                                                            : provider ===
+                                                                "qwen"
+                                                              ? "e.g., qwen-max (or qwen-turbo, qwen-plus)"
+                                                              : provider ===
+                                                                  "doubao"
+                                                                ? "e.g., doubao-pro-4k (or doubao-pro-32k, doubao-lite-4k)"
+                                                                : provider ===
+                                                                    "qiniu"
+                                                                  ? "e.g., qiniu-deepseek-67b (or qiniu-deepseek-7b, qiniu-deepseek-14b, qiniu-llama-3-70b, qiniu-qwen-72b)"
+                                                                  : "Model ID"
                                             }
                                         />
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="ai-api-key">
-                                            API Key
+                                            API 密钥
                                         </Label>
                                         <Input
                                             id="ai-api-key"
@@ -289,7 +307,7 @@ export function SettingsDialog({
                                                     e.target.value,
                                                 )
                                             }}
-                                            placeholder="Your API key"
+                                            placeholder="你的 API 密钥"
                                             autoComplete="off"
                                         />
                                         <p className="text-[0.8rem] text-muted-foreground">
@@ -311,12 +329,23 @@ export function SettingsDialog({
                                                           : provider ===
                                                               "siliconflow"
                                                             ? "SILICONFLOW_API_KEY"
-                                                            : "server API key"}
+                                                            : provider === "glm"
+                                                              ? "GLM_API_KEY"
+                                                              : provider ===
+                                                                  "qwen"
+                                                                ? "QWEN_API_KEY"
+                                                                : provider ===
+                                                                    "doubao"
+                                                                  ? "DOUBAO_API_KEY"
+                                                                  : provider ===
+                                                                      "qiniu"
+                                                                    ? "QINIU_API_KEY"
+                                                                    : "server API key"}
                                         </p>
                                     </div>
                                     <div className="space-y-2">
                                         <Label htmlFor="ai-base-url">
-                                            Base URL (optional)
+                                            Base URL (可选)
                                         </Label>
                                         <Input
                                             id="ai-base-url"
@@ -333,7 +362,17 @@ export function SettingsDialog({
                                                     ? "https://api.anthropic.com/v1"
                                                     : provider === "siliconflow"
                                                       ? "https://api.siliconflow.com/v1"
-                                                      : "Custom endpoint URL"
+                                                      : provider === "glm"
+                                                        ? "https://open.bigmodel.cn/api/paas/v4"
+                                                        : provider === "qwen"
+                                                          ? "https://dashscope.aliyun.com/compatible-mode/v1"
+                                                          : provider ===
+                                                              "doubao"
+                                                            ? "https://ark.cn-beijing.volces.com/api/v3"
+                                                            : provider ===
+                                                                "qiniu"
+                                                              ? "https://api.qiniucdn.com/v1"
+                                                              : "Custom endpoint URL"
                                             }
                                         />
                                     </div>
@@ -360,7 +399,7 @@ export function SettingsDialog({
                                             setModelId("")
                                         }}
                                     >
-                                        Clear Settings
+                                        清除设置
                                     </Button>
                                 </>
                             )}
@@ -369,9 +408,9 @@ export function SettingsDialog({
 
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
-                            <Label htmlFor="theme-toggle">Theme</Label>
+                            <Label htmlFor="theme-toggle">主题</Label>
                             <p className="text-[0.8rem] text-muted-foreground">
-                                Dark/Light mode for interface and DrawIO canvas.
+                                界面和 DrawIO 画布的深色/浅色模式。
                             </p>
                         </div>
                         <Button
@@ -390,10 +429,9 @@ export function SettingsDialog({
 
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
-                            <Label htmlFor="drawio-ui">DrawIO Style</Label>
+                            <Label htmlFor="drawio-ui">DrawIO 样式</Label>
                             <p className="text-[0.8rem] text-muted-foreground">
-                                Canvas style:{" "}
-                                {drawioUi === "min" ? "Minimal" : "Sketch"}
+                                画布样式: {drawioUi === "min" ? "简约" : "素描"}
                             </p>
                         </div>
                         <Button
@@ -402,18 +440,15 @@ export function SettingsDialog({
                             size="sm"
                             onClick={onToggleDrawioUi}
                         >
-                            Switch to{" "}
-                            {drawioUi === "min" ? "Sketch" : "Minimal"}
+                            切换到 {drawioUi === "min" ? "素描" : "简约"}
                         </Button>
                     </div>
 
                     <div className="flex items-center justify-between">
                         <div className="space-y-0.5">
-                            <Label htmlFor="close-protection">
-                                Close Protection
-                            </Label>
+                            <Label htmlFor="close-protection">关闭保护</Label>
                             <p className="text-[0.8rem] text-muted-foreground">
-                                Show confirmation when leaving the page.
+                                离开页面时显示确认提示。
                             </p>
                         </div>
                         <Switch

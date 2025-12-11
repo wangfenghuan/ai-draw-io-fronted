@@ -111,36 +111,35 @@ export default function ExamplePanel({
             {/* Welcome section */}
             <div className="text-center mb-6">
                 <h2 className="text-lg font-semibold text-foreground mb-2">
-                    Create diagrams with AI
+                    使用 AI 创建图表
                 </h2>
                 <p className="text-sm text-muted-foreground max-w-xs mx-auto">
-                    Describe what you want to create or upload an image to
-                    replicate
+                    描述您想要创建的内容或上传图片进行复制
                 </p>
             </div>
 
             {/* Examples grid */}
             <div className="space-y-3">
                 <p className="text-xs font-medium text-muted-foreground uppercase tracking-wider px-1">
-                    Quick Examples
+                    快速示例
                 </p>
 
                 <div className="grid gap-2">
                     <ExampleCard
                         icon={<FileText className="w-4 h-4 text-primary" />}
-                        title="Paper to Diagram"
-                        description="Upload .pdf, .txt, .md, .json, .csv, .py, .js, .ts and more"
+                        title="论文转图表"
+                        description="上传 .pdf, .txt, .md, .json, .csv, .py, .js, .ts 等文件"
                         onClick={handlePdfExample}
                         isNew
                     />
 
                     <ExampleCard
                         icon={<Zap className="w-4 h-4 text-primary" />}
-                        title="Animated Diagram"
-                        description="Draw a transformer architecture with animated connectors"
+                        title="动画图表"
+                        description="绘制带有动画连接线的 Transformer 架构图"
                         onClick={() => {
                             setInput(
-                                "Give me a **animated connector** diagram of transformer's architecture",
+                                "给我一个带有**动画连接线**的 Transformer 架构图",
                             )
                             setFiles([])
                         }}
@@ -148,31 +147,31 @@ export default function ExamplePanel({
 
                     <ExampleCard
                         icon={<Cloud className="w-4 h-4 text-primary" />}
-                        title="AWS Architecture"
-                        description="Create a cloud architecture diagram with AWS icons"
+                        title="AWS 架构"
+                        description="使用 AWS 图标创建云架构图"
                         onClick={handleReplicateArchitecture}
                     />
 
                     <ExampleCard
                         icon={<GitBranch className="w-4 h-4 text-primary" />}
-                        title="Replicate Flowchart"
-                        description="Upload and replicate an existing flowchart"
+                        title="复制流程图"
+                        description="上传并复制现有流程图"
                         onClick={handleReplicateFlowchart}
                     />
 
                     <ExampleCard
                         icon={<Palette className="w-4 h-4 text-primary" />}
-                        title="Creative Drawing"
-                        description="Draw something fun and creative"
+                        title="创意绘图"
+                        description="绘制有趣且富有创意的内容"
                         onClick={() => {
-                            setInput("Draw a cat for me")
+                            setInput("给我画一只猫")
                             setFiles([])
                         }}
                     />
                 </div>
 
                 <p className="text-[11px] text-muted-foreground/60 text-center mt-4">
-                    Examples are cached for instant response
+                    示例已缓存，可即时响应
                 </p>
             </div>
         </div>

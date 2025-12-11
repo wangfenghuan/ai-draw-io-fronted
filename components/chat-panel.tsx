@@ -1293,7 +1293,7 @@ Please retry with an adjusted search pattern or use display_diagram if retries a
         return (
             <div className="h-full flex flex-col items-center pt-4 bg-card border border-border/30 rounded-xl">
                 <ButtonWithTooltip
-                    tooltipContent="Show chat panel (Ctrl+B)"
+                    tooltipContent="显示聊天面板 (Ctrl+B)"
                     variant="ghost"
                     size="icon"
                     onClick={onToggleVisibility}
@@ -1308,7 +1308,7 @@ Please retry with an adjusted search pattern or use display_diagram if retries a
                         transform: "rotate(180deg)",
                     }}
                 >
-                    AI Chat
+                    AI 聊天
                 </div>
             </div>
         )
@@ -1345,7 +1345,7 @@ Please retry with an adjusted search pattern or use display_diagram if retries a
                             <h1
                                 className={`${isMobile ? "text-sm" : "text-base"} font-semibold tracking-tight whitespace-nowrap`}
                             >
-                                Next AI Drawio
+                                Next AI 流程图
                             </h1>
                         </div>
                         {!isMobile && (
@@ -1355,7 +1355,7 @@ Please retry with an adjusted search pattern or use display_diagram if retries a
                                 rel="noopener noreferrer"
                                 className="text-sm text-muted-foreground hover:text-foreground transition-colors ml-2"
                             >
-                                About
+                                关于
                             </Link>
                         )}
                         {!isMobile && (
@@ -1365,7 +1365,7 @@ Please retry with an adjusted search pattern or use display_diagram if retries a
                                 rel="noopener noreferrer"
                             >
                                 <ButtonWithTooltip
-                                    tooltipContent="Due to high usage, I have changed the model to minimax-m2 and added some usage limits. See About page for details."
+                                    tooltipContent="由于使用量较高，我已将模型更改为 minimax-m2 并添加了一些使用限制。详见关于页面。"
                                     variant="ghost"
                                     size="icon"
                                     className="h-6 w-6 text-amber-500 hover:text-amber-600"
@@ -1377,7 +1377,7 @@ Please retry with an adjusted search pattern or use display_diagram if retries a
                     </div>
                     <div className="flex items-center gap-1">
                         <a
-                            href="https://github.com/DayuanJiang/next-ai-draw-io"
+                            href="https://github.com/wangfenghuan/w-next-ai-drawio"
                             target="_blank"
                             rel="noopener noreferrer"
                             className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-accent transition-colors"
@@ -1387,7 +1387,7 @@ Please retry with an adjusted search pattern or use display_diagram if retries a
                             />
                         </a>
                         <ButtonWithTooltip
-                            tooltipContent="Settings"
+                            tooltipContent="设置"
                             variant="ghost"
                             size="icon"
                             onClick={() => setShowSettingsDialog(true)}
@@ -1399,7 +1399,7 @@ Please retry with an adjusted search pattern or use display_diagram if retries a
                         </ButtonWithTooltip>
                         {!isMobile && (
                             <ButtonWithTooltip
-                                tooltipContent="Hide chat panel (Ctrl+B)"
+                                tooltipContent="隐藏聊天面板 (Ctrl+B)"
                                 variant="ghost"
                                 size="icon"
                                 onClick={onToggleVisibility}

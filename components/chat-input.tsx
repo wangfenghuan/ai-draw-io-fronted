@@ -312,7 +312,7 @@ export function ChatInput({
                     onChange={handleChange}
                     onKeyDown={handleKeyDown}
                     onPaste={handlePaste}
-                    placeholder="Describe your diagram or upload a file..."
+                    placeholder="描述你的图表或上传文件..."
                     disabled={isDisabled}
                     aria-label="Chat input"
                     className="min-h-[60px] max-h-[200px] resize-none border-0 bg-transparent px-4 py-3 text-sm focus-visible:ring-0 focus-visible:ring-offset-0 placeholder:text-muted-foreground/60"

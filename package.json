@@ -1,8 +1,28 @@
 {
-    "name": "next-ai-draw-io",
+    "name": "w-next-ai-drawio",
     "version": "0.3.0",
+    "description": "AI-powered diagram generator with multi-provider support (GLM, Qwen, Doubao, Qiniu, OpenAI, Anthropic, etc.). Chinese-first interface for creating diagrams through natural language.",
     "license": "Apache-2.0",
-    "private": true,
+    "private": false,
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/wangfenghuan/w-next-ai-drawio.git"
+    },
+    "bugs": {
+        "url": "https://github.com/wangfenghuan/w-next-ai-drawio/issues"
+    },
+    "homepage": "https://github.com/wangfenghuan/w-next-ai-drawio#readme",
+    "keywords": [
+        "ai-diagram",
+        "drawio",
+        "diagram-generator",
+        "glm",
+        "qwen",
+        "doubao",
+        "qiniu",
+        "aws-architecture",
+        "flowchart"
+    ],
     "scripts": {
         "dev": "next dev --turbopack --port 6002",
         "build": "next build",

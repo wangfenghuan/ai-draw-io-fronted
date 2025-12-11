@@ -4,7 +4,7 @@
 
 **AI驱动的图表创建工具 - 对话、绘制、可视化**
 
-[English](../README.md) | 中文 | [日本語](./README_JA.md)
+[English](../README.md) | 中文
 
 [![TrendShift](https://trendshift.io/api/badge/repositories/15449)](https://next-ai-drawio.jiang.jp/)
 
@@ -133,8 +133,8 @@ docker run -d -p 3000:3000 --env-file .env ghcr.io/dayuanjiang/next-ai-draw-io:l
 1. 克隆仓库：
 
 ```bash
-git clone https://github.com/DayuanJiang/next-ai-draw-io
-cd next-ai-draw-io
+git clone https://github.com/wangfenghuan/w-next-ai-drawio.git
+cd w-next-ai-drawio
 ```
 
 2. 安装依赖：
@@ -243,6 +243,6 @@ public/               # 静态资源包括示例图片
 
 ## Star历史
 
-[![Star History Chart](https://api.star-history.com/svg?repos=DayuanJiang/next-ai-draw-io&type=date&legend=top-left)](https://www.star-history.com/#DayuanJiang/next-ai-draw-io&type=date&legend=top-left)
+[![Star History Chart](https://api.star-history.com/svg?repos=wangfenghuan/w-next-ai-drawio&type=date&legend=top-left)](https://www.star-history.com/#wangfenghuan/w-next-ai-drawio&type=date&legend=top-left)
 
 ---

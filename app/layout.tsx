@@ -26,46 +26,46 @@ export const viewport: Viewport = {
 }
 
 export const metadata: Metadata = {
-    title: "Next AI Draw.io - AI-Powered Diagram Generator",
+    title: "W-Next AI Drawio - AI-Driven Diagram Generator",
     description:
-        "Create AWS architecture diagrams, flowcharts, and technical diagrams using AI. Free online tool integrating draw.io with AI assistance for professional diagram creation.",
+        "Multi-provider AI diagram generator supporting GLM, Qwen, Doubao, Qiniu, OpenAI, Anthropic, Google, and more. Create AWS architecture diagrams, flowcharts, and technical diagrams using natural language. Chinese-first interface with comprehensive AI model support.",
     keywords: [
         "AI diagram generator",
+        "GLM",
+        "Qwen",
+        "Doubao",
+        "Qiniu",
+        "multi-provider AI",
         "AWS architecture",
         "flowchart creator",
         "draw.io",
         "AI drawing tool",
         "technical diagrams",
-        "diagram automation",
-        "free diagram generator",
-        "online diagram maker",
     ],
-    authors: [{ name: "Next AI Draw.io" }],
-    creator: "Next AI Draw.io",
-    publisher: "Next AI Draw.io",
-    metadataBase: new URL("https://next-ai-drawio.jiang.jp"),
+    authors: [{ name: "wangfenghuan" }],
+    creator: "wangfenghuan",
+    publisher: "wangfenghuan",
     openGraph: {
-        title: "Next AI Draw.io - AI Diagram Generator",
+        title: "W-Next AI Drawio - Multi-Provider AI Diagram Generator",
         description:
-            "Create professional diagrams with AI assistance. Supports AWS architecture, flowcharts, and more.",
+            "Create professional diagrams with multi-provider AI support. Supports GLM, Qwen, Doubao, Qiniu, OpenAI, Anthropic, AWS, GCP, and Azure architecture diagrams.",
         type: "website",
-        url: "https://next-ai-drawio.jiang.jp",
-        siteName: "Next AI Draw.io",
-        locale: "en_US",
+        siteName: "W-Next AI Drawio",
+        locale: "zh-CN",
         images: [
             {
                 url: "/architecture.png",
                 width: 1200,
                 height: 630,
-                alt: "Next AI Draw.io - AI-powered diagram creation tool",
+                alt: "W-Next AI Drawio - Multi-provider AI diagram creation tool",
             },
         ],
     },
     twitter: {
         card: "summary_large_image",
-        title: "Next AI Draw.io - AI Diagram Generator",
+        title: "W-Next AI Drawio - Multi-Provider AI Diagram Generator",
         description:
-            "Create professional diagrams with AI assistance. Free, no login required.",
+            "AI-powered diagram generator with support for GLM, Qwen, Doubao, Qiniu, OpenAI, Anthropic, and more. Chinese-first interface.",
         images: ["/architecture.png"],
     },
     robots: {
@@ -92,12 +92,11 @@ export default function RootLayout({
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
-        name: "Next AI Draw.io",
+        name: "W-Next AI Drawio",
         applicationCategory: "DesignApplication",
         operatingSystem: "Web Browser",
         description:
-            "AI-powered diagram generator with targeted XML editing capabilities that integrates with draw.io for creating AWS architecture diagrams, flowcharts, and technical diagrams. Features diagram history, multi-provider AI support, and real-time collaboration.",
-        url: "https://next-ai-drawio.jiang.jp",
+            "Multi-provider AI diagram generator with native support for Chinese AI models (GLM, Qwen, Doubao, Qiniu) and international providers (OpenAI, Anthropic, Google, Azure, AWS). Features natural language diagram creation, PDF upload support, diagram history, and targeted XML editing for professional diagrams.",
         offers: {
             "@type": "Offer",
             price: "0",
@@ -106,7 +105,7 @@ export default function RootLayout({
     }
 
     return (
-        <html lang="en" suppressHydrationWarning>
+        <html lang="zh-CN" suppressHydrationWarning>
             <head>
                 <script
                     type="application/ld+json"
