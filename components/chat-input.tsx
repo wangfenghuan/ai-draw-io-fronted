@@ -6,6 +6,7 @@ import {
     Image as ImageIcon,
     Loader2,
     Send,
+    Square,
     Trash2,
 } from "lucide-react"
 import type React from "react"
@@ -119,6 +120,8 @@ interface ChatInputProps {
     onSubmit: (e: React.FormEvent<HTMLFormElement>) => void
     onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void
     onClearChat: () => void
+    onStop?: () => void
+    isManuallyStopped?: boolean
     files?: File[]
     onFileChange?: (files: File[]) => void
     pdfData?: Map<
@@ -137,6 +140,8 @@ export function ChatInput({
     onSubmit,
     onChange,
     onClearChat,
+    onStop,
+    isManuallyStopped = false,
     files = [],
     onFileChange = () => {},
     pdfData = new Map(),
@@ -154,7 +159,13 @@ export function ChatInput({
 
     // Allow retry when there's an error (even if status is still "streaming" or "submitted")
     const isDisabled =
-        (status === "streaming" || status === "submitted") && !error
+        (status === "streaming" || status === "submitted") &&
+        !error &&
+        !isManuallyStopped
+
+    // Determine if we should show stop button
+    const isStreaming =
+        (status === "streaming" || status === "submitted") && !isManuallyStopped
 
     const adjustTextareaHeight = useCallback(() => {
         const textarea = textareaRef.current
@@ -406,24 +417,38 @@ export function ChatInput({
 
                         <div className="w-px h-5 bg-border mx-1" />
 
-                        <Button
-                            type="submit"
-                            disabled={isDisabled || !input.trim()}
-                            size="sm"
-                            className="h-8 px-4 rounded-xl font-medium shadow-sm"
-                            aria-label={
-                                isDisabled ? "Sending..." : "Send message"
-                            }
-                        >
-                            {isDisabled ? (
-                                <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                                <>
-                                    <Send className="h-4 w-4 mr-1.5" />
-                                    Send
-                                </>
-                            )}
-                        </Button>
+                        {isStreaming ? (
+                            <ButtonWithTooltip
+                                type="button"
+                                onClick={() => onStop?.()}
+                                size="sm"
+                                className="h-8 px-4 rounded-xl font-medium shadow-sm bg-destructive hover:bg-destructive/90 text-white"
+                                tooltipContent="停止生成"
+                                aria-label="Stop generation"
+                            >
+                                <Square className="h-4 w-4 mr-1.5" />
+                                停止
+                            </ButtonWithTooltip>
+                        ) : (
+                            <Button
+                                type="submit"
+                                disabled={isDisabled || !input.trim()}
+                                size="sm"
+                                className="h-8 px-4 rounded-xl font-medium shadow-sm"
+                                aria-label={
+                                    isDisabled ? "Sending..." : "Send message"
+                                }
+                            >
+                                {isDisabled ? (
+                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                ) : (
+                                    <>
+                                        <Send className="h-4 w-4 mr-1.5" />
+                                        Send
+                                    </>
+                                )}
+                            </Button>
+                        )}
                     </div>
                 </div>
             </div>

@@ -42,13 +42,48 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
     const resolverRef = useRef<((value: string) => void) | null>(null)
     // Track if we're expecting an export for history (user-initiated)
     const expectHistoryExportRef = useRef<boolean>(false)
+    // Store XML that needs to be loaded when DrawIO becomes ready
+    const pendingXmlRef = useRef<string>("")
 
     const onDrawioLoad = () => {
         // Only set ready state once to prevent infinite loops
         if (hasCalledOnLoadRef.current) return
         hasCalledOnLoadRef.current = true
-        // console.log("[DiagramContext] DrawIO loaded, setting ready state")
+        console.log("[DiagramContext] DrawIO loaded, setting ready state")
         setIsDrawioReady(true)
+
+        // Load any pending XML that was set before DrawIO was ready
+        if (pendingXmlRef.current && drawioRef.current) {
+            try {
+                drawioRef.current.load({
+                    xml: pendingXmlRef.current,
+                })
+                console.log(
+                    "[DiagramContext] Loaded pending XML after DrawIO ready",
+                )
+            } catch (error) {
+                console.error(
+                    "[DiagramContext] Failed to load pending XML:",
+                    error,
+                )
+            }
+            pendingXmlRef.current = ""
+        } else if (chartXML && drawioRef.current) {
+            // If no pending XML but we have existing chartXML, load it
+            try {
+                drawioRef.current.load({
+                    xml: chartXML,
+                })
+                console.log(
+                    "[DiagramContext] Loaded existing chartXML after DrawIO ready",
+                )
+            } catch (error) {
+                console.error(
+                    "[DiagramContext] Failed to load existing chartXML:",
+                    error,
+                )
+            }
+        }
     }
 
     const resetDrawioReady = () => {
@@ -98,10 +133,24 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
         // Keep chartXML in sync even when diagrams are injected (e.g., display_diagram tool)
         setChartXML(chart)
 
-        if (drawioRef.current) {
-            drawioRef.current.load({
-                xml: chart,
-            })
+        if (drawioRef.current && isDrawioReady) {
+            try {
+                drawioRef.current.load({
+                    xml: chart,
+                })
+                console.log(
+                    "[loadDiagram] Successfully loaded diagram into DrawIO",
+                )
+            } catch (error) {
+                console.error("[loadDiagram] Failed to load diagram:", error)
+                return "Failed to load diagram into DrawIO"
+            }
+        } else {
+            // Store XML for later loading when DrawIO becomes ready
+            pendingXmlRef.current = chart
+            console.log(
+                "[loadDiagram] DrawIO not ready, storing XML for later loading",
+            )
         }
 
         return null
@@ -121,7 +170,16 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
         }
 
         const extractedXML = extractDiagramXML(data.data)
-        setChartXML(extractedXML)
+
+        // Only update chartXML if it's different (prevent unnecessary re-renders)
+        if (extractedXML !== chartXML) {
+            console.log(
+                "[DiagramContext] Updating chartXML from export, length:",
+                extractedXML.length,
+            )
+            setChartXML(extractedXML)
+        }
+
         setLatestSvg(data.data)
 
         // Only add to history if this was a user-initiated export

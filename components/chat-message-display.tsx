@@ -186,6 +186,7 @@ export function ChatMessageDisplay({
 }: ChatMessageDisplayProps) {
     const { chartXML, loadDiagram: onDisplayChart } = useDiagram()
     const messagesEndRef = useRef<HTMLDivElement>(null)
+    const scrollAreaRef = useRef<HTMLDivElement>(null)
     const previousXML = useRef<string>("")
     const processedToolCalls = useRef<Set<string>>(new Set())
     const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>(
@@ -205,6 +206,9 @@ export function ChatMessageDisplay({
     const [expandedPdfSections, setExpandedPdfSections] = useState<
         Record<string, boolean>
     >({})
+    // Track if user is manually scrolling
+    const isUserScrolling = useRef(false)
+    const lastMessageCount = useRef(messages.length)
 
     const copyMessageToClipboard = async (messageId: string, text: string) => {
         try {
@@ -275,9 +279,41 @@ export function ChatMessageDisplay({
         [chartXML, onDisplayChart],
     )
 
+    // Auto scroll to bottom only when new messages are added and user isn't scrolling
     useEffect(() => {
-        if (messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
+        const scrollContainer = scrollAreaRef.current?.querySelector(
+            "[data-radix-scroll-area-viewport]",
+        )
+        if (!scrollContainer) return
+
+        const handleScroll = () => {
+            const { scrollTop, scrollHeight, clientHeight } = scrollContainer
+            const isAtBottom = scrollTop + clientHeight >= scrollHeight - 50
+            isUserScrolling.current = !isAtBottom
+        }
+
+        scrollContainer.addEventListener("scroll", handleScroll, {
+            passive: true,
+        })
+
+        // Only auto-scroll when a new message is added and user isn't manually scrolling
+        if (
+            messages.length > lastMessageCount.current &&
+            !isUserScrolling.current
+        ) {
+            setTimeout(() => {
+                if (messagesEndRef.current) {
+                    messagesEndRef.current.scrollIntoView({
+                        behavior: "smooth",
+                    })
+                }
+            }, 100)
+        }
+
+        lastMessageCount.current = messages.length
+
+        return () => {
+            scrollContainer.removeEventListener("scroll", handleScroll)
         }
     }, [messages])
 
@@ -420,7 +456,10 @@ export function ChatMessageDisplay({
     }
 
     return (
-        <ScrollArea className="h-full w-full scrollbar-thin">
+        <ScrollArea
+            ref={scrollAreaRef}
+            className="h-full w-full scrollbar-thin"
+        >
             {messages.length === 0 ? (
                 <ExamplePanel setInput={setInput} setFiles={setFiles} />
             ) : (

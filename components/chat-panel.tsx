@@ -198,6 +198,7 @@ export default function ChatPanel({
     const [dailyRequestLimit, setDailyRequestLimit] = useState(0)
     const [dailyTokenLimit, setDailyTokenLimit] = useState(0)
     const [tpmLimit, setTpmLimit] = useState(0)
+    const [isManuallyStopped, setIsManuallyStopped] = useState(false)
 
     // Check config on mount
     useEffect(() => {
@@ -444,6 +445,18 @@ export default function ChatPanel({
             api: "/api/chat",
         }),
         async onToolCall({ toolCall }) {
+            // Check if generation has been stopped
+            if (isManuallyStopped || !stopRef.current) {
+                console.log(
+                    "[onToolCall] Generation stopped, skipping tool execution",
+                    {
+                        isManuallyStopped,
+                        hasStopRef: !!stopRef.current,
+                    },
+                )
+                return
+            }
+
             if (DEBUG) {
                 console.log(
                     `[onToolCall] Tool: ${toolCall.toolName}, CallId: ${toolCall.toolCallId}`,
@@ -562,13 +575,25 @@ Please fix the edit to avoid structural issues (e.g., duplicate IDs, invalid ref
                         })
                         return
                     }
+
+                    // Update the chartXML ref immediately with the edited XML
+                    chartXMLRef.current = editedXml
+
+                    // Force a short delay to ensure DrawIO has time to process the new XML
+                    await new Promise((resolve) => setTimeout(resolve, 100))
+
+                    // Export to sync with DrawIO and update context
                     onExport()
+
                     addToolOutput({
                         tool: "edit_diagram",
                         toolCallId: toolCall.toolCallId,
                         output: `Successfully applied ${edits.length} edit(s) to the diagram.`,
                     })
-                    console.log("[edit_diagram] Success")
+                    console.log(
+                        "[edit_diagram] Success - diagram updated, XML length:",
+                        editedXml.length,
+                    )
                 } catch (error) {
                     console.error("[edit_diagram] Failed:", error)
 
@@ -613,16 +638,26 @@ Please retry with an adjusted search pattern or use display_diagram if retries a
                 friendlyMessage = "This model doesn't support image input."
             }
 
-            // Add system message for error so it can be cleared
-            setMessages((currentMessages) => {
-                const errorMessage = {
-                    id: `error-${Date.now()}`,
-                    role: "system" as const,
-                    content: friendlyMessage,
-                    parts: [{ type: "text" as const, text: friendlyMessage }],
-                }
-                return [...currentMessages, errorMessage]
-            })
+            // Only add system message for persistent errors (not temporary ones)
+            const isTemporaryError =
+                friendlyMessage.includes("Network error") ||
+                friendlyMessage.includes("connection") ||
+                friendlyMessage.includes("timeout") ||
+                friendlyMessage.includes("rate limit")
+
+            if (!isTemporaryError) {
+                setMessages((currentMessages) => {
+                    const errorMessage = {
+                        id: `error-${Date.now()}`,
+                        role: "system" as const,
+                        content: friendlyMessage,
+                        parts: [
+                            { type: "text" as const, text: friendlyMessage },
+                        ],
+                    }
+                    return [...currentMessages, errorMessage]
+                })
+            }
 
             if (error.message.includes("Invalid or missing access code")) {
                 // Show settings button and open dialog to help user fix it
@@ -662,6 +697,13 @@ Please retry with an adjusted search pattern or use display_diagram if retries a
     useEffect(() => {
         messagesRef.current = messages
     }, [messages])
+
+    // Debug: Monitor status changes in development
+    useEffect(() => {
+        if (DEBUG) {
+            console.log("[ChatPanel] Status changed to:", status)
+        }
+    }, [status])
 
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -992,6 +1034,46 @@ Please retry with an adjusted search pattern or use display_diagram if retries a
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
     ) => {
         setInput(e.target.value)
+    }
+
+    // Enhanced stop function to properly clean up state
+    const handleStop = () => {
+        if (DEBUG) {
+            console.log(
+                "[ChatPanel] Stop button clicked, stopping AI generation",
+            )
+        }
+
+        // Set stopped flag immediately to update UI
+        setIsManuallyStopped(true)
+
+        try {
+            // Call AI SDK's stop function
+            stop()
+
+            // Force clear any pending tool executions
+            stopRef.current = null
+
+            if (DEBUG) {
+                console.log("[ChatPanel] Stop function called successfully")
+            }
+        } catch (error) {
+            console.error("[ChatPanel] Error calling stop function:", error)
+        }
+
+        // Force UI to reflect stopped state by clearing input and files
+        setInput("")
+        setFiles([])
+
+        // Reset stopped flag after a delay to allow new requests
+        setTimeout(() => {
+            setIsManuallyStopped(false)
+            if (DEBUG) {
+                console.log(
+                    "[ChatPanel] Reset stopped flag, ready for new requests",
+                )
+            }
+        }, 1000)
     }
 
     const handleFileChange = async (newFiles: File[]) => {
@@ -1451,6 +1533,8 @@ Please retry with an adjusted search pattern or use display_diagram if retries a
                             newSessionId,
                         )
                     }}
+                    onStop={handleStop}
+                    isManuallyStopped={isManuallyStopped}
                     files={files}
                     onFileChange={handleFileChange}
                     pdfData={pdfData}
