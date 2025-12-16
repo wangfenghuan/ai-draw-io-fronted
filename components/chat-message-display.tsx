@@ -2,6 +2,9 @@
 
 import type { UIMessage } from "ai"
 
+// Debug constant
+const DEBUG = process.env.NODE_ENV === "development"
+
 import {
     Check,
     ChevronDown,
@@ -195,7 +198,9 @@ export function ChatMessageDisplay({
     const debounceTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
         null,
     )
-    const STREAMING_DEBOUNCE_MS = 150 // Only update diagram every 150ms during streaming
+    // Track edit operation preview state
+    const editPreviewRef = useRef<Map<string, DiagramOperation[]>>(new Map())
+    const STREAMING_DEBOUNCE_MS = 150 // Keep original 150ms debounce timing
     const [expandedTools, setExpandedTools] = useState<Record<string, boolean>>(
         {},
     )
@@ -223,7 +228,7 @@ export function ChatMessageDisplay({
 
             setCopiedMessageId(messageId)
             setTimeout(() => setCopiedMessageId(null), 2000)
-        } catch (err) {
+        } catch (_err) {
             // Fallback for non-secure contexts (HTTP) or permission denied
             const textarea = document.createElement("textarea")
             textarea.value = text
@@ -293,6 +298,19 @@ export function ChatMessageDisplay({
             console.time("perf:handleDisplayChart")
             const currentXml = xml || ""
             const convertedXml = convertToLegalXml(currentXml)
+
+            // Log the raw XML for debugging edit_diagram vs display_diagram issues
+            if (
+                DEBUG &&
+                (currentXml.includes("UPDATE") ||
+                    currentXml.includes("cell_id"))
+            ) {
+                console.log(
+                    "[ChatMessageDisplay] Processing edit_diagram XML:",
+                    currentXml.substring(0, 200) + "...",
+                )
+            }
+
             if (convertedXml !== previousXML.current) {
                 // Parse and validate XML BEFORE calling replaceNodes
                 console.time("perf:DOMParser")
@@ -309,9 +327,21 @@ export function ChatMessageDisplay({
                         // Only log as error and show toast if this is the final XML
                         console.error(
                             "[ChatMessageDisplay] Malformed XML detected in final output",
+                            "Converted XML:",
+                            convertedXml.substring(0, 1000) +
+                                (convertedXml.length > 1000 ? "..." : ""),
+                            "Parse error details:",
+                            parseError.textContent,
                         )
                         toast.error(
                             "AI generated invalid diagram XML. Please try regenerating.",
+                        )
+                    } else {
+                        console.warn(
+                            "[ChatMessageDisplay] Malformed XML in streaming output (expected during streaming)",
+                            "Converted XML preview:",
+                            convertedXml.substring(0, 500) +
+                                (convertedXml.length > 500 ? "..." : ""),
                         )
                     }
                     console.timeEnd("perf:handleDisplayChart")
@@ -451,6 +481,34 @@ export function ChatMessageDisplay({
                         ) {
                             const xml = input.xml as string
 
+                            // Skip if this looks like edit_diagram operation data instead of display_diagram XML
+                            // Be very strict - any sign of edit operations should be skipped
+                            if (
+                                xml.includes("UPDATE") ||
+                                xml.includes("cell_id") ||
+                                xml.includes("operations")
+                            ) {
+                                console.warn(
+                                    "[ChatMessageDisplay] Detected edit operation data in display_diagram handler, skipping:",
+                                    xml.substring(0, 200),
+                                )
+                                return
+                            }
+
+                            // Ensure it's actually XML content (starts with XML tags and contains proper diagram structure)
+                            if (
+                                !xml.trim().startsWith("<") ||
+                                (!xml.includes("mxfile") &&
+                                    !xml.includes("<diagram") &&
+                                    !xml.includes("<mxGraphModel"))
+                            ) {
+                                console.warn(
+                                    "[ChatMessageDisplay] Skipping invalid XML content in display_diagram handler:",
+                                    xml.substring(0, 200),
+                                )
+                                return
+                            }
+
                             // Skip if XML hasn't changed since last processing
                             const lastXml =
                                 lastProcessedXmlRef.current.get(toolCallId)
@@ -508,6 +566,124 @@ export function ChatMessageDisplay({
                                 // Clean up the ref entry - tool is complete, no longer needed
                                 lastProcessedXmlRef.current.delete(toolCallId)
                                 processedCount++
+                            }
+                        }
+
+                        // Handle edit_diagram operations
+                        if (
+                            part.type === "tool-edit_diagram" &&
+                            input?.operations &&
+                            Array.isArray(input.operations)
+                        ) {
+                            const operations =
+                                input.operations as DiagramOperation[]
+
+                            // Skip if operations haven't changed since last processing
+                            const lastOpsStr =
+                                lastProcessedXmlRef.current.get(toolCallId)
+                            const currentOpsStr = JSON.stringify(operations)
+                            if (lastOpsStr === currentOpsStr) {
+                                skippedCount++
+                                return // Skip redundant processing
+                            }
+
+                            if (
+                                state === "input-streaming" ||
+                                state === "input-available"
+                            ) {
+                                // For edit operations, use shorter debounce for better responsiveness
+                                pendingXmlRef.current = currentOpsStr
+                                // Store operations for preview
+                                editPreviewRef.current.set(
+                                    toolCallId,
+                                    operations,
+                                )
+
+                                if (!debounceTimeoutRef.current) {
+                                    debounceTimeoutRef.current = setTimeout(
+                                        () => {
+                                            const pendingOps =
+                                                pendingXmlRef.current
+                                            debounceTimeoutRef.current = null
+                                            pendingXmlRef.current = null
+                                            if (pendingOps) {
+                                                console.log(
+                                                    "perf:edit_diagram processing operations",
+                                                )
+                                                // For edit operations, we don't directly render
+                                                // The server-side processing will update the diagram
+                                                // We just track that we've processed these operations
+                                                lastProcessedXmlRef.current.set(
+                                                    toolCallId,
+                                                    pendingOps,
+                                                )
+                                            }
+                                        },
+                                        STREAMING_DEBOUNCE_MS,
+                                    )
+                                }
+                                debouncedCount++
+                            } else if (
+                                state === "output-available" &&
+                                !processedToolCalls.current.has(toolCallId)
+                            ) {
+                                // Final output - clear any pending debounce
+                                if (debounceTimeoutRef.current) {
+                                    clearTimeout(debounceTimeoutRef.current)
+                                    debounceTimeoutRef.current = null
+                                    pendingXmlRef.current = null
+                                }
+
+                                // Mark as processed and track operations
+                                lastProcessedXmlRef.current.set(
+                                    toolCallId,
+                                    currentOpsStr,
+                                )
+                                processedToolCalls.current.add(toolCallId)
+                                // Clear preview state
+                                editPreviewRef.current.delete(toolCallId)
+                                processedCount++
+
+                                console.log(
+                                    `[ChatMessageDisplay] Edit diagram completed: ${operations.length} operations`,
+                                )
+
+                                // IMPORTANT: After edit completes, we need to ensure the diagram is properly displayed
+                                // The chartXML should already be updated by the server-side processing
+                                // But we can trigger a refresh to make sure it's displayed
+                                setTimeout(() => {
+                                    if (chartXML?.trim()) {
+                                        handleDisplayChart(chartXML, false)
+                                    }
+                                }, 100)
+                            }
+                        }
+
+                        // Additional safety check: Handle cases where edit_diagram data might be incorrectly tagged as display_diagram
+                        if (
+                            part.type === "tool-display_diagram" &&
+                            input?.xml &&
+                            (input.xml.includes("UPDATE") ||
+                                input.xml.includes("cell_id") ||
+                                input.xml.includes("operations"))
+                        ) {
+                            // This is likely mis-categorized edit_diagram data - treat it as such
+                            console.warn(
+                                "[ChatMessageDisplay] Detected edit_diagram data mislabeled as display_diagram, correcting...",
+                            )
+
+                            // Convert to edit_diagram processing
+                            // Try to extract operations from the XML if possible
+                            if (
+                                state === "input-streaming" ||
+                                state === "input-available"
+                            ) {
+                                console.log(
+                                    "[ChatMessageDisplay] Processing mislabeled edit data as streaming input",
+                                )
+                                // Skip processing as edit operations - server will handle
+                                skippedCount++
+                                return
                             }
                         }
                     }
@@ -582,9 +758,32 @@ export function ChatMessageDisplay({
                                     (toolName === "display_diagram" ||
                                         toolName === "append_diagram") &&
                                     !isMxCellXmlComplete(input?.xml)
+
+                                // For edit_diagram, check if it's actually processing vs real error
+                                const isEditProcessing =
+                                    toolName === "edit_diagram" &&
+                                    state === "output-error" &&
+                                    input?.operations &&
+                                    Array.isArray(input.operations)
+
+                                const isEditGuidance =
+                                    (toolName === "edit_diagram" &&
+                                        state === "output-error" &&
+                                        output?.includes("Cannot find cell")) ||
+                                    output?.includes("Failed to apply") ||
+                                    output?.includes("Please try again")
+
                                 return isTruncated ? (
                                     <span className="text-xs font-medium text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded-full">
                                         Truncated
+                                    </span>
+                                ) : isEditProcessing ? (
+                                    <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
+                                        Processing
+                                    </span>
+                                ) : isEditGuidance ? (
+                                    <span className="text-xs font-medium text-orange-600 bg-orange-50 px-2 py-0.5 rounded-full">
+                                        Guidance
                                     </span>
                                 ) : (
                                     <span className="text-xs font-medium text-red-600 bg-red-50 px-2 py-0.5 rounded-full">

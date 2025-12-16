@@ -26,7 +26,12 @@ import { findCachedResponse } from "@/lib/cached-responses"
 import { isPdfFile, isTextFile } from "@/lib/pdf-utils"
 import { type FileData, useFileProcessor } from "@/lib/use-file-processor"
 import { useQuotaManager } from "@/lib/use-quota-manager"
-import { formatXML, isMxCellXmlComplete, wrapWithMxFile } from "@/lib/utils"
+import {
+    applyDiagramOperations,
+    formatXML,
+    isMxCellXmlComplete,
+    wrapWithMxFile,
+} from "@/lib/utils"
 import { ChatMessageDisplay } from "./chat-message-display"
 
 // localStorage keys for persistence
@@ -64,7 +69,7 @@ interface ChatPanelProps {
 // Constants for tool states
 const TOOL_ERROR_STATE = "output-error" as const
 const DEBUG = process.env.NODE_ENV === "development"
-const MAX_AUTO_RETRY_COUNT = 1
+const MAX_AUTO_RETRY_COUNT = 3
 
 /**
  * Check if auto-resubmit should happen based on tool errors.
@@ -342,9 +347,6 @@ ${finalXml}
                         currentXml = await onFetchChart(false)
                     }
 
-                    const { applyDiagramOperations } = await import(
-                        "@/lib/utils"
-                    )
                     const { result: editedXml, errors } =
                         applyDiagramOperations(currentXml, operations)
 
@@ -357,18 +359,33 @@ ${finalXml}
                             )
                             .join("\n")
 
+                        // Log detailed errors for debugging
+                        console.error(
+                            "[edit_diagram] Operation errors:",
+                            errorMessages,
+                            "Operations:",
+                            operations,
+                        )
+
+                        // Provide more user-friendly error message
+                        const userFriendlyMessage =
+                            errors.length === 1 &&
+                            errors[0].message.includes("not found")
+                                ? `Cannot find cell with ID "${errors[0].cellId}" in the current diagram. The cell may have been deleted or the ID may be incorrect.`
+                                : `Failed to apply ${errors.length} edit operation(s). The diagram structure may have changed or some cell IDs may not exist.`
+
                         addToolOutput({
                             tool: "edit_diagram",
                             toolCallId: toolCall.toolCallId,
                             state: "output-error",
-                            errorText: `Some operations failed:\n${errorMessages}
+                            errorText: `${userFriendlyMessage}
 
-Current diagram XML:
-\`\`\`xml
-${currentXml}
-\`\`\`
+Please try again with:
+1. A more specific edit request
+2. Or ask me to regenerate the diagram with your desired changes
+3. Or check if the elements you want to edit still exist in the diagram
 
-Please check the cell IDs and retry.`,
+Current diagram contains ${currentXml.match(/mxCell/g)?.length || 0} cells.`,
                         })
                         return
                     }
@@ -379,6 +396,8 @@ Please check the cell IDs and retry.`,
                         console.warn(
                             "[edit_diagram] Validation error:",
                             validationError,
+                            "Edited XML:",
+                            editedXml.substring(0, 1000) + "...",
                         )
                         addToolOutput({
                             tool: "edit_diagram",
@@ -595,6 +614,10 @@ Continue from EXACTLY where you stopped.`,
             } else {
                 // Regular error: check retry count limit
                 if (autoRetryCountRef.current >= MAX_AUTO_RETRY_COUNT) {
+                    console.error(
+                        `[sendAutomaticallyWhen] Auto-retry limit reached (${MAX_AUTO_RETRY_COUNT}). Last error was in message:`,
+                        messages[messages.length - 1],
+                    )
                     toast.error(
                         `Auto-retry limit reached (${MAX_AUTO_RETRY_COUNT}). Please try again manually.`,
                     )

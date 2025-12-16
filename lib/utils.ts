@@ -891,6 +891,22 @@ export function autoFixXml(xml: string): { fixed: string; fixes: string[] } {
         fixes.push("Fixed JSON-escaped XML")
     }
 
+    // 0.1. Fix common line break issues in AI-generated diagrams
+    // Convert literal \n in value attributes to proper line breaks for DrawIO
+    const lineBreakFixed = fixed.replace(
+        /value="([^"]*?\\n[^"]*?)"/g,
+        (match, content) => {
+            // Replace literal \n with actual line breaks
+            const withBreaks = content.replace(/\\n/g, "&#xa;")
+            return `value="${withBreaks}"`
+        },
+    )
+
+    if (lineBreakFixed !== fixed) {
+        fixed = lineBreakFixed
+        fixes.push("Fixed line breaks in text content")
+    }
+
     // 1. Remove CDATA wrapper (MUST be before text-before-root check)
     if (/^\s*<!\[CDATA\[/.test(fixed)) {
         fixed = fixed.replace(/^\s*<!\[CDATA\[/, "").replace(/\]\]>\s*$/, "")
