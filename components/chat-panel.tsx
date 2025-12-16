@@ -1366,6 +1366,10 @@ Continue from EXACTLY where you stopped.`,
                     onSubmit={onFormSubmit}
                     onChange={handleInputChange}
                     onClearChat={handleNewChat}
+                    onStop={stop}
+                    isManuallyStopped={
+                        status === "ready" && stopRef.current !== null
+                    }
                     files={files}
                     onFileChange={handleFileChange}
                     pdfData={pdfData}
