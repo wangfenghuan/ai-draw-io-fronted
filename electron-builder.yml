@@ -4,6 +4,7 @@ directories:
   output: dist
 files:
   - out/**/*
+  - dist-electron/**/*
   - electron/**/*
   - package.json
   - node_modules/**/*
@@ -39,3 +40,4 @@ asar: true
 nodeGypRebuild: false
 buildDependenciesFromSource: false
 npmRebuild: false
+publish: never

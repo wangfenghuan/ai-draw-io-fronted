@@ -35,3 +35,4 @@ asar: true
 nodeGypRebuild: false
 buildDependenciesFromSource: false
 npmRebuild: false
+publish: never
