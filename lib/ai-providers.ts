@@ -23,6 +23,7 @@ export type ProviderName =
     | "doubao"
     | "qiniu"
     | "kimi"
+    | "minimax"
 
 interface ModelConfig {
     model: any
@@ -52,6 +53,7 @@ const ALLOWED_CLIENT_PROVIDERS: ProviderName[] = [
     "doubao",
     "qiniu",
     "kimi",
+    "minimax",
 ]
 
 // Bedrock provider options for Anthropic beta features
@@ -371,6 +373,7 @@ const PROVIDER_ENV_VARS: Record<ProviderName, string | null> = {
     doubao: "DOUBAO_API_KEY",
     qiniu: "QINIU_API_KEY",
     kimi: "KIMI_API_KEY",
+    minimax: "MINIMAX_API_KEY",
 }
 
 /**
@@ -435,7 +438,7 @@ function validateProviderCredentials(provider: ProviderName): void {
  * Get the AI model based on environment variables
  *
  * Environment variables:
- * - AI_PROVIDER: The provider to use (bedrock, openai, anthropic, google, azure, ollama, openrouter, deepseek, siliconflow, glm, qwen, doubao, qiniu, kimi)
+ * - AI_PROVIDER: The provider to use (bedrock, openai, anthropic, google, azure, ollama, openrouter, deepseek, siliconflow, glm, qwen, doubao, qiniu, kimi, minimax)
  * - AI_MODEL: The model ID/name for the selected provider
  *
  * Provider-specific env vars:
@@ -461,6 +464,8 @@ function validateProviderCredentials(provider: ProviderName): void {
  * - QINIU_BASE_URL: Qiniu endpoint (optional, defaults to https://api.qiniucdn.com/v1)
  * - KIMI_API_KEY: Kimi API key
  * - KIMI_BASE_URL: Kimi endpoint (optional, defaults to https://api.moonshot.cn/v1)
+ * - MINIMAX_API_KEY: Minimax API key
+ * - MINIMAX_BASE_URL: Minimax endpoint (optional, defaults to https://api.minimax.chat/v1)
  */
 export function getAIModel(overrides?: ClientOverrides): ModelConfig {
     // SECURITY: Prevent SSRF attacks (GHSA-9qf7-mprq-9qgm)
@@ -529,6 +534,7 @@ export function getAIModel(overrides?: ClientOverrides): ModelConfig {
                         `- AZURE_API_KEY for Azure\n` +
                         `- SILICONFLOW_API_KEY for SiliconFlow\n` +
                         `- KIMI_API_KEY for Kimi\n` +
+                        `- MINIMAX_API_KEY for Minimax\n` +
                         `Or set AI_PROVIDER=ollama for local Ollama.`,
                 )
             } else {
@@ -768,9 +774,23 @@ export function getAIModel(overrides?: ClientOverrides): ModelConfig {
             break
         }
 
+        case "minimax": {
+            const apiKey = overrides?.apiKey || process.env.MINIMAX_API_KEY
+            const baseURL =
+                overrides?.baseUrl ||
+                process.env.MINIMAX_BASE_URL ||
+                "https://api.minimax.chat/v1"
+            const minimaxProvider = createOpenAI({
+                apiKey,
+                baseURL,
+            })
+            model = minimaxProvider.chat(modelId)
+            break
+        }
+
         default:
             throw new Error(
-                `Unknown AI provider: ${provider}. Supported providers: bedrock, openai, anthropic, google, azure, ollama, openrouter, deepseek, siliconflow, glm, qwen, doubao, qiniu, kimi`,
+                `Unknown AI provider: ${provider}. Supported providers: bedrock, openai, anthropic, google, azure, ollama, openrouter, deepseek, siliconflow, glm, qwen, doubao, qiniu, kimi, minimax`,
             )
     }
 

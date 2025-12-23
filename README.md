@@ -159,7 +159,7 @@ cp env.example .env.local
 
 Edit `.env.local` and configure your chosen provider:
 
--   Set `AI_PROVIDER` to your chosen provider (bedrock, openai, anthropic, google, azure, ollama, openrouter, deepseek, siliconflow)
+-   Set `AI_PROVIDER` to your chosen provider (bedrock, openai, anthropic, google, azure, ollama, openrouter, deepseek, siliconflow, minimax)
 -   Set `AI_MODEL` to the specific model you want to use
 -   Add the required API keys for your provider
 -   `TEMPERATURE`: Optional temperature setting (e.g., `0` for deterministic output). Leave unset for models that don't support it (e.g., reasoning models).
@@ -200,6 +200,7 @@ Be sure to **set the environment variables** in the Vercel dashboard as you did 
 -   OpenRouter
 -   DeepSeek
 -   SiliconFlow
+-   Minimax
 
 All providers except AWS Bedrock and OpenRouter support custom endpoints.
 

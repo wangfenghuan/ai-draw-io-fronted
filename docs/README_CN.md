@@ -196,6 +196,7 @@ npm run dev
 -   OpenRouter
 -   DeepSeek
 -   SiliconFlow
+-   Minimax
 
 除AWS Bedrock和OpenRouter外，所有提供商都支持自定义端点。
 

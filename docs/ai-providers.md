@@ -143,7 +143,20 @@ If you only configure **one** provider's API key, the system will automatically 
 If you configure **multiple** API keys, you must explicitly set `AI_PROVIDER`:
 
 ```bash
-AI_PROVIDER=google  # or: openai, anthropic, deepseek, siliconflow, azure, bedrock, openrouter, ollama
+AI_PROVIDER=google  # or: openai, anthropic, deepseek, siliconflow, azure, bedrock, openrouter, ollama, minimax
+```
+
+### Minimax
+
+```bash
+MINIMAX_API_KEY=your_api_key
+AI_MODEL=abab6.5s-chat  # example; use any Minimax model ID
+```
+
+Optional custom endpoint:
+
+```bash
+MINIMAX_BASE_URL=https://api.minimax.chat/v1
 ```
 
 ## Model Capability Requirements
