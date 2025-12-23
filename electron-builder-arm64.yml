@@ -5,7 +5,6 @@ artifactName: W-Next-AI-Drawio-${version}-${arch}.${ext}
 
 directories:
   output: dist
-publish: never
 
 # APPLE SILICON ONLY
 mac:
