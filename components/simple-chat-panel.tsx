@@ -5,7 +5,6 @@ import { MessageSquare, Send, Square } from "lucide-react"
 import { useEffect, useState } from "react"
 import ReactMarkdown from "react-markdown"
 import rehypeHighlight from "rehype-highlight"
-import rehypeRaw from "rehype-raw"
 import remarkGfm from "remark-gfm"
 import { listDiagramChatHistory } from "@/api/conversionController"
 import type { API } from "@/api/typings"
@@ -203,10 +202,7 @@ export default function SimpleChatPanel({
                                     {message.content ? (
                                         <ReactMarkdown
                                             remarkPlugins={[remarkGfm]}
-                                            rehypePlugins={[
-                                                rehypeHighlight,
-                                                rehypeRaw,
-                                            ]}
+                                            rehypePlugins={[rehypeHighlight]}
                                             components={{
                                                 // 代码块样式
                                                 code({

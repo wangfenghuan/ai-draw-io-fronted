@@ -235,12 +235,22 @@ declare namespace API {
         id?: number
         /** 图表标题 */
         name?: string
+        /** 图表名称 */
+        diagramName?: string
+        /** 图表代码 */
+        diagramCode?: string
+        /** 描述 */
+        description?: string
         /** 创建用户ID */
         userId?: number
         /** 创建时间 */
         createTime?: string
         /** 更新时间 */
         updateTime?: string
+        /** 图片URL */
+        pictureUrl?: string
+        /** 矢量图URL */
+        svgUrl?: string
     }
 
     type doChatParams = {

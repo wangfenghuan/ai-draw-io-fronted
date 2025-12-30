@@ -7,8 +7,12 @@ const menus: MenuDataItem[] = [
         name: "主页",
     },
     {
+        path: "/my-diagrams",
+        name: "我的图表",
+    },
+    {
         path: "/diagrams",
-        name: "图表",
+        name: "图表广场",
     },
     {
         path: "/room",
