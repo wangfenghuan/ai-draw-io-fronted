@@ -16,6 +16,7 @@ import { useCallback, useEffect, useRef, useState } from "react"
 import { flushSync } from "react-dom"
 import { FaGithub } from "react-icons/fa"
 import { Toaster, toast } from "sonner"
+import { listDiagramChatHistory } from "@/api/conversionController"
 import { ButtonWithTooltip } from "@/components/button-with-tooltip"
 import { ChatInput } from "@/components/chat-input"
 import { ResetWarningModal } from "@/components/reset-warning-modal"
@@ -64,6 +65,7 @@ interface ChatPanelProps {
     onToggleDarkMode: () => void
     isMobile?: boolean
     onCloseProtectionChange?: (enabled: boolean) => void
+    diagramId?: string
 }
 
 // Constants for tool states
@@ -128,6 +130,7 @@ export default function ChatPanel({
     onToggleDarkMode,
     isMobile = false,
     onCloseProtectionChange,
+    diagramId,
 }: ChatPanelProps) {
     const {
         loadDiagram: onDisplayChart,
@@ -697,11 +700,91 @@ Continue from EXACTLY where you stopped.`,
 
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
-    // Restore messages and XML snapshots from localStorage on mount
+    // Restore messages and XML snapshots from backend on mount
     useEffect(() => {
         if (hasRestoredRef.current) return
         hasRestoredRef.current = true
 
+        // If diagramId is provided, load from backend
+        if (diagramId) {
+            loadHistoryFromBackend(diagramId)
+        } else {
+            // Fallback to localStorage for backward compatibility
+            restoreFromLocalStorage()
+        }
+    }, [diagramId, setMessages])
+
+    // Load chat history from backend API
+    const loadHistoryFromBackend = async (id: string) => {
+        try {
+            console.log(
+                "[ChatPanel] Loading history from backend for diagram:",
+                id,
+            )
+            const response = await listDiagramChatHistory({
+                diagramId: id,
+                pageSize: "100", // Load more history
+            })
+
+            if (response?.code === 0 && response?.data?.records) {
+                const conversions = response.data.records
+                console.log(
+                    "[ChatPanel] Loaded",
+                    conversions.length,
+                    "history records",
+                )
+
+                // Convert backend Conversion format to frontend messages format
+                const messages = conversions
+                    .filter((conv: API.Conversion) => !conv.isDelete)
+                    .sort(
+                        (a: API.Conversion, b: API.Conversion) =>
+                            new Date(a.createTime || 0).getTime() -
+                            new Date(b.createTime || 0).getTime(),
+                    )
+                    .map((conv: API.Conversion) => {
+                        const role =
+                            conv.messageType === "user" ? "user" : "assistant"
+                        let parts: any[] = []
+
+                        if (role === "user") {
+                            // User message
+                            parts = [{ type: "text", text: conv.message || "" }]
+                        } else {
+                            // AI assistant message
+                            parts = [{ type: "text", text: conv.message || "" }]
+                        }
+
+                        return {
+                            id: `msg-${conv.id}`,
+                            role,
+                            parts,
+                            createTime: conv.createTime,
+                        }
+                    })
+
+                if (messages.length > 0) {
+                    setMessages(messages as any)
+                    console.log(
+                        "[ChatPanel] Restored",
+                        messages.length,
+                        "messages from backend",
+                    )
+                } else {
+                    console.log("[ChatPanel] No history found for diagram:", id)
+                }
+            }
+        } catch (error) {
+            console.error(
+                "[ChatPanel] Failed to load history from backend:",
+                error,
+            )
+            toast.error("加载历史记录失败")
+        }
+    }
+
+    // Fallback: Restore from localStorage (for backward compatibility)
+    const restoreFromLocalStorage = () => {
         try {
             // Restore messages
             const savedMessages = localStorage.getItem(STORAGE_MESSAGES_KEY)
@@ -727,7 +810,7 @@ Continue from EXACTLY where you stopped.`,
             localStorage.removeItem(STORAGE_XML_SNAPSHOTS_KEY)
             toast.error("Session data was corrupted. Starting fresh.")
         }
-    }, [setMessages])
+    }
 
     // Restore diagram XML when DrawIO becomes ready
     const hasDiagramRestoredRef = useRef(false)

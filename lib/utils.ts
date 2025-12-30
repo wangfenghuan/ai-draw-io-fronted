@@ -895,7 +895,7 @@ export function autoFixXml(xml: string): { fixed: string; fixes: string[] } {
     // Convert literal \n in value attributes to proper line breaks for DrawIO
     const lineBreakFixed = fixed.replace(
         /value="([^"]*?\\n[^"]*?)"/g,
-        (match, content) => {
+        (_match, content) => {
             // Replace literal \n with actual line breaks
             const withBreaks = content.replace(/\\n/g, "&#xa;")
             return `value="${withBreaks}"`
@@ -1590,4 +1590,40 @@ export function extractDiagramXML(xml_svg_string: string): string {
         console.error("Error extracting diagram XML:", error)
         throw error // Re-throw for caller handling
     }
+}
+
+// Parse AI response and load diagram
+export function parseXmlAndLoadDiagram(
+    content: string,
+    loadDiagram: (xml: string, skipValidation?: boolean) => string | null,
+) {
+    // 尝试从内容中提取 XML
+    const xmlMatch = content.match(/<mxfile[\s\S]*?<\/mxfile>/)
+
+    if (xmlMatch) {
+        const xml = xmlMatch[0]
+        console.log(
+            "[parseXmlAndLoadDiagram] Found XML in response, loading diagram...",
+        )
+        loadDiagram(xml)
+        return xml
+    }
+
+    // 如果没有找到完整的 mxfile，尝试查找 mxGraphModel
+    const graphModelMatch = content.match(
+        /<mxGraphModel[\s\S]*?<\/mxGraphModel>/,
+    )
+
+    if (graphModelMatch) {
+        const graphModel = graphModelMatch[0]
+        const wrappedXml = `<mxfile><diagram name="Page-1" id="page-1">${graphModel}</diagram></mxfile>`
+        console.log(
+            "[parseXmlAndLoadDiagram] Found mxGraphModel, wrapping and loading...",
+        )
+        loadDiagram(wrappedXml)
+        return wrappedXml
+    }
+
+    console.log("[parseXmlAndLoadDiagram] No XML found in response")
+    return null
 }

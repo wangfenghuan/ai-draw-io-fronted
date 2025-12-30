@@ -1,201 +1,204 @@
 "use client"
-import { useEffect, useRef, useState } from "react"
-import { DrawIoEmbed } from "react-drawio"
-import type { ImperativePanelHandle } from "react-resizable-panels"
-import ChatPanel from "@/components/chat-panel"
-import { STORAGE_CLOSE_PROTECTION_KEY } from "@/components/settings-dialog"
+
 import {
-    ResizableHandle,
-    ResizablePanel,
-    ResizablePanelGroup,
-} from "@/components/ui/resizable"
-import { useDiagram } from "@/contexts/diagram-context"
+    BulbOutlined,
+    PlusOutlined,
+    ThunderboltOutlined,
+} from "@ant-design/icons"
+import { App, Button, Card, Space, Typography } from "antd"
+import { useRouter } from "next/navigation"
+import React from "react"
+import { addDiagram } from "@/api/diagramController"
 
-const drawioBaseUrl =
-    process.env.NEXT_PUBLIC_DRAWIO_BASE_URL || "https://embed.diagrams.net"
+const { Title, Paragraph } = Typography
 
-export default function Home() {
-    const { drawioRef, handleDiagramExport, onDrawioLoad, resetDrawioReady } =
-        useDiagram()
-    const [isMobile, setIsMobile] = useState(false)
-    const [isChatVisible, setIsChatVisible] = useState(true)
-    const [drawioUi, setDrawioUi] = useState<"min" | "sketch">("min")
-    const [darkMode, setDarkMode] = useState(false)
-    const [isLoaded, setIsLoaded] = useState(false)
-    const [closeProtection, setCloseProtection] = useState(false)
+const Home: React.FC = () => {
+    const { message } = App.useApp()
+    const router = useRouter()
+    const [loading, setLoading] = React.useState(false)
 
-    const chatPanelRef = useRef<ImperativePanelHandle>(null)
+    const handleCreateDiagram = async () => {
+        try {
+            setLoading(true)
 
-    // Load preferences from localStorage after mount
-    useEffect(() => {
-        const savedUi = localStorage.getItem("drawio-theme")
-        if (savedUi === "min" || savedUi === "sketch") {
-            setDrawioUi(savedUi)
-        }
+            // 调用创建图表的 API
+            const response = await addDiagram({
+                name: "未命名图表",
+                diagramCode: "",
+                pictureUrl: "",
+            })
 
-        const savedDarkMode = localStorage.getItem("next-ai-draw-io-dark-mode")
-        if (savedDarkMode !== null) {
-            // Use saved preference
-            const isDark = savedDarkMode === "true"
-            setDarkMode(isDark)
-            document.documentElement.classList.toggle("dark", isDark)
-        } else {
-            // First visit: match browser preference
-            const prefersDark = window.matchMedia(
-                "(prefers-color-scheme: dark)",
-            ).matches
-            setDarkMode(prefersDark)
-            document.documentElement.classList.toggle("dark", prefersDark)
-        }
+            // 检查响应状态，code 为 0 表示成功
+            if (response && response.code === 0 && response.data) {
+                const diagramId = response.data
 
-        const savedCloseProtection = localStorage.getItem(
-            STORAGE_CLOSE_PROTECTION_KEY,
-        )
-        if (savedCloseProtection === "true") {
-            setCloseProtection(true)
-        }
+                message.success("图表创建成功！")
 
-        setIsLoaded(true)
-    }, [])
-
-    const toggleDarkMode = () => {
-        const newValue = !darkMode
-        setDarkMode(newValue)
-        localStorage.setItem("next-ai-draw-io-dark-mode", String(newValue))
-        document.documentElement.classList.toggle("dark", newValue)
-        // Reset so onDrawioLoad fires again after remount
-        resetDrawioReady()
-    }
-
-    // Check mobile
-    useEffect(() => {
-        const checkMobile = () => {
-            setIsMobile(window.innerWidth < 768)
-        }
-
-        checkMobile()
-        window.addEventListener("resize", checkMobile)
-        return () => window.removeEventListener("resize", checkMobile)
-    }, [])
-
-    const toggleChatPanel = () => {
-        const panel = chatPanelRef.current
-        if (panel) {
-            if (panel.isCollapsed()) {
-                panel.expand()
-                setIsChatVisible(true)
+                // 跳转到编辑页面，将图表 ID 作为路由参数传递
+                router.push(`/diagram/edit/${diagramId}`)
             } else {
-                panel.collapse()
-                setIsChatVisible(false)
+                message.error(response?.message || "创建图表失败，请稍后重试")
             }
+        } catch (error) {
+            console.error("创建图表失败:", error)
+            message.error("创建图表失败，请稍后重试")
+        } finally {
+            setLoading(false)
         }
     }
 
-    // Keyboard shortcut for toggling chat panel
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if ((event.ctrlKey || event.metaKey) && event.key === "b") {
-                event.preventDefault()
-                toggleChatPanel()
-            }
-        }
-
-        window.addEventListener("keydown", handleKeyDown)
-        return () => window.removeEventListener("keydown", handleKeyDown)
-    }, [])
-
-    // Show confirmation dialog when user tries to leave the page
-    useEffect(() => {
-        if (!closeProtection) return
-
-        const handleBeforeUnload = (event: BeforeUnloadEvent) => {
-            event.preventDefault()
-            return ""
-        }
-
-        window.addEventListener("beforeunload", handleBeforeUnload)
-        return () =>
-            window.removeEventListener("beforeunload", handleBeforeUnload)
-    }, [closeProtection])
+    const quickTemplates = [
+        {
+            icon: <ThunderboltOutlined />,
+            title: "快速开始",
+            desc: "从零开始创建",
+        },
+        { icon: <BulbOutlined />, title: "AI 辅助", desc: "智能生成图表" },
+    ]
 
     return (
-        <div className="h-screen bg-background relative overflow-hidden">
-            <ResizablePanelGroup
-                id="main-panel-group"
-                direction={isMobile ? "vertical" : "horizontal"}
-                className="h-full"
+        <div
+            style={{
+                minHeight: "100vh",
+                background: "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                padding: "20px",
+            }}
+        >
+            <Card
+                hoverable
+                style={{
+                    width: "100%",
+                    maxWidth: "600px",
+                    borderRadius: "16px",
+                    boxShadow: "0 20px 60px rgba(0,0,0,0.3)",
+                    border: "none",
+                    overflow: "hidden",
+                }}
+                styles={{
+                    body: {
+                        padding: "48px",
+                        textAlign: "center",
+                    },
+                }}
             >
-                {/* Draw.io Canvas */}
-                <ResizablePanel
-                    id="drawio-panel"
-                    defaultSize={isMobile ? 50 : 67}
-                    minSize={20}
-                >
+                <div style={{ marginBottom: "32px" }}>
                     <div
-                        className={`h-full relative ${
-                            isMobile ? "p-1" : "p-2"
-                        }`}
+                        style={{
+                            width: "80px",
+                            height: "80px",
+                            margin: "0 auto 24px",
+                            background:
+                                "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                            borderRadius: "50%",
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}
                     >
-                        <div className="h-full rounded-xl overflow-hidden shadow-soft-lg border border-border/30">
-                            {isLoaded ? (
-                                <DrawIoEmbed
-                                    key={`${drawioUi}-${darkMode}`}
-                                    ref={drawioRef}
-                                    onExport={handleDiagramExport}
-                                    onLoad={onDrawioLoad}
-                                    baseUrl={drawioBaseUrl}
-                                    urlParameters={{
-                                        ui: drawioUi,
-                                        spin: true,
-                                        libraries: false,
-                                        saveAndExit: false,
-                                        noExitBtn: true,
-                                        dark: darkMode,
-                                    }}
-                                />
-                            ) : (
-                                <div className="h-full w-full flex items-center justify-center bg-background">
-                                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </ResizablePanel>
-
-                <ResizableHandle withHandle />
-
-                {/* Chat Panel */}
-                <ResizablePanel
-                    id="chat-panel"
-                    ref={chatPanelRef}
-                    defaultSize={isMobile ? 50 : 33}
-                    minSize={isMobile ? 20 : 15}
-                    maxSize={isMobile ? 80 : 50}
-                    collapsible={!isMobile}
-                    collapsedSize={isMobile ? 0 : 3}
-                    onCollapse={() => setIsChatVisible(false)}
-                    onExpand={() => setIsChatVisible(true)}
-                >
-                    <div className={`h-full ${isMobile ? "p-1" : "py-2 pr-2"}`}>
-                        <ChatPanel
-                            isVisible={isChatVisible}
-                            onToggleVisibility={toggleChatPanel}
-                            drawioUi={drawioUi}
-                            onToggleDrawioUi={() => {
-                                const newUi =
-                                    drawioUi === "min" ? "sketch" : "min"
-                                localStorage.setItem("drawio-theme", newUi)
-                                setDrawioUi(newUi)
-                                resetDrawioReady()
-                            }}
-                            darkMode={darkMode}
-                            onToggleDarkMode={toggleDarkMode}
-                            isMobile={isMobile}
-                            onCloseProtectionChange={setCloseProtection}
+                        <PlusOutlined
+                            style={{ fontSize: "40px", color: "#fff" }}
                         />
                     </div>
-                </ResizablePanel>
-            </ResizablePanelGroup>
+                    <Title
+                        level={2}
+                        style={{ marginBottom: "16px", color: "#1a1a1a" }}
+                    >
+                        智能协同云画图
+                    </Title>
+                    <Paragraph
+                        style={{
+                            fontSize: "16px",
+                            color: "#666",
+                            marginBottom: "32px",
+                        }}
+                    >
+                        使用 AI 技术快速创建专业图表，支持多种图表类型和协同编辑
+                    </Paragraph>
+                </div>
+
+                <Space
+                    direction="vertical"
+                    size="large"
+                    style={{ width: "100%" }}
+                >
+                    <Button
+                        type="primary"
+                        size="large"
+                        icon={<PlusOutlined />}
+                        onClick={handleCreateDiagram}
+                        loading={loading}
+                        style={{
+                            height: "56px",
+                            fontSize: "18px",
+                            borderRadius: "12px",
+                            background:
+                                "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                            border: "none",
+                            boxShadow: "0 4px 15px rgba(102, 126, 234, 0.4)",
+                        }}
+                    >
+                        立即创建我的图表
+                    </Button>
+
+                    <div
+                        style={{
+                            display: "flex",
+                            gap: "16px",
+                            justifyContent: "center",
+                            marginTop: "24px",
+                        }}
+                    >
+                        {quickTemplates.map((item, index) => (
+                            <Card
+                                key={index}
+                                hoverable
+                                style={{
+                                    flex: 1,
+                                    borderRadius: "12px",
+                                    border: "2px solid #f0f0f0",
+                                    transition: "all 0.3s",
+                                }}
+                                styles={{
+                                    body: { padding: "20px" },
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        fontSize: "24px",
+                                        marginBottom: "8px",
+                                        color: "#667eea",
+                                    }}
+                                >
+                                    {item.icon}
+                                </div>
+                                <div
+                                    style={{
+                                        fontSize: "14px",
+                                        fontWeight: 600,
+                                        color: "#1a1a1a",
+                                    }}
+                                >
+                                    {item.title}
+                                </div>
+                                <div
+                                    style={{
+                                        fontSize: "12px",
+                                        color: "#999",
+                                        marginTop: "4px",
+                                    }}
+                                >
+                                    {item.desc}
+                                </div>
+                            </Card>
+                        ))}
+                    </div>
+                </Space>
+            </Card>
         </div>
     )
 }
+
+export default Home
