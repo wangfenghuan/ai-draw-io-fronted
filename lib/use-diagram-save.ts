@@ -5,7 +5,9 @@ import type { DrawIoEmbedRef } from "react-drawio"
 import { toast } from "sonner"
 import { editDiagram } from "@/api/diagramController"
 
-// 定义必要的接口
+// 辅助函数：睡眠/延时
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
+
 export interface SaveOptions {
     diagramId: string
     userId: string
@@ -19,9 +21,6 @@ export interface DownloadOptions {
     format: "PNG" | "SVG" | "XML"
 }
 
-// 辅助函数：睡眠/延时，用于防止 iframe 操作过快
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
 export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
     // 用于暂存导出操作的 Promise 控制器
     const exportPromiseRef = useRef<{
@@ -32,7 +31,6 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
 
     /**
      * 导出图表为指定格式（返回 Promise）
-     * 这是一个异步操作，通过 postMessage 与 iframe 通信
      */
     const exportDiagram = useCallback(
         (format: "xml" | "png" | "svg"): Promise<string> => {
@@ -42,14 +40,11 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
                     return
                 }
 
-                // 如果上一次导出还没结束，直接拒绝新的请求，防止状态冲突
                 if (exportPromiseRef.current) {
-                    // 这种情况极少发生，因为我们在 saveDiagram 中使用了 await
                     console.warn("上一次导出尚未完成，正在重置...")
                     exportPromiseRef.current = null
                 }
 
-                // 保存 resolver 以在回调中使用
                 exportPromiseRef.current = {
                     resolve,
                     reject,
@@ -57,17 +52,13 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
                 }
 
                 try {
-                    // 调用 Draw.io 的导出方法
-                    // xml: 使用 xmlsvg 格式 (包含 XML 数据的 SVG)
-                    // png: 使用 png 格式
-                    // svg: 使用 xmlsvg 格式
+                    // xml 使用 xmlsvg，其他对应格式
                     const drawioFormat =
                         format === "xml"
                             ? "xmlsvg"
                             : format === "png"
                               ? "png"
                               : "xmlsvg"
-
                     drawioRef.current.exportDiagram({
                         format: drawioFormat,
                     })
@@ -81,8 +72,7 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
     )
 
     /**
-     * 处理 Draw.io 导出回调（需要在组件中调用）
-     * 必须绑定到 <DrawIoEmbed onExport={handleExportCallback} />
+     * 处理 Draw.io 导出回调
      */
     const handleExportCallback = useCallback((data: string) => {
         if (exportPromiseRef.current) {
@@ -95,8 +85,7 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
     }, [])
 
     /**
-     * 上传文件到后端
-     * 使用 FormData multipart/form-data 格式
+     * 上传文件到后端 (适配 @RequestPart)
      */
     const uploadFile = useCallback(
         async (
@@ -106,44 +95,38 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
             bizType: "png" | "svg",
         ): Promise<string | null> => {
             try {
-                // 创建 FormData
                 const formData = new FormData()
+
+                // 1. 添加文件
                 formData.append("file", file)
 
-                // 创建 diagramUploadRequest JSON
-                const diagramUploadRequest = {
-                    biz: bizType,
+                // 2. 添加请求参数 (适配后端 @RequestPart("diagramUploadRequest"))
+                // 必须使用 Blob 并指定 type: application/json，后端才能正确解析 JSON
+                const requestBody = {
+                    biz: bizType, // 确保后端枚举能匹配 "png" 或 "svg"
                     diagramId: diagramId,
                     userId: userId,
                 }
 
-                // 添加为 JSON 字符串
-                formData.append(
-                    "diagramUploadRequest",
-                    JSON.stringify(diagramUploadRequest),
-                )
+                const jsonBlob = new Blob([JSON.stringify(requestBody)], {
+                    type: "application/json",
+                })
+
+                formData.append("diagramUploadRequest", jsonBlob)
 
                 console.log(
-                    `[useDiagramSave] 开始上传 ${bizType.toUpperCase()} 文件:`,
-                    {
-                        fileName: file.name,
-                        fileSize: file.size,
-                        diagramId,
-                    },
+                    `[useDiagramSave] 开始上传 ${bizType.toUpperCase()} 文件...`,
                 )
 
-                // 使用 fetch 直接发送 FormData
                 const API_BASE_URL =
                     process.env.NEXT_PUBLIC_API_BASE_URL ||
                     "http://localhost:8081/api"
 
                 const response = await fetch(`${API_BASE_URL}/diagram/upload`, {
                     method: "POST",
-                    headers: {
-                        // 不设置 Content-Type，让浏览器自动设置 multipart/form-data boundary
-                    },
+                    // fetch 自动设置 multipart/form-data boundary，不要手动设置 Content-Type
                     body: formData,
-                    credentials: "include", // 携带 cookie
+                    credentials: "include",
                 })
 
                 if (!response.ok) {
@@ -154,22 +137,19 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
 
                 if (result?.code === 0 && result?.data) {
                     console.log(
-                        `[useDiagramSave] ${bizType.toUpperCase()} 上传成功:`,
+                        `[useDiagramSave] ${bizType} 上传成功:`,
                         result.data,
                     )
                     return result.data
                 } else {
                     console.error(
-                        `[useDiagramSave] ${bizType.toUpperCase()} 上传失败:`,
+                        `[useDiagramSave] ${bizType} 上传失败:`,
                         result,
                     )
                     return null
                 }
             } catch (error) {
-                console.error(
-                    `[useDiagramSave] ${bizType.toUpperCase()} 上传异常:`,
-                    error,
-                )
+                console.error(`[useDiagramSave] ${bizType} 上传异常:`, error)
                 return null
             }
         },
@@ -177,8 +157,7 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
     )
 
     /**
-     * 保存图表到后端
-     * 严格的串行流程：导出PNG -> 上传PNG -> 休息 -> 导出SVG -> 上传SVG -> 保存信息
+     * 保存图表到后端 (串行流程)
      */
     const saveDiagram = useCallback(
         async ({
@@ -192,61 +171,47 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
                 let pngUrl: string | null = null
                 let svgUrl: string | null = null
 
-                // --- 阶段 1: 处理 PNG ---
+                // 1. 处理 PNG
                 try {
-                    console.log("[useDiagramSave] 阶段1: 导出 PNG...")
                     const pngData = await exportDiagram("png")
                     const pngFile = base64ToFile(
                         pngData,
                         `${title}.png`,
                         "image/png",
                     )
-                    // 立即上传 PNG
                     pngUrl = await uploadFile(pngFile, diagramId, userId, "png")
                 } catch (e) {
-                    console.error("PNG 导出/上传失败 (非致命错误):", e)
+                    console.error("PNG 处理失败:", e)
                 }
 
-                // --- 关键：休息一下 ---
-                // 给 Draw.io iframe 一点时间喘息，防止连续 postMessage 导致死锁
-                await sleep(100)
+                await sleep(100) // 缓冲
 
-                // --- 阶段 2: 处理 SVG ---
+                // 2. 处理 SVG
                 try {
-                    console.log("[useDiagramSave] 阶段2: 导出 SVG...")
                     const svgData = await exportDiagram("svg")
                     const svgFile = base64ToFile(
                         svgData,
                         `${title}.svg`,
                         "image/svg+xml",
                     )
-                    // 立即上传 SVG
                     svgUrl = await uploadFile(svgFile, diagramId, userId, "svg")
                 } catch (e) {
-                    console.error("SVG 导出/上传失败 (非致命错误):", e)
+                    console.error("SVG 处理失败:", e)
                 }
 
-                // --- 阶段 3: 保存图表元数据 ---
-                console.log("[useDiagramSave] 阶段3: 保存图表信息...")
-
-                // 只要 XML 还在，即使图片生成失败也允许保存，只是没有预览图
+                // 3. 更新图表信息 (XML)
                 const response = await editDiagram({
                     id: diagramId,
                     title: title,
                     diagramCode: xml,
-                    pictureUrl: pngUrl || svgUrl || undefined, // 优先使用 PNG
+                    pictureUrl: pngUrl || svgUrl || undefined,
                 })
 
                 if (response?.code === 0) {
                     toast.success("图表保存成功！", { id: "save-diagram" })
-                    console.log("[useDiagramSave] 流程全部完成")
                     return true
                 } else {
-                    throw new Error(
-                        response?.message ||
-                            response?.msg ||
-                            "保存接口返回错误",
-                    )
+                    throw new Error(response?.message || "保存接口返回错误")
                 }
             } catch (error) {
                 console.error("[useDiagramSave] 保存流程致命错误:", error)
@@ -263,7 +228,7 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
     )
 
     /**
-     * 从后端下载图表
+     * 下载图表
      */
     const downloadDiagram = useCallback(
         async ({
@@ -278,8 +243,9 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
                     process.env.NEXT_PUBLIC_API_BASE_URL ||
                     "http://localhost:8081/api"
 
+                // 适配后端的 downloadRemoteFile 参数: fileName, type, diagramId
                 const params = new URLSearchParams({
-                    type: format.toUpperCase(),
+                    type: format.toUpperCase(), // SVG, PNG, XML
                     diagramId: String(diagramId),
                     fileName: filename,
                 })
@@ -293,16 +259,16 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
                 )
 
                 if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`)
+                    throw new Error(`下载失败: ${response.statusText}`)
                 }
 
-                const extension =
-                    format === "xml" ? "drawio" : format.toLowerCase()
                 const blob = await response.blob()
                 const url = URL.createObjectURL(blob)
                 const a = document.createElement("a")
                 a.href = url
-                a.download = `${filename}.${extension}`
+                // 根据 format 决定后缀
+                const ext = format === "xml" ? "drawio" : format.toLowerCase()
+                a.download = `${filename}.${ext}`
                 document.body.appendChild(a)
                 a.click()
                 document.body.removeChild(a)
@@ -310,7 +276,7 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
 
                 toast.success("下载完成！", { id: "download-diagram" })
             } catch (error) {
-                console.error("[useDiagramSave] 下载失败:", error)
+                console.error("下载异常:", error)
                 toast.error(
                     `下载失败: ${error instanceof Error ? error.message : "未知错误"}`,
                     {
@@ -330,30 +296,26 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
     }
 }
 
+// 完整的 Base64 转 File 函数
 function base64ToFile(
     base64: string,
     filename: string,
     mimeType: string,
 ): File {
     try {
-        // 移除 data URL 前缀（如果有）
+        if (!base64) return new File([""], filename, { type: mimeType })
         const base64Data = base64.includes(",") ? base64.split(",")[1] : base64
-
-        // 将 base64 转换为二进制
         const byteCharacters = atob(base64Data)
         const byteNumbers = new Array(byteCharacters.length)
         for (let i = 0; i < byteCharacters.length; i++) {
             byteNumbers[i] = byteCharacters.charCodeAt(i)
         }
         const byteArray = new Uint8Array(byteNumbers)
-
-        // 创建 Blob
-        const blob = new Blob([byteArray], { type: mimeType })
-
-        // 创建 File
-        return new File([blob], filename, { type: mimeType })
+        return new File([new Blob([byteArray], { type: mimeType })], filename, {
+            type: mimeType,
+        })
     } catch (e) {
-        console.error("Base64 conversion failed", e)
+        console.error("Base64 conversion error", e)
         return new File([""], filename, { type: mimeType })
     }
 }
