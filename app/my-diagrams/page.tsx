@@ -3,9 +3,7 @@
 import {
     ClockCircleOutlined,
     DeleteOutlined,
-    DownloadOutlined,
     EditOutlined,
-    EyeOutlined,
     FileTextOutlined,
     PlusOutlined,
     SearchOutlined,
@@ -20,8 +18,6 @@ import {
     Modal,
     Pagination,
     Popconfirm,
-    Space,
-    Tag,
     Tooltip,
 } from "antd"
 import { useRouter } from "next/navigation"
@@ -32,22 +28,23 @@ import {
     editDiagram,
     listMyDiagramVoByPage,
 } from "@/api/diagramController"
-import type { API } from "@/api/typings"
 
 const { Search } = Input
 const { TextArea } = Input
 
 export default function MyDiagramsPage() {
+    // 使用 App 包裹获取上下文 message，避免静态方法警告
     const { message } = App.useApp()
     const router = useRouter()
+
     const [diagrams, setDiagrams] = useState<API.DiagramVO[]>([])
-    const [allRecords, setAllRecords] = useState<API.DiagramVO[]>([]) // 缓存所有数据
     const [loading, setLoading] = useState(false)
     const [pagination, setPagination] = useState({
         current: 1,
         pageSize: 12,
         total: 0,
     })
+
     const [searchText, setSearchText] = useState("")
     const [editModalVisible, setEditModalVisible] = useState(false)
     const [editingDiagram, setEditingDiagram] = useState<API.DiagramVO | null>(
@@ -71,54 +68,41 @@ export default function MyDiagramsPage() {
             })
 
             if (response?.code === 0 && response?.data) {
-                const records = response.data.records || []
-                const backendTotal = Number(response.data.total) || 0
-                const backendSize = Number(response.data.size) || pageSize
-                const backendCurrent = Number(response.data.current) || 1
+                const data = response.data
+                const records = data.records || []
 
-                // 计算总数，处理后端返回的 total 为 0 或错误的情况
-                let calculatedTotal = backendTotal
-                let needsClientPagination = false
+                // 后端返回的 Long 类型字段可能是 String，需要显式转换
+                const serverCurrent = Number(data.current) || 1
+                const serverSize = Number(data.size) || 12
+                let serverTotal = Number(data.total) || 0
 
-                // 如果后端返回的 total 为 0，但实际有数据，需要估算或使用 records.length
-                if (backendTotal === 0 && records.length > 0) {
-                    // 如果返回的记录数远大于请求的 pageSize，说明后端没有分页，返回了所有数据
-                    if (records.length > pageSize) {
-                        calculatedTotal = records.length
-                        needsClientPagination = true
-                    } else if (records.length === backendSize) {
-                        // 如果正好满页，可能还有下一页，估算为至少有这么多
-                        calculatedTotal =
-                            backendCurrent * backendSize + backendSize
+                // 修正逻辑：如果后端返回 total 为 0，但 records 有数据
+                // 说明后端可能没有执行 count 查询或返回了所有数据
+                if (serverTotal === 0 && records.length > 0) {
+                    // 如果当前页数据量大于 pageSize，说明可能是一次性返回了所有数据（后端分页失效）
+                    if (records.length > serverSize) {
+                        serverTotal = records.length
                     } else {
-                        // 不足一页，说明是最后一页
-                        calculatedTotal =
-                            (backendCurrent - 1) * backendSize + records.length
+                        // 估算一个 total，确保分页器能显示
+                        serverTotal =
+                            (serverCurrent - 1) * serverSize + records.length
                     }
                 }
 
-                // 缓存所有数据（用于客户端分页）
-                if (records.length > pageSize || needsClientPagination) {
-                    setAllRecords(records)
-                    // 前端手动分页
-                    const startIndex = (current - 1) * pageSize
-                    const endIndex = startIndex + pageSize
-                    const displayRecords = records.slice(startIndex, endIndex)
-                    setDiagrams(displayRecords)
-                } else {
-                    setAllRecords([])
-                    setDiagrams(records)
-                }
-
+                setDiagrams(records)
                 setPagination({
-                    current: backendCurrent,
-                    pageSize: backendSize,
-                    total: calculatedTotal,
+                    current: serverCurrent,
+                    pageSize: serverSize,
+                    total: serverTotal,
                 })
+            } else {
+                message.error(
+                    "获取图表列表失败：" + (response?.message || "未知错误"),
+                )
             }
         } catch (error) {
             console.error("加载图表列表失败:", error)
-            message.error("加载图表列表失败")
+            message.error("系统繁忙，请稍后重试")
         } finally {
             setLoading(false)
         }
@@ -129,32 +113,19 @@ export default function MyDiagramsPage() {
         loadDiagrams()
     }, [])
 
-    // 搜索
+    // 搜索触发
     const handleSearch = (value: string) => {
         setSearchText(value)
-        setAllRecords([]) // 清除缓存
-        setPagination({ ...pagination, current: 1 })
+        // 搜索时重置回第一页
+        setPagination((prev) => ({ ...prev, current: 1 }))
         loadDiagrams(1, pagination.pageSize)
     }
 
-    // 分页、排序、筛选变化
+    // 分页、页大小变化触发
     const handleTableChange = (page: number, pageSize: number) => {
-        // 如果有客户端缓存数据，直接使用缓存进行分页
-        if (allRecords.length > 0) {
-            const startIndex = (page - 1) * pageSize
-            const endIndex = startIndex + pageSize
-            const displayRecords = allRecords.slice(startIndex, endIndex)
-            setDiagrams(displayRecords)
-            setPagination({
-                current: page,
-                pageSize: pageSize,
-                total: allRecords.length,
-            })
-        } else {
-            // 否则请求后端
-            setPagination({ ...pagination, current: page, pageSize })
-            loadDiagrams(page, pageSize)
-        }
+        // 更新状态并重新加载
+        setPagination({ ...pagination, current: page, pageSize })
+        loadDiagrams(page, pageSize)
     }
 
     // 跳转到编辑页面
@@ -169,17 +140,19 @@ export default function MyDiagramsPage() {
         if (!id) return
 
         try {
-            const response = await deleteDiagram({ id: Number(id) })
+            // 注意：deleteDiagram 如果接受 Number，需要把 id 转为 number
+            // 如果后端接受 String id，则无需 Number()
+            const response = await deleteDiagram({ id: id as any })
             if (response?.code === 0) {
                 message.success("删除成功")
-                setAllRecords([]) // 清除缓存
+                // 删除后刷新当前页
                 loadDiagrams()
             } else {
                 message.error(response?.message || "删除失败")
             }
         } catch (error) {
             console.error("删除图表失败:", error)
-            message.error("删除失败")
+            message.error("删除操作异常")
         }
     }
 
@@ -187,9 +160,8 @@ export default function MyDiagramsPage() {
     const handleOpenEditModal = (diagram: API.DiagramVO) => {
         setEditingDiagram(diagram)
         editForm.setFieldsValue({
-            name: diagram.diagramName,
-            diagramCode: diagram.diagramCode,
-            description: diagram.description,
+            name: diagram.name, // 注意：后端返回字段是 name 还是 diagramName？根据您的JSON是 name
+            description: diagram.description, // 您的JSON里没有 description，注意检查
         })
         setEditModalVisible(true)
     }
@@ -206,31 +178,32 @@ export default function MyDiagramsPage() {
             if (response?.code === 0) {
                 message.success("保存成功")
                 setEditModalVisible(false)
-                setAllRecords([]) // 清除缓存
                 loadDiagrams()
             } else {
                 message.error(response?.message || "保存失败")
             }
         } catch (error) {
             console.error("保存失败:", error)
-            message.error("保存失败")
+            // 如果是表单校验失败，不需要弹窗提示
+            if (!error.errorFields) {
+                message.error("保存失败")
+            }
         }
     }
 
-    // 下载图表
+    // 下载图表 (保持原样，如有需要可增加 svg/png 选择逻辑)
     const handleDownload = async (diagram: API.DiagramVO) => {
         try {
             const response = await downloadRemoteFile({
                 id: diagram.id,
-                type: "svg",
+                type: "svg", // 默认下载 svg
             })
-
+            // 处理 Blob 下载逻辑...
             if (response) {
-                // 创建下载链接
                 const url = window.URL.createObjectURL(new Blob([response]))
                 const link = document.createElement("a")
                 link.href = url
-                link.download = `${diagram.diagramName || "diagram"}.svg`
+                link.download = `${diagram.name || "diagram"}.svg`
                 document.body.appendChild(link)
                 link.click()
                 document.body.removeChild(link)
@@ -273,7 +246,7 @@ export default function MyDiagramsPage() {
                         <Button
                             type="primary"
                             icon={<PlusOutlined />}
-                            onClick={() => router.push("/")}
+                            onClick={() => router.push("/")} // 假设新建在首页或特定路由
                             style={{ borderRadius: "6px" }}
                         >
                             新建图表
@@ -281,9 +254,10 @@ export default function MyDiagramsPage() {
                     </div>
                 }
             >
+                {/* 搜索栏 */}
                 <div style={{ marginBottom: "24px" }}>
                     <Search
-                        placeholder="搜索图表名称、代码..."
+                        placeholder="搜索图表名称..."
                         allowClear
                         enterButton={
                             <Button icon={<SearchOutlined />}>搜索</Button>
@@ -294,6 +268,7 @@ export default function MyDiagramsPage() {
                     />
                 </div>
 
+                {/* 图表列表 Grid */}
                 <div
                     style={{
                         display: "grid",
@@ -303,7 +278,7 @@ export default function MyDiagramsPage() {
                     }}
                 >
                     {loading ? (
-                        // 加载中占位
+                        // 骨架屏占位
                         Array.from({ length: pagination.pageSize }).map(
                             (_, index) => (
                                 <Card
@@ -335,14 +310,12 @@ export default function MyDiagramsPage() {
                                         >
                                             暂无图表
                                         </p>
-                                        <p
-                                            style={{
-                                                fontSize: "14px",
-                                                color: "#999",
-                                            }}
+                                        <Button
+                                            type="link"
+                                            onClick={() => router.push("/")}
                                         >
-                                            点击"新建图表"开始创作
-                                        </p>
+                                            去创建第一个图表
+                                        </Button>
                                     </div>
                                 }
                             />
@@ -354,7 +327,7 @@ export default function MyDiagramsPage() {
                                 hoverable
                                 style={{
                                     borderRadius: "8px",
-                                    position: "relative",
+                                    overflow: "hidden",
                                 }}
                                 bodyStyle={{ padding: "16px" }}
                                 onClick={() =>
@@ -371,10 +344,12 @@ export default function MyDiagramsPage() {
                                             textOverflow: "ellipsis",
                                             whiteSpace: "nowrap",
                                         }}
+                                        title={diagram.name}
                                     >
-                                        {diagram.diagramName || "未命名图表"}
+                                        {diagram.name || "未命名图表"}
                                     </h3>
-                                    {diagram.description && (
+                                    {/* 兼容 description 字段，如果后端未返回则不显示 */}
+                                    {diagram.description ? (
                                         <p
                                             style={{
                                                 fontSize: "13px",
@@ -387,6 +362,13 @@ export default function MyDiagramsPage() {
                                         >
                                             {diagram.description}
                                         </p>
+                                    ) : (
+                                        <div
+                                            style={{
+                                                height: "13px",
+                                                marginBottom: "12px",
+                                            }}
+                                        ></div>
                                     )}
                                     <div
                                         style={{
@@ -402,33 +384,33 @@ export default function MyDiagramsPage() {
                                             {diagram.createTime
                                                 ? new Date(
                                                       diagram.createTime,
-                                                  ).toLocaleDateString()
-                                                : "-"}
+                                                  ).toLocaleString()
+                                                : "未知时间"}
                                         </span>
                                     </div>
                                 </div>
 
+                                {/* 缩略图区域 */}
                                 <div
                                     style={{
                                         marginBottom: "12px",
-                                        height: "120px",
+                                        height: "140px",
                                         borderRadius: "6px",
-                                        overflow: "hidden",
                                         background: "#f5f5f5",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
+                                        overflow: "hidden",
                                     }}
                                 >
                                     <img
                                         src={
                                             diagram.pictureUrl ||
                                             diagram.svgUrl ||
-                                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='1'%3E%3Crect x='3' y='3' width='18' height='18' rx='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E"
+                                            // 默认占位图
+                                            "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24' fill='none' stroke='%23d9d9d9' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E"
                                         }
-                                        alt={
-                                            diagram.diagramName || "未命名图表"
-                                        }
+                                        alt={diagram.name}
                                         style={{
                                             maxWidth: "100%",
                                             maxHeight: "100%",
@@ -437,22 +419,14 @@ export default function MyDiagramsPage() {
                                     />
                                 </div>
 
-                                <div style={{ display: "flex", gap: "8px" }}>
-                                    <Tooltip title="编辑">
-                                        <Button
-                                            type="primary"
-                                            size="small"
-                                            icon={<EditOutlined />}
-                                            onClick={(e) => {
-                                                e.stopPropagation()
-                                                handleEditDiagram(
-                                                    diagram.id?.toString(),
-                                                )
-                                            }}
-                                        >
-                                            编辑
-                                        </Button>
-                                    </Tooltip>
+                                {/* 操作按钮区 */}
+                                <div
+                                    style={{
+                                        display: "flex",
+                                        gap: "8px",
+                                        justifyContent: "flex-end",
+                                    }}
+                                >
                                     <Tooltip title="修改信息">
                                         <Button
                                             size="small"
@@ -461,18 +435,18 @@ export default function MyDiagramsPage() {
                                                 e.stopPropagation()
                                                 handleOpenEditModal(diagram)
                                             }}
-                                        >
-                                            信息
-                                        </Button>
+                                        />
                                     </Tooltip>
                                     <Popconfirm
-                                        title="确定要删除这个图表吗？"
+                                        title="删除图表"
+                                        description="确定要永久删除这个图表吗？"
                                         onConfirm={(e) => {
                                             e?.stopPropagation()
                                             handleDeleteDiagram(
                                                 diagram.id?.toString(),
                                             )
                                         }}
+                                        onCancel={(e) => e?.stopPropagation()}
                                         okText="确定"
                                         cancelText="取消"
                                     >
@@ -481,9 +455,7 @@ export default function MyDiagramsPage() {
                                             size="small"
                                             icon={<DeleteOutlined />}
                                             onClick={(e) => e.stopPropagation()}
-                                        >
-                                            删除
-                                        </Button>
+                                        />
                                     </Popconfirm>
                                 </div>
                             </Card>
@@ -491,18 +463,14 @@ export default function MyDiagramsPage() {
                     )}
                 </div>
 
-                {/* 分页 */}
+                {/* 分页组件 */}
                 {!loading && (
                     <div
                         style={{
                             marginTop: "32px",
                             display: "flex",
                             justifyContent: "center",
-                            alignItems: "center",
                             padding: "24px 0",
-                            borderTop: "1px solid #f0f0f0",
-                            backgroundColor: "#fafafa",
-                            borderRadius: "0 0 8px 8px",
                         }}
                     >
                         <Pagination
@@ -512,32 +480,8 @@ export default function MyDiagramsPage() {
                             onChange={handleTableChange}
                             onShowSizeChange={handleTableChange}
                             showSizeChanger
-                            showQuickJumper
-                            showTotal={(total, range) =>
-                                total > 0
-                                    ? `显示 ${range[0]}-${range[1]} 条，共 ${total} 条`
-                                    : "暂无数据"
-                            }
-                            pageSizeOptions={["12", "24", "36", "48"]}
-                            size="default"
-                            locale={{
-                                items_per_page: "条/页",
-                                jump_to: "跳至",
-                                jump_to_confirm: "确定",
-                                page: "页",
-                                prev_page: "上一页",
-                                next_page: "下一页",
-                                prev_5: "向前 5 页",
-                                next_5: "向后 5 页",
-                                prev_3: "向前 3 页",
-                                next_3: "向后 3 页",
-                            }}
-                            style={{
-                                display: "flex",
-                                alignItems: "center",
-                                flexWrap: "wrap",
-                                gap: "8px",
-                            }}
+                            pageSizeOptions={["12", "24", "48", "60"]}
+                            showTotal={(total) => `共 ${total} 条`}
                         />
                     </div>
                 )}
@@ -549,20 +493,17 @@ export default function MyDiagramsPage() {
                 open={editModalVisible}
                 onOk={handleSaveEdit}
                 onCancel={() => setEditModalVisible(false)}
-                width={500}
                 okText="保存"
                 cancelText="取消"
+                destroyOnClose
             >
-                <Form form={editForm} layout="vertical">
+                <Form form={editForm} layout="vertical" preserve={false}>
                     <Form.Item
                         label="图表名称"
                         name="name"
                         rules={[{ required: true, message: "请输入图表名称" }]}
                     >
                         <Input placeholder="请输入图表名称" />
-                    </Form.Item>
-                    <Form.Item label="图表编码" name="diagramCode">
-                        <Input placeholder="请输入图表编码" />
                     </Form.Item>
                     <Form.Item label="描述" name="description">
                         <TextArea rows={4} placeholder="请输入描述" />

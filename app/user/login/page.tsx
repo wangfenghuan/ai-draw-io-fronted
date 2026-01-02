@@ -26,7 +26,8 @@ const UserLogin: React.FC = () => {
         try {
             const res = await userLogin(value)
             if (res.code === 0) {
-                dispatch(setLoginUser(res?.data?.data))
+                // 修复：直接使用 res?.data 而不是 res?.data?.data
+                dispatch(setLoginUser(res?.data))
                 message.success("登录成功")
                 setTimeout(() => {
                     router.replace("/")

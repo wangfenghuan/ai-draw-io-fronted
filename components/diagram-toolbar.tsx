@@ -7,7 +7,7 @@ import { type ExportFormat, SaveDialog } from "@/components/save-dialog"
 import { Button } from "@/components/ui/button"
 
 interface DiagramToolbarProps {
-    diagramId: number
+    diagramId: string
     title: string
     xml: string
     onSave: () => Promise<boolean>
@@ -21,16 +21,6 @@ export function DiagramToolbar({
 }: DiagramToolbarProps) {
     const [saveDialogOpen, setSaveDialogOpen] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
-
-    // 处理保存
-    const handleSave = async () => {
-        setIsSaving(true)
-        try {
-            await onSave()
-        } finally {
-            setIsSaving(false)
-        }
-    }
 
     // 处理保存对话框确认
     const handleSaveConfirm = async (
@@ -49,17 +39,7 @@ export function DiagramToolbar({
     return (
         <>
             <div className="flex items-center gap-4">
-                {/* 保存按钮 */}
-                <Button
-                    size="default"
-                    variant="outline"
-                    onClick={handleSave}
-                    disabled={isSaving}
-                    className="gap-2 h-10 px-6 bg-white/95 hover:bg-white text-gray-800 border-gray-300 hover:border-gray-400 shadow-md font-medium"
-                >
-                    <Save className="h-5 w-5" />
-                    {isSaving ? "保存中..." : "保存"}
-                </Button>
+                {/* 保存按钮已移除，请使用聊天面板中的保存按钮 */}
             </div>
 
             {/* 保存对话框 - 复用现有组件 */}

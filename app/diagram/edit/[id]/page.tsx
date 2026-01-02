@@ -6,6 +6,7 @@ import { DrawIoEmbed } from "react-drawio"
 import { useSelector } from "react-redux"
 import type { ImperativePanelHandle } from "react-resizable-panels"
 import { toast } from "sonner"
+import { getDiagramVoById } from "@/api/diagramController"
 import { DiagramToolbar } from "@/components/diagram-toolbar"
 import { STORAGE_CLOSE_PROTECTION_KEY } from "@/components/settings-dialog"
 import SimpleChatPanel from "@/components/simple-chat-panel"
@@ -22,10 +23,9 @@ const drawioBaseUrl =
     process.env.NEXT_PUBLIC_DRAWIO_BASE_URL || "https://embed.diagrams.net"
 
 export default function DrawioHome() {
-    // 获取路由参数中的图表 ID
+    // 获取路由参数中的图表 ID（保持为字符串以避免精度丢失）
     const params = useParams()
     const diagramId = params.id as string
-    const diagramIdNum = parseInt(diagramId, 10)
 
     // 从 Redux store 中获取登录用户信息
     const loginUser = useSelector((state: RootState) => state.loginUser)
@@ -37,6 +37,8 @@ export default function DrawioHome() {
         onDrawioLoad,
         resetDrawioReady,
         chartXML,
+        loadDiagram,
+        isDrawioReady,
     } = useDiagram()
     const { saveDiagram, downloadDiagram, handleExportCallback } =
         useDiagramSave(drawioRef)
@@ -53,14 +55,55 @@ export default function DrawioHome() {
     const chatPanelRef = useRef<ImperativePanelHandle>(null)
     const containerRef = useRef<HTMLDivElement>(null)
 
-    // 当 diagramId 改变时，可以在这里加载对应的图表数据
+    // 当 diagramId 改变时，从后端加载对应的图表数据
     useEffect(() => {
-        if (diagramId) {
-            console.log("当前编辑的图表 ID:", diagramId)
-            // TODO: 根据 diagramId 从后端加载图表数据
-            // 可以在这里调用 API 获取图表的详细信息和初始数据
+        const loadDiagramData = async () => {
+            if (!diagramId || !isDrawioReady) return
+
+            try {
+                console.log("正在加载图表，ID:", diagramId)
+                const response = await getDiagramVoById({ id: diagramId })
+
+                if (response?.code === 0 && response?.data) {
+                    const diagramData = response.data
+
+                    // 更新图表标题
+                    if (diagramData.name) {
+                        setDiagramTitle(diagramData.name)
+                    }
+
+                    // 如果有图表代码，渲染到画布上
+                    if (diagramData.diagramCode) {
+                        console.log("正在渲染图表代码到画布...")
+                        const error = loadDiagram(diagramData.diagramCode)
+
+                        if (error) {
+                            console.error("加载图表失败:", error)
+                            toast.error("加载图表失败: " + error)
+                        } else {
+                            toast.success("图表加载成功")
+                        }
+                    } else {
+                        console.warn("图表代码为空，使用空白画布")
+                        // 如果没有图表代码，加载空白画布
+                        const emptyDiagram = `<mxfile><diagram name="Page-1" id="page-1"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel></diagram></mxfile>`
+                        loadDiagram(emptyDiagram, true)
+                    }
+                } else {
+                    console.error("获取图表信息失败:", response?.message)
+                    toast.error(
+                        "获取图表信息失败: " +
+                            (response?.message || "未知错误"),
+                    )
+                }
+            } catch (error) {
+                console.error("加载图表数据失败:", error)
+                toast.error("加载图表数据失败，请稍后重试")
+            }
         }
-    }, [diagramId])
+
+        loadDiagramData()
+    }, [diagramId, isDrawioReady])
 
     // Load preferences from localStorage after mount
     useEffect(() => {
@@ -179,14 +222,19 @@ export default function DrawioHome() {
             return false
         }
 
-        if (!userId) {
-            console.error("用户未登录")
+        // 检查用户是否登录（通过检查 userRole 或 id）
+        const isLogin = userId && loginUser?.userRole !== "notLogin"
+        if (!isLogin) {
+            console.error("用户未登录", {
+                userId,
+                userRole: loginUser?.userRole,
+            })
             toast.error("请先登录后再保存图表")
             return false
         }
 
         return await saveDiagram({
-            diagramId: diagramIdNum,
+            diagramId: diagramId,
             userId: userId,
             title: diagramTitle,
             xml: chartXML,
@@ -196,7 +244,7 @@ export default function DrawioHome() {
     // 下载图表
     const handleDownload = async (format: "xml" | "png" | "svg") => {
         await downloadDiagram({
-            diagramId: diagramIdNum,
+            diagramId: diagramId,
             filename: diagramTitle,
             format: format,
         })
@@ -241,7 +289,7 @@ export default function DrawioHome() {
                     {/* 保存按钮组 */}
                     <div className="flex items-center gap-4">
                         <DiagramToolbar
-                            diagramId={diagramIdNum}
+                            diagramId={diagramId}
                             title={diagramTitle}
                             xml={chartXML}
                             onSave={handleSave}

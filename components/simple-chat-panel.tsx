@@ -2,19 +2,23 @@
 
 import {
     ChevronDown,
-    ChevronRight,
     Code,
     Download,
     MessageSquare,
+    Save,
     Send,
     Settings,
     Square,
+    Trash2, // 引入垃圾桶图标，替换清空按钮的文字，节省空间
 } from "lucide-react"
 import { useEffect, useRef, useState } from "react"
 import ReactMarkdown from "react-markdown"
+import { useSelector } from "react-redux"
 import rehypeHighlight from "rehype-highlight"
 import remarkGfm from "remark-gfm"
+import { toast } from "sonner"
 import { listDiagramChatHistory } from "@/api/conversionController"
+import { editDiagram, uploadDiagram } from "@/api/diagramController"
 import type { API } from "@/api/typings"
 import {
     type AIConfig,
@@ -31,7 +35,9 @@ import {
 } from "@/components/ui/collapsible"
 import { useDiagram } from "@/contexts/diagram-context"
 import { type Message, useBackendChat } from "@/lib/use-backend-chat"
+import { useDiagramSave } from "@/lib/use-diagram-save"
 import { parseXmlAndLoadDiagram } from "@/lib/utils"
+import type { RootState } from "@/stores"
 import "highlight.js/styles/github-dark.css"
 
 interface SimpleChatPanelProps {
@@ -55,9 +61,13 @@ export default function SimpleChatPanel({
     const [historyLoaded, setHistoryLoaded] = useState(false)
     const [configDialogOpen, setConfigDialogOpen] = useState(false)
     const [downloadDialogOpen, setDownloadDialogOpen] = useState(false)
+    const [isSaving, setIsSaving] = useState(false)
     const [aiConfig, setAiConfig] = useAIConfig()
-    const { loadDiagram } = useDiagram()
+    const { loadDiagram, drawioRef, chartXML } = useDiagram()
+    const { saveDiagram: saveDiagramToServer, handleExportCallback } =
+        useDiagramSave(drawioRef)
     const messagesEndRef = useRef<HTMLDivElement>(null)
+    const loginUser = useSelector((state: RootState) => state.loginUser)
 
     const {
         messages,
@@ -71,7 +81,6 @@ export default function SimpleChatPanel({
         diagramId,
         aiConfig,
         onMessageComplete: (fullContent) => {
-            // 消息完成后，尝试解析 XML 并加载图表
             try {
                 parseXmlAndLoadDiagram(fullContent, loadDiagram)
             } catch (err) {
@@ -89,10 +98,6 @@ export default function SimpleChatPanel({
             if (!diagramId || historyLoaded) return
 
             try {
-                console.log(
-                    "[SimpleChatPanel] Loading history for diagram:",
-                    diagramId,
-                )
                 const response = await listDiagramChatHistory({
                     diagramId: diagramId,
                     pageSize: "100",
@@ -100,13 +105,6 @@ export default function SimpleChatPanel({
 
                 if (response?.code === 0 && response?.data?.records) {
                     const conversions = response.data.records
-                    console.log(
-                        "[SimpleChatPanel] Loaded",
-                        conversions.length,
-                        "history records",
-                    )
-
-                    // 转换为前端消息格式
                     const historyMessages: Message[] = conversions
                         .filter((conv: API.Conversion) => !conv.isDelete)
                         .sort(
@@ -126,11 +124,6 @@ export default function SimpleChatPanel({
 
                     if (historyMessages.length > 0) {
                         setMessages(historyMessages)
-                        console.log(
-                            "[SimpleChatPanel] Restored",
-                            historyMessages.length,
-                            "messages",
-                        )
                     }
                 }
             } catch (err) {
@@ -145,7 +138,10 @@ export default function SimpleChatPanel({
 
     // 自动滚动到底部
     useEffect(() => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+        const timer = setTimeout(() => {
+            messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
+        }, 100)
+        return () => clearTimeout(timer)
     }, [messages])
 
     const handleSubmit = async (e: React.FormEvent) => {
@@ -161,7 +157,45 @@ export default function SimpleChatPanel({
         clearMessages()
     }
 
-    // 简化的折叠视图
+    // 保存图表到服务器
+    const handleSaveDiagram = async () => {
+        if (!chartXML) {
+            toast.error("图表内容为空")
+            return
+        }
+
+        // 检查用户是否登录
+        const isLogin = loginUser?.id && loginUser?.userRole !== "notLogin"
+        if (!isLogin) {
+            console.error("用户未登录", {
+                userId: loginUser?.id,
+                userRole: loginUser?.userRole,
+            })
+            toast.error("请先登录后再保存图表")
+            return
+        }
+
+        setIsSaving(true)
+        try {
+            // 使用 useDiagramSave hook 中的 saveDiagram 函数
+            const success = await saveDiagramToServer({
+                diagramId: diagramId,
+                userId: loginUser.id,
+                title: diagramTitle,
+                xml: chartXML,
+            })
+
+            if (!success) {
+                throw new Error("保存失败")
+            }
+        } catch (error) {
+            console.error("保存图表失败:", error)
+            // 错误提示已经在 saveDiagram 中处理了
+        } finally {
+            setIsSaving(false)
+        }
+    }
+
     if (!isVisible) {
         return (
             <div className="h-full w-full flex flex-col items-center justify-center bg-white/5 backdrop-blur-sm border-l border-white/10">
@@ -178,22 +212,34 @@ export default function SimpleChatPanel({
     }
 
     return (
-        <div className="h-full w-full flex flex-col bg-gradient-to-b from-slate-900 to-slate-800 rounded-r-2xl overflow-hidden">
-            {/* 头部 */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/20 flex-shrink-0">
-                <div className="flex items-center gap-2">
+        <div className="h-full w-full flex flex-col bg-gradient-to-b from-slate-900 to-slate-800 rounded-r-2xl overflow-hidden relative">
+            {/* --- 顶部工具栏 (修改了这里) --- */}
+            <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/20 z-10">
+                {/* 左侧标题 */}
+                <div className="flex items-center gap-2 flex-shrink-0">
                     <MessageSquare className="h-4 w-4 text-blue-400" />
-                    <h2 className="text-base font-semibold text-white">
+                    <h2 className="text-base font-semibold text-white whitespace-nowrap">
                         AI 对话
                     </h2>
                 </div>
-                <div className="flex items-center gap-4">
+
+                {/* 右侧按钮组：增加了 gap，添加了分隔线 */}
+                <div className="flex items-center gap-3">
+                    <button
+                        onClick={handleSaveDiagram}
+                        disabled={isSaving || !chartXML}
+                        className="p-2 rounded-lg bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 hover:text-blue-300 border border-blue-500/30 transition-all duration-200 hover:scale-110 disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="保存图表"
+                    >
+                        <Save className="h-4 w-4" />
+                    </button>
+
                     <button
                         onClick={() => setConfigDialogOpen(true)}
-                        className={`p-2.5 rounded-lg transition-all duration-200 hover:scale-105 ${
+                        className={`p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
                             aiConfig.mode === "custom"
-                                ? "bg-green-500/20 text-green-400 hover:bg-green-500/30 border border-green-500/30"
-                                : "bg-white/10 text-white/70 hover:bg-white/20 border border-white/20"
+                                ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                : "bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10"
                         }`}
                         title={
                             aiConfig.mode === "custom"
@@ -201,300 +247,228 @@ export default function SimpleChatPanel({
                                 : "配置AI模型"
                         }
                     >
-                        <Settings className="h-5 w-5" />
+                        <Settings className="h-4 w-4" />
                     </button>
 
                     <button
                         onClick={() => setDownloadDialogOpen(true)}
-                        className="flex items-center gap-2 px-4 py-2 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 border border-blue-500/30 transition-all duration-200 hover:scale-105"
+                        className="p-2 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10 transition-all duration-200 hover:scale-110"
                         title="下载图表"
                     >
-                        <Download className="h-5 w-5" />
-                        <span className="text-sm font-medium">下载</span>
+                        <Download className="h-4 w-4" />
                     </button>
 
-                    <Button
-                        size="sm"
+                    <button
                         onClick={handleClearChat}
                         disabled={messages.length === 0}
-                        className="h-10 px-5 bg-white/10 border-white/20 text-white hover:bg-white/20 hover:border-white/30 text-sm font-medium"
+                        className="p-2 rounded-lg bg-white/5 text-white/60 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all duration-200 hover:scale-110 disabled:opacity-30 disabled:cursor-not-allowed"
+                        title="清空对话"
                     >
-                        清空
-                    </Button>
+                        <Trash2 className="h-4 w-4" />
+                    </button>
+
+                    {/* 垂直分隔线 */}
+                    <div className="w-px h-4 bg-white/10 mx-1"></div>
 
                     <button
                         onClick={onToggleVisibility}
-                        className="p-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white/70 hover:text-white border border-white/20 transition-all duration-200 hover:scale-105"
-                        title="隐藏聊天面板"
+                        className="p-2 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10 transition-all duration-200 hover:scale-110"
+                        title="隐藏面板"
                     >
-                        <Square className="h-5 w-5" />
+                        <Square className="h-4 w-4" />
                     </button>
                 </div>
             </div>
 
-            {/* 消息列表 - 固定高度的可滚动区域 */}
-            <div className="flex-1 min-h-0 overflow-y-auto overflow-x-hidden bg-gradient-to-b from-transparent to-black/20 scrollbar-thin">
-                <div className="p-4 space-y-4">
-                    {messages.length === 0 ? (
-                        <div className="flex items-center justify-center h-full">
-                            <div className="text-center">
-                                <MessageSquare className="h-12 w-12 text-white/20 mx-auto mb-3" />
-                                <p className="text-white/60 text-sm">
-                                    开始与 AI 对话来生成图表
-                                </p>
-                            </div>
-                        </div>
-                    ) : (
-                        messages.map((message) => (
-                            <div
-                                key={message.id}
-                                className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}
-                            >
-                                <div
-                                    className={`max-w-[85%] rounded-xl px-4 py-3 shadow-lg ${
-                                        message.role === "user"
-                                            ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white"
-                                            : "bg-white/10 backdrop-blur-sm text-white border border-white/10"
-                                    }`}
-                                >
-                                    <div className="text-xs font-medium mb-1.5 opacity-70">
-                                        {message.role === "user"
-                                            ? "你"
-                                            : "AI 助手"}
-                                    </div>
-                                    <div className="text-sm leading-relaxed markdown-content">
-                                        {message.content ? (
-                                            <ReactMarkdown
-                                                remarkPlugins={[remarkGfm]}
-                                                rehypePlugins={[
-                                                    rehypeHighlight,
-                                                ]}
-                                                components={{
-                                                    code({
-                                                        node,
-                                                        inline,
-                                                        className,
-                                                        children,
-                                                        ...props
-                                                    }) {
-                                                        const match =
-                                                            /language-(\w+)/.exec(
-                                                                className || "",
-                                                            )
-                                                        const language = match
-                                                            ? match[1]
-                                                            : "text"
-
-                                                        // 代码块（非行内）
-                                                        if (!inline && match) {
-                                                            const codeContent =
-                                                                String(
-                                                                    children,
-                                                                ).replace(
-                                                                    /\n$/,
-                                                                    "",
-                                                                )
-                                                            const isLongCode =
-                                                                codeContent.length >
-                                                                500 // 超过500字符认为是长代码
-                                                            const previewLines =
-                                                                codeContent
-                                                                    .split("\n")
-                                                                    .slice(0, 3)
-                                                                    .join("\n") // 预览前3行
-                                                            const remainingLines =
-                                                                codeContent.split(
-                                                                    "\n",
-                                                                ).length - 3
-
-                                                            return (
-                                                                <Collapsible
-                                                                    defaultOpen={
-                                                                        !isLongCode
-                                                                    }
-                                                                >
-                                                                    <div className="my-2 rounded-lg overflow-hidden border border-white/10 bg-black/30">
-                                                                        {/* 代码块头部 */}
-                                                                        <CollapsibleTrigger className="w-full px-3 py-1.5 bg-black/40 border-b border-white/10 flex items-center justify-between hover:bg-black/50 transition-colors">
-                                                                            <div className="flex items-center gap-2">
-                                                                                <Code className="h-3.5 w-3.5 text-blue-400" />
-                                                                                <span className="text-xs text-white/60 font-mono">
-                                                                                    {
-                                                                                        language
-                                                                                    }
-                                                                                </span>
-                                                                                {isLongCode && (
-                                                                                    <span className="text-xs text-white/40">
-                                                                                        (
-                                                                                        {
-                                                                                            codeContent.length
-                                                                                        }{" "}
-                                                                                        字符,{" "}
-                                                                                        {remainingLines >
-                                                                                        0
-                                                                                            ? `${remainingLines}+ 行`
-                                                                                            : "全部内容"}
-                                                                                        )
-                                                                                    </span>
-                                                                                )}
-                                                                            </div>
-                                                                            {isLongCode && (
-                                                                                <div className="flex items-center gap-1 text-white/60">
-                                                                                    <span className="text-xs">
-                                                                                        点击展开
-                                                                                    </span>
-                                                                                    <ChevronDown className="h-4 w-4" />
-                                                                                </div>
-                                                                            )}
-                                                                        </CollapsibleTrigger>
-
-                                                                        {/* 代码内容 */}
-                                                                        <CollapsibleContent>
-                                                                            <div className="max-h-[300px] overflow-y-auto">
-                                                                                <CodeBlock
-                                                                                    code={
-                                                                                        codeContent
-                                                                                    }
-                                                                                    language={
-                                                                                        language as
-                                                                                            | "xml"
-                                                                                            | "json"
-                                                                                    }
-                                                                                />
-                                                                            </div>
-                                                                        </CollapsibleContent>
-
-                                                                        {/* 预览提示（当代码折叠时显示） */}
-                                                                        {isLongCode && (
-                                                                            <div className="px-3 py-2 bg-black/20 border-t border-white/5 text-xs text-white/50 italic">
-                                                                                <CollapsibleTrigger className="w-full text-center hover:text-white/70 transition-colors cursor-pointer">
-                                                                                    点击展开查看完整代码...
-                                                                                </CollapsibleTrigger>
-                                                                            </div>
-                                                                        )}
-                                                                    </div>
-                                                                </Collapsible>
-                                                            )
-                                                        }
-
-                                                        // 行内代码
-                                                        return (
-                                                            <code
-                                                                className="bg-white/10 px-1.5 py-0.5 rounded text-blue-300 text-sm"
-                                                                {...props}
-                                                            >
-                                                                {children}
-                                                            </code>
-                                                        )
-                                                    },
-                                                    h1: ({ children }) => (
-                                                        <h1 className="text-xl font-bold mt-4 mb-2 text-white">
-                                                            {children}
-                                                        </h1>
-                                                    ),
-                                                    h2: ({ children }) => (
-                                                        <h2 className="text-lg font-bold mt-3 mb-2 text-white">
-                                                            {children}
-                                                        </h2>
-                                                    ),
-                                                    h3: ({ children }) => (
-                                                        <h3 className="text-base font-bold mt-2 mb-1 text-white">
-                                                            {children}
-                                                        </h3>
-                                                    ),
-                                                    p: ({ children }) => (
-                                                        <p className="mb-2 text-white/90">
-                                                            {children}
-                                                        </p>
-                                                    ),
-                                                    ul: ({ children }) => (
-                                                        <ul className="list-disc list-inside mb-2 text-white/90">
-                                                            {children}
-                                                        </ul>
-                                                    ),
-                                                    ol: ({ children }) => (
-                                                        <ol className="list-decimal list-inside mb-2 text-white/90">
-                                                            {children}
-                                                        </ol>
-                                                    ),
-                                                    li: ({ children }) => (
-                                                        <li className="mb-1">
-                                                            {children}
-                                                        </li>
-                                                    ),
-                                                    blockquote: ({
-                                                        children,
-                                                    }) => (
-                                                        <blockquote className="border-l-4 border-blue-400 pl-4 my-2 text-white/80 italic">
-                                                            {children}
-                                                        </blockquote>
-                                                    ),
-                                                    a: ({ href, children }) => (
-                                                        <a
-                                                            href={href}
-                                                            className="text-blue-400 hover:text-blue-300 underline"
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                        >
-                                                            {children}
-                                                        </a>
-                                                    ),
-                                                    table: ({ children }) => (
-                                                        <div className="overflow-x-auto my-2">
-                                                            <table className="min-w-full border border-white/20">
-                                                                {children}
-                                                            </table>
-                                                        </div>
-                                                    ),
-                                                    thead: ({ children }) => (
-                                                        <thead className="bg-white/10">
-                                                            {children}
-                                                        </thead>
-                                                    ),
-                                                    th: ({ children }) => (
-                                                        <th className="border border-white/20 px-3 py-1 text-left text-white">
-                                                            {children}
-                                                        </th>
-                                                    ),
-                                                    td: ({ children }) => (
-                                                        <td className="border border-white/20 px-3 py-1 text-white/90">
-                                                            {children}
-                                                        </td>
-                                                    ),
-                                                }}
-                                            >
-                                                {message.content}
-                                            </ReactMarkdown>
-                                        ) : (
-                                            <span className="text-white/40 italic">
-                                                正在生成...
-                                            </span>
-                                        )}
-                                    </div>
+            {/* --- 消息列表容器 (保持之前的修复) --- */}
+            <div className="flex-1 relative min-h-0 w-full">
+                <div className="absolute inset-0 overflow-y-auto overflow-x-hidden bg-gradient-to-b from-transparent to-black/20 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
+                    <div className="p-4 space-y-4">
+                        {messages.length === 0 ? (
+                            <div className="flex items-center justify-center h-full pt-20">
+                                <div className="text-center">
+                                    <MessageSquare className="h-12 w-12 text-white/20 mx-auto mb-3" />
+                                    <p className="text-white/60 text-sm">
+                                        开始与 AI 对话来生成图表
+                                    </p>
                                 </div>
                             </div>
-                        ))
-                    )}
+                        ) : (
+                            messages.map((message) => (
+                                <div
+                                    key={message.id}
+                                    className={`flex ${
+                                        message.role === "user"
+                                            ? "justify-end"
+                                            : "justify-start"
+                                    }`}
+                                >
+                                    <div
+                                        className={`max-w-[90%] rounded-xl px-4 py-3 shadow-lg ${
+                                            message.role === "user"
+                                                ? "bg-gradient-to-br from-blue-600 to-blue-700 text-white"
+                                                : "bg-white/10 backdrop-blur-sm text-white border border-white/10"
+                                        }`}
+                                    >
+                                        <div className="text-xs font-medium mb-1.5 opacity-70">
+                                            {message.role === "user"
+                                                ? "你"
+                                                : "AI 助手"}
+                                        </div>
+                                        <div className="text-sm leading-relaxed markdown-content">
+                                            {message.content ? (
+                                                <ReactMarkdown
+                                                    remarkPlugins={[remarkGfm]}
+                                                    rehypePlugins={[
+                                                        rehypeHighlight,
+                                                    ]}
+                                                    components={{
+                                                        code({
+                                                            node,
+                                                            inline,
+                                                            className,
+                                                            children,
+                                                            ...props
+                                                        }) {
+                                                            const match =
+                                                                /language-(\w+)/.exec(
+                                                                    className ||
+                                                                        "",
+                                                                )
+                                                            const language =
+                                                                match
+                                                                    ? match[1]
+                                                                    : "text"
 
-                    {error && (
-                        <div className="bg-red-500/20 backdrop-blur-sm text-red-200 border border-red-500/30 p-4 rounded-xl">
-                            <div className="flex items-center gap-2">
-                                <Square className="h-4 w-4" />
-                                <span className="font-medium text-sm">
-                                    错误
-                                </span>
+                                                            if (
+                                                                !inline &&
+                                                                match
+                                                            ) {
+                                                                const codeContent =
+                                                                    String(
+                                                                        children,
+                                                                    ).replace(
+                                                                        /\n$/,
+                                                                        "",
+                                                                    )
+                                                                const isLongCode =
+                                                                    codeContent.length >
+                                                                    500
+                                                                const remainingLines =
+                                                                    codeContent.split(
+                                                                        "\n",
+                                                                    ).length - 3
+
+                                                                return (
+                                                                    <Collapsible
+                                                                        defaultOpen={
+                                                                            !isLongCode
+                                                                        }
+                                                                    >
+                                                                        <div className="my-2 rounded-lg overflow-hidden border border-white/10 bg-black/30">
+                                                                            <CollapsibleTrigger className="w-full px-3 py-1.5 bg-black/40 border-b border-white/10 flex items-center justify-between hover:bg-black/50 transition-colors">
+                                                                                <div className="flex items-center gap-2">
+                                                                                    <Code className="h-3.5 w-3.5 text-blue-400" />
+                                                                                    <span className="text-xs text-white/60 font-mono">
+                                                                                        {
+                                                                                            language
+                                                                                        }
+                                                                                    </span>
+                                                                                    {isLongCode && (
+                                                                                        <span className="text-xs text-white/40">
+                                                                                            (
+                                                                                            {
+                                                                                                codeContent.length
+                                                                                            }{" "}
+                                                                                            字符)
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                                {isLongCode && (
+                                                                                    <div className="flex items-center gap-1 text-white/60">
+                                                                                        <ChevronDown className="h-4 w-4" />
+                                                                                    </div>
+                                                                                )}
+                                                                            </CollapsibleTrigger>
+                                                                            <CollapsibleContent>
+                                                                                <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                                                                    <CodeBlock
+                                                                                        code={
+                                                                                            codeContent
+                                                                                        }
+                                                                                        language={
+                                                                                            language as
+                                                                                                | "xml"
+                                                                                                | "json"
+                                                                                        }
+                                                                                    />
+                                                                                </div>
+                                                                            </CollapsibleContent>
+                                                                        </div>
+                                                                    </Collapsible>
+                                                                )
+                                                            }
+                                                            return (
+                                                                <code
+                                                                    className="bg-white/10 px-1.5 py-0.5 rounded text-blue-300 text-sm break-all"
+                                                                    {...props}
+                                                                >
+                                                                    {children}
+                                                                </code>
+                                                            )
+                                                        },
+                                                        p: ({ children }) => (
+                                                            <p className="mb-2 text-white/90 break-words">
+                                                                {children}
+                                                            </p>
+                                                        ),
+                                                        a: ({
+                                                            href,
+                                                            children,
+                                                        }) => (
+                                                            <a
+                                                                href={href}
+                                                                className="text-blue-400 hover:text-blue-300 underline"
+                                                                target="_blank"
+                                                                rel="noopener noreferrer"
+                                                            >
+                                                                {children}
+                                                            </a>
+                                                        ),
+                                                    }}
+                                                >
+                                                    {message.content}
+                                                </ReactMarkdown>
+                                            ) : (
+                                                <span className="text-white/40 italic flex items-center gap-1">
+                                                    <span className="animate-pulse">
+                                                        ●
+                                                    </span>
+                                                    <span className="animate-pulse delay-75">
+                                                        ●
+                                                    </span>
+                                                    <span className="animate-pulse delay-150">
+                                                        ●
+                                                    </span>
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </div>
+                            ))
+                        )}
+                        {error && (
+                            <div className="bg-red-500/20 backdrop-blur-sm text-red-200 border border-red-500/30 p-4 rounded-xl">
+                                <p className="text-sm">{error.message}</p>
                             </div>
-                            <p className="text-sm mt-1">{error.message}</p>
-                        </div>
-                    )}
-
-                    {/* 用于自动滚动的锚点 */}
-                    <div ref={messagesEndRef} />
+                        )}
+                        <div ref={messagesEndRef} className="h-1" />
+                    </div>
                 </div>
             </div>
 
-            {/* 输入框 */}
-            <div className="p-4 border-t border-white/10 bg-black/20 flex-shrink-0">
+            {/* --- 底部输入框 --- */}
+            <div className="flex-shrink-0 p-4 border-t border-white/10 bg-black/20 z-10">
                 <form onSubmit={handleSubmit} className="flex gap-2">
                     <input
                         type="text"
@@ -526,7 +500,6 @@ export default function SimpleChatPanel({
                 </form>
             </div>
 
-            {/* AI 配置对话框 */}
             <AIConfigDialog
                 open={configDialogOpen}
                 onOpenChange={setConfigDialogOpen}
@@ -534,7 +507,6 @@ export default function SimpleChatPanel({
                 onConfigChange={setAiConfig}
             />
 
-            {/* 下载对话框 */}
             {onDownload && (
                 <DownloadDialog
                     open={downloadDialogOpen}

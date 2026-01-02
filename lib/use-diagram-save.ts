@@ -11,14 +11,14 @@ import {
 import type { API } from "@/api/typings"
 
 export interface SaveOptions {
-    diagramId: number
-    userId: number
+    diagramId: string
+    userId: string
     title: string
     xml: string
 }
 
 export interface DownloadOptions {
-    diagramId: number
+    diagramId: string
     filename: string
     format: "png" | "svg" | "xml"
 }
@@ -88,8 +88,8 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
     const uploadFile = useCallback(
         async (
             file: File,
-            diagramId: number,
-            userId: number,
+            diagramId: string,
+            userId: string,
             bizType: "png" | "svg",
         ): Promise<string | null> => {
             try {
@@ -207,12 +207,10 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
                 // 4. 保存图表信息
                 console.log("[useDiagramSave] 开始保存图表信息...")
                 const response = await editDiagram({
-                    body: {
-                        id: diagramId,
-                        title: title,
-                        diagramCode: xml,
-                        pictureUrl: pngUrl || svgUrl || undefined, // 优先使用 PNG，其次 SVG
-                    },
+                    id: diagramId,
+                    title: title,
+                    diagramCode: xml,
+                    pictureUrl: pngUrl || svgUrl || undefined, // 优先使用 PNG，其次 SVG
                 })
 
                 if (response?.code === 0) {

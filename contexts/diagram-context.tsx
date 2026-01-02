@@ -140,6 +140,21 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
             }
         }
 
+        // Check if the data is PNG or SVG (not xmlsvg), skip XML extraction
+        // PNG starts with data:image/png
+        // SVG starts with <svg or data:image/svg+xml but doesn't have content attribute
+        const dataStr = data.data || ""
+        if (
+            dataStr.startsWith("data:image/png") ||
+            (dataStr.startsWith("<svg") && !dataStr.includes("content="))
+        ) {
+            // This is a raw PNG or SVG export, don't try to extract XML
+            console.log(
+                "[handleDiagramExport] Skipping XML extraction for raw PNG/SVG export",
+            )
+            return
+        }
+
         const extractedXML = extractDiagramXML(data.data)
         setChartXML(extractedXML)
         setLatestSvg(data.data)

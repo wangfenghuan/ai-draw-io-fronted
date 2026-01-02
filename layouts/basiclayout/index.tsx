@@ -62,6 +62,9 @@ export default function BasicLayout({ children }: Props) {
     const router = useRouter()
     const dispatch = useDispatch<AppDispatch>()
 
+    // 判断是否是图表编辑页面
+    const isEditorPage = pathName.startsWith("/diagram/edit/")
+
     const logout = useCallback(async () => {
         try {
             const res = await userLogout()
@@ -82,6 +85,7 @@ export default function BasicLayout({ children }: Props) {
                 height: "100vh",
                 display: "flex",
                 flexDirection: "column",
+                overflow: "hidden", // 外层保持 hidden，防止双重滚动条
             }}
         >
             <ProLayout
@@ -91,15 +95,20 @@ export default function BasicLayout({ children }: Props) {
                 location={{
                     pathname: pathName,
                 }}
-                // 核心：强制 ProLayout 内部容器撑满高度
                 style={{
-                    minHeight: "100vh",
+                    height: "100vh",
                 }}
-                // 核心：内容区样式，确保 flex 布局
+                // --- 修复重点 1：contentStyle ---
                 contentStyle={{
                     display: "flex",
                     flexDirection: "column",
-                    paddingBlockEnd: 0, // 移除默认内边距以免干扰 footer
+                    width: "100%",
+                    // 编辑页：0 padding，隐藏溢出
+                    // 普通页：保留 padding，允许 Y 轴滚动 (overflowY: "auto")
+                    padding: isEditorPage ? 0 : 24,
+                    overflowY: isEditorPage ? "hidden" : "auto",
+                    overflowX: "hidden",
+                    height: "100%", // 让内容区撑满剩余高度，从而让滚动条出现在内容区内部
                 }}
                 avatarProps={{
                     src:
@@ -154,28 +163,26 @@ export default function BasicLayout({ children }: Props) {
                         {dom}
                     </Link>
                 )}
-                // 注入全局 Footer
-                footerRender={() => <GlobalFooter />}
+                // 编辑页不需要 Footer，普通页显示小 Footer
+                footerRender={() => (isEditorPage ? null : <GlobalFooter />)}
             >
-                {/* 核心：flex: 1 会自动占据所有剩余空间，
-                  从而将底部的 footer 推到页面最下方
-                */}
+                {/* --- 修复重点 2：子容器 Wrapper --- */}
                 <div
                     style={{
-                        flex: 1,
-                        // 检测是否是图表编辑页面，如果是则移除 padding
-                        padding: pathName.startsWith("/diagram/edit/")
-                            ? "0"
-                            : "24px",
-                        // 图表编辑页面需要完全弹性占满
-                        ...(pathName.startsWith("/diagram/edit/")
+                        width: "100%",
+                        // 编辑页：强制占满高度，隐藏溢出（因为编辑器内部有滚动条）
+                        // 普通页：不需要 height: 100%，让内容自然撑开；也不要 overflow: hidden
+                        ...(isEditorPage
                             ? {
                                   height: "100%",
+                                  overflow: "hidden",
                                   display: "flex",
                                   flexDirection: "column",
-                                  overflow: "hidden",
                               }
-                            : {}),
+                            : {
+                                  // 普通页面模式：不做限制，让内容自然生长
+                                  minHeight: "100%", // 确保至少撑满一屏
+                              }),
                     }}
                 >
                     {children}

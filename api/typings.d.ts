@@ -126,14 +126,14 @@ declare namespace API {
     }
 
     type DeleteRequest = {
-        id?: number
+        id?: string
     }
 
     type Diagram = {
-        /** 图表主键ID */
-        id?: number
+        /** 图表主键ID (使用string类型避免精度丢失) */
+        id?: string
         /** 用户ID */
-        userId?: number
+        userId?: string
         /** 图表代码 */
         diagramCode?: string
         /** 图表名称 */
@@ -160,10 +160,12 @@ declare namespace API {
     }
 
     type DiagramEditRequest = {
-        /** 图表ID */
-        id?: number
+        /** 图表ID (使用string类型避免精度丢失) */
+        id?: string
         /** 图表标题 */
         title?: string
+        /** 图表描述 */
+        description?: string
         /** 图表代码 */
         diagramCode?: string
         /** 图片URL */
@@ -224,15 +226,15 @@ declare namespace API {
     type DiagramUploadRequest = {
         /** 业务类型 */
         biz?: string
-        /** 图表ID */
-        diagramId?: number
+        /** 图表ID (使用string类型避免精度丢失) */
+        diagramId?: string
         /** 用户ID */
-        userId?: number
+        userId?: string
     }
 
     type DiagramVO = {
-        /** 图表ID */
-        id?: number
+        /** 图表ID (使用string类型避免精度丢失) */
+        id?: string
         /** 图表标题 */
         name?: string
         /** 图表名称 */
@@ -242,7 +244,7 @@ declare namespace API {
         /** 描述 */
         description?: string
         /** 创建用户ID */
-        userId?: number
+        userId?: string
         /** 创建时间 */
         createTime?: string
         /** 更新时间 */
@@ -262,7 +264,7 @@ declare namespace API {
     type downloadRemoteFileParams = {
         fileName?: string
         type: string
-        diagramId: number
+        diagramId: string
     }
 
     type getDiagramRoomVOByIdParams = {
@@ -270,7 +272,7 @@ declare namespace API {
     }
 
     type getDiagramVOByIdParams = {
-        id: number
+        id: string
     }
 
     type getUserByIdParams = {
@@ -288,8 +290,8 @@ declare namespace API {
     }
 
     type LoginUserVO = {
-        /** 用户ID */
-        id?: number
+        /** 用户ID (使用string类型避免精度丢失) */
+        id?: string
         /** 用户昵称 */
         userName?: string
         /** 用户头像 */

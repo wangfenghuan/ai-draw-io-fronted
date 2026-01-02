@@ -26,8 +26,8 @@ const InitLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
         try {
             const res = await getLoginUser()
             if (res?.code === 0 && res?.data) {
-                // 登录成功，保存用户信息
-                dispatch(setLoginUser(res.data.data))
+                // 登录成功，保存用户信息（修复：直接使用 res.data）
+                dispatch(setLoginUser(res.data))
             } else {
                 // 未登录或登录失效
                 console.log("用户未登录，跳转到登录页面")
