@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useRef, useState } from "react"
+import { createContext, useCallback, useContext, useRef, useState } from "react"
 import type { DrawIoEmbedRef } from "react-drawio"
 import { STORAGE_DIAGRAM_XML_KEY } from "@/components/chat-panel"
 import type { ExportFormat } from "@/components/save-dialog"
@@ -26,6 +26,8 @@ interface DiagramContextType {
     isDrawioReady: boolean
     onDrawioLoad: () => void
     resetDrawioReady: () => void
+    // 新增：注册外部导出回调处理器
+    registerExportCallback: (callback: ((data: string) => void) | null) => void
 }
 
 const DiagramContext = createContext<DiagramContextType | undefined>(undefined)
@@ -62,6 +64,19 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
         resolver: ((data: string) => void) | null
         format: ExportFormat | null
     }>({ resolver: null, format: null })
+
+    // 外部导出回调（用于 useDiagramSave 等其他模块）
+    const externalExportCallbackRef = useRef<((data: string) => void) | null>(
+        null,
+    )
+
+    // 注册外部导出回调
+    const registerExportCallback = useCallback(
+        (callback: ((data: string) => void) | null) => {
+            externalExportCallbackRef.current = callback
+        },
+        [],
+    )
 
     const handleExport = () => {
         if (drawioRef.current) {
@@ -128,6 +143,11 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
     }
 
     const handleDiagramExport = (data: any) => {
+        // 首先调用外部回调（useDiagramSave 等）
+        if (externalExportCallbackRef.current) {
+            externalExportCallbackRef.current(data.data)
+        }
+
         // Handle save to file if requested (process raw data before extraction)
         if (saveResolverRef.current.resolver) {
             const format = saveResolverRef.current.format
@@ -305,6 +325,7 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
                 isDrawioReady,
                 onDrawioLoad,
                 resetDrawioReady,
+                registerExportCallback,
             }}
         >
             {children}

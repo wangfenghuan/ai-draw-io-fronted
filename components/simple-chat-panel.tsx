@@ -63,8 +63,10 @@ export default function SimpleChatPanel({
     const [isSaving, setIsSaving] = useState(false)
 
     const [aiConfig, setAiConfig] = useAIConfig()
-    const { loadDiagram, drawioRef, chartXML } = useDiagram()
-    const { saveDiagram: saveDiagramToServer } = useDiagramSave(drawioRef)
+    const { loadDiagram, drawioRef, chartXML, registerExportCallback } =
+        useDiagram()
+    const { saveDiagram: saveDiagramToServer, handleExportCallback } =
+        useDiagramSave(drawioRef)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const loginUser = useSelector((state: RootState) => state.loginUser)
 
@@ -139,6 +141,15 @@ export default function SimpleChatPanel({
         }, 100)
         return () => clearTimeout(timer)
     }, [messages])
+
+    // 🔧 关键修复：注册 useDiagramSave 的导出回调到 diagram-context
+    // 这样 handleDiagramExport 才能调用 handleExportCallback，从而 resolve exportDiagram 的 Promise
+    useEffect(() => {
+        registerExportCallback(handleExportCallback)
+        return () => {
+            registerExportCallback(null) // 清理回调
+        }
+    }, [registerExportCallback, handleExportCallback])
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()

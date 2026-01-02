@@ -52,13 +52,8 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
                 }
 
                 try {
-                    // xml 使用 xmlsvg，其他对应格式
-                    const drawioFormat =
-                        format === "xml"
-                            ? "xmlsvg"
-                            : format === "png"
-                              ? "png"
-                              : "xmlsvg"
+                    // xml 使用 xmlsvg，其他格式（png、svg）直接使用
+                    const drawioFormat = format === "xml" ? "xmlsvg" : format
                     drawioRef.current.exportDiagram({
                         format: drawioFormat,
                     })
@@ -174,7 +169,7 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
                 // 1. 处理 PNG
                 try {
                     const pngData = await exportDiagram("png")
-                    const pngFile = base64ToFile(
+                    const pngFile = dataToFile(
                         pngData,
                         `${title}.png`,
                         "image/png",
@@ -189,7 +184,7 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
                 // 2. 处理 SVG
                 try {
                     const svgData = await exportDiagram("svg")
-                    const svgFile = base64ToFile(
+                    const svgFile = dataToFile(
                         svgData,
                         `${title}.svg`,
                         "image/svg+xml",
@@ -296,26 +291,41 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
     }
 }
 
-// 完整的 Base64 转 File 函数
-function base64ToFile(
-    base64: string,
-    filename: string,
-    mimeType: string,
-): File {
+/**
+ * 将导出数据转换为 File 对象
+ * 支持两种格式：
+ * 1. Base64 data URL (data:xxx;base64,...) - PNG 等格式
+ * 2. 纯文本字符串 - SVG 等格式
+ */
+function dataToFile(data: string, filename: string, mimeType: string): File {
     try {
-        if (!base64) return new File([""], filename, { type: mimeType })
-        const base64Data = base64.includes(",") ? base64.split(",")[1] : base64
-        const byteCharacters = atob(base64Data)
-        const byteNumbers = new Array(byteCharacters.length)
-        for (let i = 0; i < byteCharacters.length; i++) {
-            byteNumbers[i] = byteCharacters.charCodeAt(i)
+        if (!data) {
+            return new File([""], filename, { type: mimeType })
         }
-        const byteArray = new Uint8Array(byteNumbers)
-        return new File([new Blob([byteArray], { type: mimeType })], filename, {
-            type: mimeType,
-        })
+
+        // 判断是否是 base64 data URL
+        if (data.startsWith("data:")) {
+            // Base64 data URL 格式 (PNG)
+            const base64Data = data.includes(",") ? data.split(",")[1] : data
+            const byteCharacters = atob(base64Data)
+            const byteNumbers = new Array(byteCharacters.length)
+            for (let i = 0; i < byteCharacters.length; i++) {
+                byteNumbers[i] = byteCharacters.charCodeAt(i)
+            }
+            const byteArray = new Uint8Array(byteNumbers)
+            return new File(
+                [new Blob([byteArray], { type: mimeType })],
+                filename,
+                {
+                    type: mimeType,
+                },
+            )
+        } else {
+            // 纯文本格式 (SVG)
+            return new File([data], filename, { type: mimeType })
+        }
     } catch (e) {
-        console.error("Base64 conversion error", e)
+        console.error("数据转换失败:", e)
         return new File([""], filename, { type: mimeType })
     }
 }
