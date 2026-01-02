@@ -241,15 +241,6 @@ export default function DrawioHome() {
         })
     }
 
-    // 下载图表
-    const handleDownload = async (format: "xml" | "png" | "svg") => {
-        await downloadDiagram({
-            diagramId: diagramId,
-            filename: diagramTitle,
-            format: format,
-        })
-    }
-
     // 覆盖 handleDiagramExport，同时调用原始的和我们新的回调
     const handleExport = (data: any) => {
         handleDiagramExport(data) // 原始处理（更新 chartXML）
@@ -373,7 +364,6 @@ export default function DrawioHome() {
                                 onToggleVisibility={toggleChatPanel}
                                 darkMode={darkMode}
                                 diagramTitle={diagramTitle}
-                                onDownload={handleDownload}
                             />
                         </div>
                     </ResizablePanel>

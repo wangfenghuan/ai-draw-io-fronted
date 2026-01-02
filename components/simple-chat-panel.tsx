@@ -45,7 +45,6 @@ interface SimpleChatPanelProps {
     onToggleVisibility: () => void
     darkMode: boolean
     diagramTitle: string
-    onDownload?: (format: "xml" | "png" | "svg") => Promise<void>
 }
 
 export default function SimpleChatPanel({
@@ -54,7 +53,6 @@ export default function SimpleChatPanel({
     onToggleVisibility,
     darkMode,
     diagramTitle,
-    onDownload,
 }: SimpleChatPanelProps) {
     const [input, setInput] = useState("")
     const [historyLoaded, setHistoryLoaded] = useState(false)
@@ -71,8 +69,11 @@ export default function SimpleChatPanel({
         handleExportWithoutHistory,
         resolverRef,
     } = useDiagram()
-    const { saveDiagram: saveDiagramToServer, handleExportCallback } =
-        useDiagramSave(drawioRef)
+    const {
+        saveDiagram: saveDiagramToServer,
+        handleExportCallback,
+        downloadDiagram,
+    } = useDiagramSave(drawioRef)
     const messagesEndRef = useRef<HTMLDivElement>(null)
     const loginUser = useSelector((state: RootState) => state.loginUser)
 
@@ -156,6 +157,22 @@ export default function SimpleChatPanel({
             registerExportCallback(null) // 清理回调
         }
     }, [registerExportCallback, handleExportCallback])
+
+    // 下载处理函数
+    const handleDownload = async (format: "xml" | "png" | "svg") => {
+        try {
+            await downloadDiagram({
+                diagramId: diagramId,
+                filename: diagramTitle || "diagram",
+                format: format.toUpperCase() as "PNG" | "SVG" | "XML",
+            })
+        } catch (error) {
+            console.error("下载失败:", error)
+            toast.error(
+                error instanceof Error ? error.message : "下载失败，请稍后重试",
+            )
+        }
+    }
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -551,14 +568,12 @@ export default function SimpleChatPanel({
                 onConfigChange={setAiConfig}
             />
 
-            {onDownload && (
-                <DownloadDialog
-                    open={downloadDialogOpen}
-                    onOpenChange={setDownloadDialogOpen}
-                    onDownload={onDownload}
-                    defaultFilename={diagramTitle}
-                />
-            )}
+            <DownloadDialog
+                open={downloadDialogOpen}
+                onOpenChange={setDownloadDialogOpen}
+                onDownload={handleDownload}
+                defaultFilename={diagramTitle}
+            />
         </div>
     )
 }
