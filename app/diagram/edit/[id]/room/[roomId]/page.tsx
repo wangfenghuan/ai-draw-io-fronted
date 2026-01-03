@@ -1,7 +1,7 @@
 "use client"
 import { Maximize2, Minimize2 } from "lucide-react"
 import { useParams } from "next/navigation"
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import { DrawIoEmbed } from "react-drawio"
 import { useSelector } from "react-redux"
 import type { ImperativePanelHandle } from "react-resizable-panels"
@@ -289,13 +289,17 @@ export default function DrawioHome() {
     }
 
     // 覆盖 handleDiagramExport，同时调用原始的和我们新的回调
-    const handleExport = (data: any) => {
-        handleDiagramExport(data) // 原始处理（更新 chartXML）
-        // 检查是否是导出操作，如果是则调用 handleExportCallback
-        if (data && data.data) {
-            handleExportCallback(data.data)
-        }
-    }
+    // 使用 useCallback 避免闭包陷阱
+    const handleExport = useCallback(
+        (data: any) => {
+            handleDiagramExport(data) // 原始处理（更新 chartXML）
+            // 检查是否是导出操作，如果是则调用 handleExportCallback
+            if (data && data.data) {
+                handleExportCallback(data.data)
+            }
+        },
+        [handleDiagramExport, handleExportCallback],
+    )
 
     // 监听全屏状态变化
     useEffect(() => {

@@ -322,6 +322,13 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
         [collaborationEnabled, collaborationConnected, pushUpdate],
     )
 
+    // 添加日志来确认依赖项的值
+    console.log("[DiagramContext] handleDiagramExport dependencies:", {
+        collaborationEnabled,
+        collaborationConnected,
+        pushUpdate: typeof pushUpdate,
+    })
+
     const clearDiagram = () => {
         const emptyDiagram = `<mxfile><diagram name="Page-1" id="page-1"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel></diagram></mxfile>`
         // Skip validation for trusted internal template (loadDiagram also sets chartXML)
