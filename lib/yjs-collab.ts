@@ -50,6 +50,7 @@ export class YjsCollaboration {
     private isDisposed = false
     private lastXML = ""
     private syncTimeout: NodeJS.Timeout | null = null
+    private isSynced = false // 标记是否已完成首次同步
 
     constructor(options: YjsCollaborationOptions) {
         this.roomName = options.roomName
@@ -98,12 +99,31 @@ export class YjsCollaboration {
             this.provider.on("sync", (event: { status: boolean }) => {
                 if (event.status) {
                     console.log(
-                        "[Yjs] Document synced, initial content:",
-                        this.ytext.toString(),
+                        "[Yjs] Document synced, initial content length:",
+                        this.ytext.toString().length,
                     )
-                    // 同步完成后，如果本地有内容，发送出去
-                    if (this.lastXML) {
-                        this.pushLocalUpdate(this.lastXML)
+
+                    // 标记同步完成
+                    this.isSynced = true
+
+                    // 检查服务器是否有数据
+                    const serverHasData = this.ytext.length > 0
+
+                    if (serverHasData) {
+                        // 服务器有数据，使用服务器数据
+                        console.log(
+                            "[Yjs] Server has data, applying remote content",
+                        )
+                        this.lastXML = this.ytext.toString()
+                        this.options.onRemoteChange?.(this.lastXML)
+                    } else {
+                        // 服务器没有数据，推送本地数据
+                        console.log(
+                            "[Yjs] Server has no data, pushing local content",
+                        )
+                        if (this.lastXML) {
+                            this.pushLocalUpdate(this.lastXML)
+                        }
                     }
                 }
             })
@@ -256,6 +276,13 @@ export class YjsCollaboration {
      */
     isConnected(): boolean {
         return this.provider?.wsconnected === true
+    }
+
+    /**
+     * 检查是否已完成首次同步
+     */
+    isReadyToPush(): boolean {
+        return this.isSynced && this.isConnected()
     }
 
     /**

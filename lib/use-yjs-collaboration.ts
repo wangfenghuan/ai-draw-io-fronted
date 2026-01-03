@@ -93,8 +93,16 @@ export function useYjsCollaboration({
      * 推送本地更新到协作服务器
      */
     const pushUpdate = (xml: string) => {
-        if (collabRef.current && isConnected) {
+        const readyToPush = collabRef.current?.isReadyToPush() || false
+        console.log(
+            "[useYjsCollaboration] pushUpdate called, readyToPush:",
+            readyToPush,
+        )
+
+        if (collabRef.current && readyToPush) {
             collabRef.current.pushLocalUpdate(xml)
+        } else {
+            console.log("[useYjsCollaboration] Skipping push - not ready yet")
         }
     }
 
@@ -111,5 +119,6 @@ export function useYjsCollaboration({
         pushUpdate,
         getDocument,
         collaboration: collabRef.current,
+        isReadyToPush: () => collabRef.current?.isReadyToPush() || false,
     }
 }
