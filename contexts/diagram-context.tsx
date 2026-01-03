@@ -63,6 +63,17 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
         useState(false)
     const isUpdatingFromRemoteRef = useRef(false) // 防止循环更新
 
+    // 使用 ref 存储最新的协作状态，避免闭包陷阱
+    const collaborationStateRef = useRef({
+        enabled: collaborationEnabled,
+        connected: false,
+    })
+
+    // 更新 ref 当状态变化时
+    useEffect(() => {
+        collaborationStateRef.current.enabled = collaborationEnabled
+    }, [collaborationEnabled])
+
     // 初始化 Yjs 协作 Hook
     const {
         isConnected: collaborationConnected,
@@ -133,6 +144,11 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
             }
         },
     })
+
+    // 更新 ref 当连接状态变化时
+    useEffect(() => {
+        collaborationStateRef.current.connected = collaborationConnected
+    }, [collaborationConnected])
 
     const onDrawioLoad = () => {
         // Only set ready state once to prevent infinite loops
@@ -270,19 +286,23 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
             setLatestSvg(data.data)
 
             // Yjs 协作：推送本地更新到服务器（如果不是远程更新触发的）
+            // 使用 ref.current 读取最新状态，避免闭包陷阱
+            const currentEnabled = collaborationStateRef.current.enabled
+            const currentConnected = collaborationStateRef.current.connected
+
             console.log(
                 "[handleDiagramExport] Checking if should push to Yjs:",
                 {
-                    collaborationEnabled,
-                    collaborationConnected,
+                    collaborationEnabled: currentEnabled,
+                    collaborationConnected: currentConnected,
                     isUpdatingFromRemote: isUpdatingFromRemoteRef.current,
                     xmlLength: extractedXML?.length,
                 },
             )
 
             if (
-                collaborationEnabled &&
-                collaborationConnected &&
+                currentEnabled &&
+                currentConnected &&
                 !isUpdatingFromRemoteRef.current
             ) {
                 console.log(
@@ -319,7 +339,7 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
                 resolverRef.current = null
             }
         },
-        [collaborationEnabled, collaborationConnected, pushUpdate],
+        [pushUpdate], // 只依赖 pushUpdate，状态从 ref 读取
     )
 
     // 添加日志来确认依赖项的值
