@@ -275,12 +275,20 @@ declare namespace API {
         id: number
     }
 
+    type getRoomByDiagramIdParams = {
+        diagramId: number
+    }
+
     type getUserByIdParams = {
         id: number
     }
 
     type getUserVOByIdParams = {
         id: number
+    }
+
+    type isContainedParams = {
+        roomId: number
     }
 
     type listDiagramChatHistoryParams = {

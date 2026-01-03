@@ -154,7 +154,7 @@ export async function updateDiagram(
 /** 上传图表到minio POST /diagram/upload */
 export async function uploadDiagram(
     body: {
-        diagramUploadRequest?: API.DiagramUploadRequest
+        diagramUploadRequest: API.DiagramUploadRequest
     },
     options?: { [key: string]: any },
 ) {

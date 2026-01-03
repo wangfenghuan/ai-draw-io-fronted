@@ -3,14 +3,18 @@
  *
  * 功能：
  * 1. 显示协作状态（连接状态、在线用户数）
- * 2. 启用/禁用协作
- * 3. 创建房间或加入已有房间
- * 4. 选择权限模式（读写/只读）
+ * 2. 一键开启/停止协作
+ * 3. 选择权限模式（读写/只读）
+ *
+ * 逻辑：
+ * - 每个图表只能有一个房间
+ * - 开启协作时，后端自动创建或返回已有房间ID
+ * - 多个用户编辑同一图表时，自动加入同一个房间
  */
 
 "use client"
 
-import { Lock, Plus, Unlock, Users, Wifi, WifiOff } from "lucide-react"
+import { Lock, Unlock, Users, Wifi, WifiOff } from "lucide-react"
 import { useParams } from "next/navigation"
 import { useState } from "react"
 import { toast } from "sonner"
@@ -30,53 +34,46 @@ export function CollaborationPanel() {
     const [roomId, setRoomId] = useState<string>("")
     const [isReadOnly, setIsReadOnly] = useState(false)
     const [showSettings, setShowSettings] = useState(false)
-    const [isCreating, setIsCreating] = useState(false)
+    const [isStarting, setIsStarting] = useState(false)
 
-    const handleCreateRoom = async () => {
+    const handleStartCollaboration = async () => {
         if (!diagramId) {
             toast.error("图表 ID 不存在")
             return
         }
 
-        setIsCreating(true)
+        setIsStarting(true)
         try {
-            // 调用后端 API 创建房间
+            // 调用后端 API 获取或创建房间（后端会自动判断是创建还是返回已有房间）
             const response = await addRoom({
-                roomName: `协作房间_${diagramId}`, // 可自定义房间名称
+                roomName: `协作房间_${diagramId}`,
                 diagramId: parseInt(diagramId as string, 10),
             })
 
             if (response?.code === 0 && response?.data) {
-                const newRoomId = String(response.data)
-                setRoomId(newRoomId)
-                toast.success(`房间创建成功！房间 ID: ${newRoomId}`)
+                const returnedRoomId = String(response.data)
+                setRoomId(returnedRoomId)
 
-                // 自动启用协作
-                toggleCollaboration(true, newRoomId, isReadOnly)
+                // 启用协作连接
+                toggleCollaboration(true, returnedRoomId, isReadOnly)
                 setShowSettings(false)
+
+                toast.success(
+                    collaborationEnabled
+                        ? "协作已开启"
+                        : "协作已开启，可以邀请他人加入",
+                )
             } else {
                 toast.error(
-                    "创建房间失败: " + (response?.message || "未知错误"),
+                    "开启协作失败: " + (response?.message || "未知错误"),
                 )
             }
         } catch (error) {
-            console.error("创建房间失败:", error)
-            toast.error("创建房间失败，请稍后重试")
+            console.error("开启协作失败:", error)
+            toast.error("开启协作失败，请稍后重试")
         } finally {
-            setIsCreating(false)
+            setIsStarting(false)
         }
-    }
-
-    const handleJoinRoom = () => {
-        if (!roomId) {
-            toast.error("请输入房间 ID")
-            return
-        }
-
-        // 加入已有房间
-        toggleCollaboration(true, roomId, isReadOnly)
-        setShowSettings(false)
-        toast.success("正在加入房间...")
     }
 
     const handleStopCollaboration = () => {
@@ -111,159 +108,69 @@ export function CollaborationPanel() {
                 )}
             </Button>
 
-            {/* 设置面板 */}
+            {/* 设置面板 - 未开启协作时 */}
             {showSettings && !collaborationEnabled && (
                 <div className="absolute top-full right-0 mt-2 w-80 bg-slate-800 rounded-lg shadow-xl border border-white/10 p-4 z-50 animate-in fade-in slide-in-from-top-2 duration-200">
                     <h3 className="text-sm font-semibold text-white mb-3">
-                        实时协作设置
+                        开启实时协作
                     </h3>
 
-                    {/* 选项卡：创建房间 vs 加入房间 */}
-                    <div className="flex gap-2 mb-4">
-                        <button
-                            type="button"
-                            onClick={() => setRoomId("")}
-                            className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${
-                                roomId === ""
-                                    ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                                    : "bg-white/5 text-gray-400 border-white/10"
-                            }`}
-                        >
-                            <div className="flex items-center justify-center gap-1.5">
-                                <Plus className="h-3.5 w-3.5" />
-                                <span>创建房间</span>
-                            </div>
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setRoomId("1")}
-                            className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${
-                                roomId !== ""
-                                    ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                                    : "bg-white/5 text-gray-400 border-white/10"
-                            }`}
-                        >
-                            <span>加入房间</span>
-                        </button>
+                    <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                        <p className="text-xs text-blue-300 mb-2">
+                            💡 开启协作后，其他用户可以通过房间 ID 加入
+                        </p>
+                        <p className="text-xs text-gray-400">
+                            • 每个图表只能有一个协作房间
+                            <br />• 开启后自动创建或加入已有房间
+                            <br />• 多人可同时编辑，实时同步
+                        </p>
                     </div>
 
-                    {/* 创建房间模式 */}
-                    {roomId === "" ? (
-                        <>
-                            <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
-                                <p className="text-xs text-blue-300">
-                                    创建一个新的协作房间，其他用户可以通过房间
-                                    ID 加入
-                                </p>
-                            </div>
-
-                            {/* 权限模式 */}
-                            <div className="mb-4">
-                                <label className="block text-xs text-gray-400 mb-1.5">
-                                    权限模式
-                                </label>
-                                <div className="flex gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsReadOnly(false)}
-                                        className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${
-                                            !isReadOnly
-                                                ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                                                : "bg-white/5 text-gray-400 border-white/10"
-                                        }`}
-                                    >
-                                        <div className="flex items-center justify-center gap-1.5">
-                                            <Unlock className="h-3.5 w-3.5" />
-                                            <span>可编辑</span>
-                                        </div>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsReadOnly(true)}
-                                        className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${
-                                            isReadOnly
-                                                ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                                                : "bg-white/5 text-gray-400 border-white/10"
-                                        }`}
-                                    >
-                                        <div className="flex items-center justify-center gap-1.5">
-                                            <Lock className="h-3.5 w-3.5" />
-                                            <span>只读</span>
-                                        </div>
-                                    </button>
-                                </div>
-                            </div>
-
-                            {/* 创建按钮 */}
-                            <Button
-                                onClick={handleCreateRoom}
-                                disabled={isCreating}
-                                className="w-full"
+                    {/* 权限模式 */}
+                    <div className="mb-4">
+                        <label className="block text-xs text-gray-400 mb-1.5">
+                            选择权限模式
+                        </label>
+                        <div className="flex gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setIsReadOnly(false)}
+                                className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${
+                                    !isReadOnly
+                                        ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
+                                        : "bg-white/5 text-gray-400 border-white/10"
+                                }`}
                             >
-                                {isCreating
-                                    ? "创建中..."
-                                    : "创建房间并开始协作"}
-                            </Button>
-                        </>
-                    ) : (
-                        /* 加入房间模式 */
-                        <>
-                            <div className="mb-3">
-                                <label className="block text-xs text-gray-400 mb-1.5">
-                                    房间 ID
-                                </label>
-                                <input
-                                    type="text"
-                                    value={roomId}
-                                    onChange={(e) => setRoomId(e.target.value)}
-                                    placeholder="输入房间 ID..."
-                                    className="w-full px-3 py-2 text-sm bg-white/5 border border-white/10 rounded-lg text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50"
-                                />
-                            </div>
-
-                            {/* 权限模式 */}
-                            <div className="mb-4">
-                                <label className="block text-xs text-gray-400 mb-1.5">
-                                    权限模式
-                                </label>
-                                <div className="flex gap-2">
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsReadOnly(false)}
-                                        className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${
-                                            !isReadOnly
-                                                ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                                                : "bg-white/5 text-gray-400 border-white/10"
-                                        }`}
-                                    >
-                                        <div className="flex items-center justify-center gap-1.5">
-                                            <Unlock className="h-3.5 w-3.5" />
-                                            <span>可编辑</span>
-                                        </div>
-                                    </button>
-                                    <button
-                                        type="button"
-                                        onClick={() => setIsReadOnly(true)}
-                                        className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${
-                                            isReadOnly
-                                                ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
-                                                : "bg-white/5 text-gray-400 border-white/10"
-                                        }`}
-                                    >
-                                        <div className="flex items-center justify-center gap-1.5">
-                                            <Lock className="h-3.5 w-3.5" />
-                                            <span>只读</span>
-                                        </div>
-                                    </button>
+                                <div className="flex items-center justify-center gap-1.5">
+                                    <Unlock className="h-3.5 w-3.5" />
+                                    <span>可编辑</span>
                                 </div>
-                            </div>
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setIsReadOnly(true)}
+                                className={`flex-1 px-3 py-2 text-xs rounded-lg border transition-colors ${
+                                    isReadOnly
+                                        ? "bg-blue-500/20 text-blue-400 border-blue-500/30"
+                                        : "bg-white/5 text-gray-400 border-white/10"
+                                }`}
+                            >
+                                <div className="flex items-center justify-center gap-1.5">
+                                    <Lock className="h-3.5 w-3.5" />
+                                    <span>只读</span>
+                                </div>
+                            </button>
+                        </div>
+                    </div>
 
-                            {/* 加入按钮 */}
-                            <Button onClick={handleJoinRoom} className="w-full">
-                                加入房间
-                            </Button>
-                        </>
-                    )}
+                    {/* 开启协作按钮 */}
+                    <Button
+                        onClick={handleStartCollaboration}
+                        disabled={isStarting}
+                        className="w-full"
+                    >
+                        {isStarting ? "开启中..." : "开启协作"}
+                    </Button>
                 </div>
             )}
 
@@ -275,7 +182,7 @@ export function CollaborationPanel() {
                     </h3>
 
                     {/* 连接状态 */}
-                    <div className="mb-4 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
+                    <div className="mb-3 p-3 bg-green-500/10 border border-green-500/20 rounded-lg">
                         <div className="flex items-center gap-2 mb-2">
                             {collaborationConnected ? (
                                 <>
@@ -302,7 +209,7 @@ export function CollaborationPanel() {
                     </div>
 
                     {/* 在线用户 */}
-                    <div className="mb-4 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
+                    <div className="mb-3 p-3 bg-blue-500/10 border border-blue-500/20 rounded-lg">
                         <div className="flex items-center gap-2">
                             <Users className="h-4 w-4 text-blue-400" />
                             <p className="text-xs text-gray-400">
@@ -316,7 +223,7 @@ export function CollaborationPanel() {
                     </div>
 
                     {/* 权限模式 */}
-                    <div className="mb-4 p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
+                    <div className="mb-3 p-3 bg-purple-500/10 border border-purple-500/20 rounded-lg">
                         <div className="flex items-center gap-2">
                             {isReadOnly ? (
                                 <>
@@ -337,7 +244,7 @@ export function CollaborationPanel() {
                     </div>
 
                     {/* 分享提示 */}
-                    <div className="mb-4 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
+                    <div className="mb-3 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-lg">
                         <p className="text-xs text-yellow-300">
                             💡 分享房间 ID 给其他人以加入协作
                         </p>

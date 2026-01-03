@@ -175,7 +175,6 @@ export default function SimpleChatPanel({
         return () => clearTimeout(timer)
     }, [messages])
 
-    // 🔧 关键修复：注册 useDiagramSave 的导出回调到 diagram-context
     // 这样 handleDiagramExport 才能调用 handleExportCallback，从而 resolve exportDiagram 的 Promise
     useEffect(() => {
         registerExportCallback(handleExportCallback)
