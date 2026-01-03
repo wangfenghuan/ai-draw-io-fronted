@@ -231,90 +231,96 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
         return null
     }
 
-    const handleDiagramExport = (data: any) => {
-        // 首先调用外部回调（useDiagramSave 等）
-        if (externalExportCallbackRef.current) {
-            externalExportCallbackRef.current(data.data)
-        }
+    const handleDiagramExport = useCallback(
+        (data: any) => {
+            // 首先调用外部回调（useDiagramSave 等）
+            if (externalExportCallbackRef.current) {
+                externalExportCallbackRef.current(data.data)
+            }
 
-        // Handle save to file if requested (process raw data before extraction)
-        if (saveResolverRef.current.resolver) {
-            const format = saveResolverRef.current.format
-            saveResolverRef.current.resolver(data.data)
-            saveResolverRef.current = { resolver: null, format: null }
-            // For non-xmlsvg formats, skip XML extraction as it will fail
-            // Only drawio (which uses xmlsvg internally) has the content attribute
-            if (format === "png" || format === "svg") {
+            // Handle save to file if requested (process raw data before extraction)
+            if (saveResolverRef.current.resolver) {
+                const format = saveResolverRef.current.format
+                saveResolverRef.current.resolver(data.data)
+                saveResolverRef.current = { resolver: null, format: null }
+                // For non-xmlsvg formats, skip XML extraction as it will fail
+                // Only drawio (which uses xmlsvg internally) has the content attribute
+                if (format === "png" || format === "svg") {
+                    return
+                }
+            }
+
+            // Check if the data is PNG or SVG (not xmlsvg), skip XML extraction
+            // PNG starts with data:image/png
+            // SVG starts with <svg or data:image/svg+xml but doesn't have content attribute
+            const dataStr = data.data || ""
+            if (
+                dataStr.startsWith("data:image/png") ||
+                (dataStr.startsWith("<svg") && !dataStr.includes("content="))
+            ) {
+                // This is a raw PNG or SVG export, don't try to extract XML
+                console.log(
+                    "[handleDiagramExport] Skipping XML extraction for raw PNG/SVG export",
+                )
                 return
             }
-        }
 
-        // Check if the data is PNG or SVG (not xmlsvg), skip XML extraction
-        // PNG starts with data:image/png
-        // SVG starts with <svg or data:image/svg+xml but doesn't have content attribute
-        const dataStr = data.data || ""
-        if (
-            dataStr.startsWith("data:image/png") ||
-            (dataStr.startsWith("<svg") && !dataStr.includes("content="))
-        ) {
-            // This is a raw PNG or SVG export, don't try to extract XML
+            const extractedXML = extractDiagramXML(data.data)
+            setChartXML(extractedXML)
+            setLatestSvg(data.data)
+
+            // Yjs 协作：推送本地更新到服务器（如果不是远程更新触发的）
             console.log(
-                "[handleDiagramExport] Skipping XML extraction for raw PNG/SVG export",
+                "[handleDiagramExport] Checking if should push to Yjs:",
+                {
+                    collaborationEnabled,
+                    collaborationConnected,
+                    isUpdatingFromRemote: isUpdatingFromRemoteRef.current,
+                    xmlLength: extractedXML?.length,
+                },
             )
-            return
-        }
 
-        const extractedXML = extractDiagramXML(data.data)
-        setChartXML(extractedXML)
-        setLatestSvg(data.data)
+            if (
+                collaborationEnabled &&
+                collaborationConnected &&
+                !isUpdatingFromRemoteRef.current
+            ) {
+                console.log(
+                    "[DiagramContext] Pushing local update to Yjs, XML length:",
+                    extractedXML.length,
+                )
+                pushUpdate(extractedXML)
+            } else {
+                console.log(
+                    "[DiagramContext] Skipping Yjs push - collaboration disabled or remote update in progress",
+                )
+            }
 
-        // Yjs 协作：推送本地更新到服务器（如果不是远程更新触发的）
-        console.log("[handleDiagramExport] Checking if should push to Yjs:", {
-            collaborationEnabled,
-            collaborationConnected,
-            isUpdatingFromRemote: isUpdatingFromRemoteRef.current,
-            xmlLength: extractedXML?.length,
-        })
+            // Only add to history if this was a user-initiated export
+            // Limit to 20 entries to prevent memory leaks during long sessions
+            const MAX_HISTORY_SIZE = 20
+            if (expectHistoryExportRef.current) {
+                setDiagramHistory((prev) => {
+                    const newHistory = [
+                        ...prev,
+                        {
+                            svg: data.data,
+                            xml: extractedXML,
+                        },
+                    ]
+                    // Keep only the last MAX_HISTORY_SIZE entries (circular buffer)
+                    return newHistory.slice(-MAX_HISTORY_SIZE)
+                })
+                expectHistoryExportRef.current = false
+            }
 
-        if (
-            collaborationEnabled &&
-            collaborationConnected &&
-            !isUpdatingFromRemoteRef.current
-        ) {
-            console.log(
-                "[DiagramContext] Pushing local update to Yjs, XML length:",
-                extractedXML.length,
-            )
-            pushUpdate(extractedXML)
-        } else {
-            console.log(
-                "[DiagramContext] Skipping Yjs push - collaboration disabled or remote update in progress",
-            )
-        }
-
-        // Only add to history if this was a user-initiated export
-        // Limit to 20 entries to prevent memory leaks during long sessions
-        const MAX_HISTORY_SIZE = 20
-        if (expectHistoryExportRef.current) {
-            setDiagramHistory((prev) => {
-                const newHistory = [
-                    ...prev,
-                    {
-                        svg: data.data,
-                        xml: extractedXML,
-                    },
-                ]
-                // Keep only the last MAX_HISTORY_SIZE entries (circular buffer)
-                return newHistory.slice(-MAX_HISTORY_SIZE)
-            })
-            expectHistoryExportRef.current = false
-        }
-
-        if (resolverRef.current) {
-            resolverRef.current(extractedXML)
-            resolverRef.current = null
-        }
-    }
+            if (resolverRef.current) {
+                resolverRef.current(extractedXML)
+                resolverRef.current = null
+            }
+        },
+        [collaborationEnabled, collaborationConnected, pushUpdate],
+    )
 
     const clearDiagram = () => {
         const emptyDiagram = `<mxfile><diagram name="Page-1" id="page-1"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel></diagram></mxfile>`
