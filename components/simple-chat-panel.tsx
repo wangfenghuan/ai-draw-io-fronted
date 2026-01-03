@@ -26,6 +26,7 @@ import {
 } from "@/components/ai-config-dialog"
 import { CodeBlock } from "@/components/code-block"
 import { DownloadDialog } from "@/components/download-dialog"
+import { removeThinkingTags, ThinkingBlock } from "@/components/thinking-block"
 import { Button } from "@/components/ui/button"
 import {
     Collapsible,
@@ -118,15 +119,40 @@ export default function SimpleChatPanel({
                                 new Date(a.createTime || 0).getTime() -
                                 new Date(b.createTime || 0).getTime(),
                         )
-                        .map((conv: API.Conversion) => ({
-                            id: `history-${conv.id}`,
-                            role:
-                                conv.messageType === "user"
-                                    ? "user"
-                                    : "assistant",
-                            content: conv.message || "",
-                            timestamp: new Date(conv.createTime || 0).getTime(),
-                        }))
+                        .map((conv: API.Conversion) => {
+                            let content = conv.message || ""
+                            // 修复：如果消息包含"图表已生成"标记，但缺少XML代码块，则尝试补充
+                            if (
+                                conv.messageType !== "user" &&
+                                (content.includes("✅ 图表已生成") ||
+                                    content.includes("图表已生成")) &&
+                                !content.includes("```xml") &&
+                                chartXML
+                            ) {
+                                // 从当前图表XML中提取内容
+                                const mxfileMatch = chartXML.match(
+                                    /<mxfile[\s\S]*?<\/mxfile>/,
+                                )
+                                if (mxfileMatch) {
+                                    // 将XML代码块添加到消息内容中
+                                    content = content.replace(
+                                        /✅ 图表已生成|图表已生成/g,
+                                        `\`\`\`xml\n${mxfileMatch[0]}\n\`\`\`\n\n✅ 图表已生成`,
+                                    )
+                                }
+                            }
+                            return {
+                                id: `history-${conv.id}`,
+                                role:
+                                    conv.messageType === "user"
+                                        ? "user"
+                                        : "assistant",
+                                content: content,
+                                timestamp: new Date(
+                                    conv.createTime || 0,
+                                ).getTime(),
+                            }
+                        })
 
                     if (historyMessages.length > 0) {
                         setMessages(historyMessages)
@@ -139,7 +165,7 @@ export default function SimpleChatPanel({
             }
         }
         loadHistory()
-    }, [diagramId, historyLoaded, setMessages])
+    }, [diagramId, historyLoaded, setMessages, chartXML])
 
     // 自动滚动
     useEffect(() => {
@@ -384,122 +410,140 @@ export default function SimpleChatPanel({
                                         </div>
                                         <div className="text-sm leading-relaxed markdown-content">
                                             {message.content ? (
-                                                <ReactMarkdown
-                                                    remarkPlugins={[remarkGfm]}
-                                                    rehypePlugins={[
-                                                        rehypeHighlight,
-                                                    ]}
-                                                    components={{
-                                                        code({
-                                                            node,
-                                                            inline,
-                                                            className,
-                                                            children,
-                                                            ...props
-                                                        }) {
-                                                            const match =
-                                                                /language-(\w+)/.exec(
-                                                                    className ||
-                                                                        "",
-                                                                )
-                                                            const language =
-                                                                match
-                                                                    ? match[1]
-                                                                    : "text"
-                                                            if (
-                                                                !inline &&
-                                                                match
-                                                            ) {
-                                                                const codeContent =
-                                                                    String(
-                                                                        children,
-                                                                    ).replace(
-                                                                        /\n$/,
-                                                                        "",
+                                                <>
+                                                    {/* 渲染深度思考模块 */}
+                                                    <ThinkingBlock
+                                                        content={
+                                                            message.content
+                                                        }
+                                                        defaultOpen={false}
+                                                    />
+                                                    {/* 渲染主要消息内容（移除思考标签后的内容） */}
+                                                    <ReactMarkdown
+                                                        remarkPlugins={[
+                                                            remarkGfm,
+                                                        ]}
+                                                        rehypePlugins={[
+                                                            rehypeHighlight,
+                                                        ]}
+                                                        components={{
+                                                            code({
+                                                                node,
+                                                                inline,
+                                                                className,
+                                                                children,
+                                                                ...props
+                                                            }) {
+                                                                const match =
+                                                                    /language-(\w+)/.exec(
+                                                                        className ||
+                                                                            "",
                                                                     )
-                                                                const isLongCode =
-                                                                    codeContent.length >
-                                                                    500
-                                                                return (
-                                                                    <Collapsible
-                                                                        defaultOpen={
-                                                                            !isLongCode
-                                                                        }
-                                                                    >
-                                                                        <div className="my-2 rounded-lg overflow-hidden border border-white/10 bg-black/30">
-                                                                            <CollapsibleTrigger className="w-full px-3 py-1.5 bg-black/40 border-b border-white/10 flex items-center justify-between hover:bg-black/50 transition-colors">
-                                                                                <div className="flex items-center gap-2">
-                                                                                    <Code className="h-3.5 w-3.5 text-blue-400" />
-                                                                                    <span className="text-xs text-white/60 font-mono">
-                                                                                        {
-                                                                                            language
-                                                                                        }
-                                                                                    </span>
-                                                                                    {isLongCode && (
-                                                                                        <span className="text-xs text-white/40">
-                                                                                            (
+                                                                const language =
+                                                                    match
+                                                                        ? match[1]
+                                                                        : "text"
+                                                                if (
+                                                                    !inline &&
+                                                                    match
+                                                                ) {
+                                                                    const codeContent =
+                                                                        String(
+                                                                            children,
+                                                                        ).replace(
+                                                                            /\n$/,
+                                                                            "",
+                                                                        )
+                                                                    const isLongCode =
+                                                                        codeContent.length >
+                                                                        500
+                                                                    return (
+                                                                        <Collapsible
+                                                                            defaultOpen={
+                                                                                !isLongCode
+                                                                            }
+                                                                        >
+                                                                            <div className="my-2 rounded-lg overflow-hidden border border-white/10 bg-black/30">
+                                                                                <CollapsibleTrigger className="w-full px-3 py-1.5 bg-black/40 border-b border-white/10 flex items-center justify-between hover:bg-black/50 transition-colors">
+                                                                                    <div className="flex items-center gap-2">
+                                                                                        <Code className="h-3.5 w-3.5 text-blue-400" />
+                                                                                        <span className="text-xs text-white/60 font-mono">
                                                                                             {
-                                                                                                codeContent.length
-                                                                                            }{" "}
-                                                                                            字符)
+                                                                                                language
+                                                                                            }
                                                                                         </span>
-                                                                                    )}
-                                                                                </div>
-                                                                                {isLongCode && (
-                                                                                    <div className="flex items-center gap-1 text-white/60">
-                                                                                        <ChevronDown className="h-4 w-4" />
+                                                                                        {isLongCode && (
+                                                                                            <span className="text-xs text-white/40">
+                                                                                                (
+                                                                                                {
+                                                                                                    codeContent.length
+                                                                                                }{" "}
+                                                                                                字符)
+                                                                                            </span>
+                                                                                        )}
                                                                                     </div>
-                                                                                )}
-                                                                            </CollapsibleTrigger>
-                                                                            <CollapsibleContent>
-                                                                                <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
-                                                                                    <CodeBlock
-                                                                                        code={
-                                                                                            codeContent
-                                                                                        }
-                                                                                        language={
-                                                                                            language as
-                                                                                                | "xml"
-                                                                                                | "json"
-                                                                                        }
-                                                                                    />
-                                                                                </div>
-                                                                            </CollapsibleContent>
-                                                                        </div>
-                                                                    </Collapsible>
+                                                                                    {isLongCode && (
+                                                                                        <div className="flex items-center gap-1 text-white/60">
+                                                                                            <ChevronDown className="h-4 w-4" />
+                                                                                        </div>
+                                                                                    )}
+                                                                                </CollapsibleTrigger>
+                                                                                <CollapsibleContent>
+                                                                                    <div className="max-h-[300px] overflow-y-auto custom-scrollbar">
+                                                                                        <CodeBlock
+                                                                                            code={
+                                                                                                codeContent
+                                                                                            }
+                                                                                            language={
+                                                                                                language as
+                                                                                                    | "xml"
+                                                                                                    | "json"
+                                                                                            }
+                                                                                        />
+                                                                                    </div>
+                                                                                </CollapsibleContent>
+                                                                            </div>
+                                                                        </Collapsible>
+                                                                    )
+                                                                }
+                                                                return (
+                                                                    <code
+                                                                        className="bg-white/10 px-1.5 py-0.5 rounded text-blue-300 text-sm break-all"
+                                                                        {...props}
+                                                                    >
+                                                                        {
+                                                                            children
+                                                                        }
+                                                                    </code>
                                                                 )
-                                                            }
-                                                            return (
-                                                                <code
-                                                                    className="bg-white/10 px-1.5 py-0.5 rounded text-blue-300 text-sm break-all"
-                                                                    {...props}
+                                                            },
+                                                            p: ({
+                                                                children,
+                                                            }) => (
+                                                                <p className="mb-2 text-white/90 break-words">
+                                                                    {children}
+                                                                </p>
+                                                            ),
+                                                            a: ({
+                                                                href,
+                                                                children,
+                                                            }) => (
+                                                                <a
+                                                                    href={href}
+                                                                    className="text-blue-400 hover:text-blue-300 underline"
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
                                                                 >
                                                                     {children}
-                                                                </code>
-                                                            )
-                                                        },
-                                                        p: ({ children }) => (
-                                                            <p className="mb-2 text-white/90 break-words">
-                                                                {children}
-                                                            </p>
-                                                        ),
-                                                        a: ({
-                                                            href,
-                                                            children,
-                                                        }) => (
-                                                            <a
-                                                                href={href}
-                                                                className="text-blue-400 hover:text-blue-300 underline"
-                                                                target="_blank"
-                                                                rel="noopener noreferrer"
-                                                            >
-                                                                {children}
-                                                            </a>
-                                                        ),
-                                                    }}
-                                                >
-                                                    {message.content}
-                                                </ReactMarkdown>
+                                                                </a>
+                                                            ),
+                                                        }}
+                                                    >
+                                                        {removeThinkingTags(
+                                                            message.content,
+                                                        )}
+                                                    </ReactMarkdown>
+                                                </>
                                             ) : (
                                                 <span className="text-white/40 italic flex items-center gap-1">
                                                     <span className="animate-pulse">
