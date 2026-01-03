@@ -93,6 +93,12 @@ export class YjsCollaboration {
                 this.options.onConnectionStatusChange?.(
                     event.status as "connecting" | "connected" | "disconnected",
                 )
+
+                // 如果连接成功，标记为已同步（允许立即推送）
+                if (event.status === "connected" && !this.isSynced) {
+                    console.log("[Yjs] Connected, marking as synced")
+                    this.isSynced = true
+                }
             })
 
             // 监听同步状态
