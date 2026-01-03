@@ -93,9 +93,28 @@ export default function DrawioHome() {
                                 !collaborationStarted &&
                                 !collaborationEnabled
                             ) {
-                                console.log("自动开启协作，房间 ID:", roomId)
+                                console.log(
+                                    "[CollabRoute] 自动开启协作，房间 ID:",
+                                    roomId,
+                                )
+                                console.log(
+                                    "[CollabRoute] 当前状态 - collaborationStarted:",
+                                    collaborationStarted,
+                                    ", collaborationEnabled:",
+                                    collaborationEnabled,
+                                )
                                 toggleCollaboration(true, roomId, false)
                                 setCollaborationStarted(true)
+                                console.log("[CollabRoute] 协作启动命令已发送")
+                            } else {
+                                console.log(
+                                    "[CollabRoute] 跳过协作启动 - roomId:",
+                                    roomId,
+                                    ", collaborationStarted:",
+                                    collaborationStarted,
+                                    ", collaborationEnabled:",
+                                    collaborationEnabled,
+                                )
                             }
                         }
                     } else {
@@ -110,7 +129,7 @@ export default function DrawioHome() {
                             !collaborationEnabled
                         ) {
                             console.log(
-                                "自动开启协作（空白图表），房间 ID:",
+                                "[CollabRoute] 自动开启协作（空白图表），房间 ID:",
                                 roomId,
                             )
                             toggleCollaboration(true, roomId, false)

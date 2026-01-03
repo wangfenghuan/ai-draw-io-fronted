@@ -121,6 +121,13 @@ export class YjsCollaboration {
                 // 检查是否是本地更新（通过 transaction.origin 判断）
                 const isLocalUpdate = event.transaction.origin === this.provider
 
+                console.log("[Yjs] ytext.observe triggered", {
+                    isLocalUpdate,
+                    origin: event.transaction.origin,
+                    provider: this.provider,
+                    hasCallback: !!this.options.onRemoteChange,
+                })
+
                 // 只处理远程更新
                 if (!isLocalUpdate) {
                     const newXML = this.ytext.toString()
@@ -128,6 +135,7 @@ export class YjsCollaboration {
                         "[Yjs] Remote update received, length:",
                         newXML.length,
                     )
+                    console.log("[Yjs] Calling onRemoteChange callback...")
 
                     // 防抖处理，避免频繁更新
                     if (this.syncTimeout) {
@@ -136,7 +144,12 @@ export class YjsCollaboration {
 
                     this.syncTimeout = setTimeout(() => {
                         this.lastXML = newXML
+                        console.log(
+                            "[Yjs] Executing onRemoteChange callback with XML length:",
+                            newXML.length,
+                        )
                         this.options.onRemoteChange?.(newXML)
+                        console.log("[Yjs] onRemoteChange callback executed")
                     }, 100)
                 }
 
