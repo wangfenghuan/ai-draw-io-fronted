@@ -277,40 +277,40 @@ export default function DrawioHome() {
                 }`}
             >
                 {/* 工具栏 - 分散布局避免堆叠 */}
-                <div className="absolute top-5 right-5 z-20 flex items-center">
-                    {/* 协作面板 - 放在最左边，增加右边距 */}
-                    <div className="mr-4">
+                <div className="absolute top-5 right-5 z-20 flex items-center justify-between gap-8">
+                    {/* 协作面板 - 独立放在左侧 */}
+                    <div className="flex-shrink-0">
                         <CollaborationPanel />
                     </div>
 
-                    {/* 分隔线 */}
-                    <div className="h-8 w-px bg-white/40 mx-2"></div>
+                    {/* 右侧按钮组 */}
+                    <div className="flex items-center gap-4">
+                        {/* 保存按钮组 */}
+                        <div className="flex items-center gap-3">
+                            <DiagramToolbar
+                                diagramId={diagramId}
+                                title={diagramTitle}
+                                xml={chartXML}
+                                onSave={handleSave}
+                            />
+                        </div>
 
-                    {/* 保存按钮组 */}
-                    <div className="flex items-center gap-3">
-                        <DiagramToolbar
-                            diagramId={diagramId}
-                            title={diagramTitle}
-                            xml={chartXML}
-                            onSave={handleSave}
-                        />
+                        {/* 分隔线 */}
+                        <div className="h-8 w-px bg-white/40"></div>
+
+                        {/* 全屏按钮 */}
+                        <button
+                            onClick={toggleFullscreen}
+                            className="p-3 rounded-xl bg-white/95 hover:bg-white text-gray-800 border border-gray-300 hover:border-gray-400 shadow-md transition-all duration-200 hover:scale-105"
+                            title={isFullscreen ? "退出全屏 (ESC)" : "全屏模式"}
+                        >
+                            {isFullscreen ? (
+                                <Minimize2 className="h-6 w-6" />
+                            ) : (
+                                <Maximize2 className="h-6 w-6" />
+                            )}
+                        </button>
                     </div>
-
-                    {/* 分隔线 */}
-                    <div className="h-8 w-px bg-white/40 mx-2"></div>
-
-                    {/* 全屏按钮 */}
-                    <button
-                        onClick={toggleFullscreen}
-                        className="p-3 rounded-xl bg-white/95 hover:bg-white text-gray-800 border border-gray-300 hover:border-gray-400 shadow-md transition-all duration-200 hover:scale-105"
-                        title={isFullscreen ? "退出全屏 (ESC)" : "全屏模式"}
-                    >
-                        {isFullscreen ? (
-                            <Minimize2 className="h-6 w-6" />
-                        ) : (
-                            <Maximize2 className="h-6 w-6" />
-                        )}
-                    </button>
                 </div>
                 <ResizablePanelGroup
                     id="main-panel-group"
