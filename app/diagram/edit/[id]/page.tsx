@@ -35,6 +35,7 @@ export default function DrawioHome() {
     const {
         drawioRef,
         handleDiagramExport,
+        handleAutoSave,
         onDrawioLoad,
         resetDrawioReady,
         chartXML,
@@ -330,6 +331,8 @@ export default function DrawioHome() {
                                     ref={drawioRef}
                                     onExport={handleExport}
                                     onLoad={onDrawioLoad}
+                                    onAutoSave={handleAutoSave}
+                                    autosave={true}
                                     baseUrl={drawioBaseUrl}
                                     urlParameters={{
                                         ui: drawioUi,

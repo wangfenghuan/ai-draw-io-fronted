@@ -15,8 +15,13 @@ const drawioBaseUrl =
     process.env.NEXT_PUBLIC_DRAWIO_BASE_URL || "https://embed.diagrams.net"
 
 export default function DrawioHome() {
-    const { drawioRef, handleDiagramExport, onDrawioLoad, resetDrawioReady } =
-        useDiagram()
+    const {
+        drawioRef,
+        handleDiagramExport,
+        handleAutoSave,
+        onDrawioLoad,
+        resetDrawioReady,
+    } = useDiagram()
     const [isMobile, setIsMobile] = useState(false)
     const [isChatVisible, setIsChatVisible] = useState(true)
     const [drawioUi, setDrawioUi] = useState<"min" | "sketch">("min")
@@ -143,6 +148,8 @@ export default function DrawioHome() {
                                     ref={drawioRef}
                                     onExport={handleDiagramExport}
                                     onLoad={onDrawioLoad}
+                                    onAutoSave={handleAutoSave}
+                                    autosave={true}
                                     baseUrl={drawioBaseUrl}
                                     urlParameters={{
                                         ui: drawioUi,

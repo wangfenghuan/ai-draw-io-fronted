@@ -25,6 +25,7 @@ interface DiagramContextType {
     resolverRef: React.Ref<((value: string) => void) | null>
     drawioRef: React.Ref<DrawIoEmbedRef | null>
     handleDiagramExport: (data: any) => void
+    handleAutoSave: (data: any) => void
     clearDiagram: () => void
     saveDiagramToFile: (
         filename: string,
@@ -94,8 +95,26 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
         isReadOnly: collaborationIsReadOnly,
         onRemoteChange: (xml) => {
             // 远程更新：应用到 Draw.io
+            console.log("[DiagramContext] 🔔 onRemoteChange called!", {
+                hasXml: !!xml,
+                xmlLength: xml?.length,
+                isUpdatingFromRemote: isUpdatingFromRemoteRef.current,
+            })
+
+            // 打印XML的前200个字符，方便调试
+            if (xml) {
+                console.log(
+                    "[DiagramContext] 📄 XML preview (first 200 chars):",
+                    xml.substring(0, 200),
+                )
+            }
+
             if (!isUpdatingFromRemoteRef.current && xml) {
                 isUpdatingFromRemoteRef.current = true
+                console.log(
+                    "[DiagramContext] 📥 Loading remote XML to Draw.io...",
+                )
+
                 // 直接加载到 Draw.io，不触发 Yjs 推送
                 setChartXML(xml)
 
@@ -104,24 +123,34 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
                         drawioRef.current.load({
                             xml: xml,
                         })
+                        console.log(
+                            "[DiagramContext] ✅ Remote XML loaded to Draw.io",
+                        )
 
                         // 延迟重置标志，确保 Draw.io 完成渲染
                         setTimeout(() => {
                             isUpdatingFromRemoteRef.current = false
+                            console.log(
+                                "[DiagramContext] 🔓 Remote update flag cleared",
+                            )
                         }, 500)
                     } catch (error) {
                         console.error(
-                            "[DiagramContext] Failed to load XML:",
+                            "[DiagramContext] ❌ Failed to load XML:",
                             error,
                         )
                         isUpdatingFromRemoteRef.current = false
                     }
                 } else {
                     console.warn(
-                        "[DiagramContext] drawioRef.current is null, cannot load XML",
+                        "[DiagramContext] ⚠️ drawioRef.current is null, cannot load XML",
                     )
                     isUpdatingFromRemoteRef.current = false
                 }
+            } else {
+                console.log(
+                    "[DiagramContext] ⏭️ Skipping remote change (updating or no xml)",
+                )
             }
         },
     })
@@ -223,6 +252,48 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
         console.timeEnd("perf:loadDiagram")
         return null
     }
+
+    // 处理 Draw.io autosave 事件（用于实时协作）
+    const handleAutoSave = useCallback(
+        (data: any) => {
+            // 只在协作模式下处理 autosave
+            const currentEnabled = collaborationStateRef.current.enabled
+            const currentConnected = collaborationStateRef.current.connected
+
+            console.log("[DiagramContext] 🎨 handleAutoSave called:", {
+                currentEnabled,
+                currentConnected,
+                isUpdatingFromRemote: isUpdatingFromRemoteRef.current,
+                hasXml: !!data.xml,
+            })
+
+            if (
+                !currentEnabled ||
+                !currentConnected ||
+                isUpdatingFromRemoteRef.current
+            ) {
+                console.log("[DiagramContext] ⏭️ Skipping autosave")
+                return
+            }
+
+            // 提取 XML
+            const xml = data.xml || ""
+            if (!xml) {
+                console.log("[DiagramContext] ⚠️ No XML in autosave data")
+                return
+            }
+
+            console.log("[DiagramContext] 📤 Autosave XML length:", xml.length)
+
+            // 更新本地状态
+            setChartXML(xml)
+
+            // 推送到 Yjs（协作服务器）
+            console.log("[DiagramContext] 🚀 Calling pushUpdate...")
+            pushUpdate(xml)
+        },
+        [pushUpdate],
+    )
 
     const handleDiagramExport = useCallback(
         (data: any) => {
@@ -406,12 +477,27 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
     // 切换协作模式
     const toggleCollaboration = useCallback(
         (enabled: boolean, roomName?: string, isReadOnly?: boolean) => {
+            console.log("[DiagramContext] toggleCollaboration called:", {
+                enabled,
+                roomName,
+                isReadOnly,
+            })
+
             if (enabled && !roomName) {
                 console.warn(
                     "[DiagramContext] Cannot enable collaboration without roomName",
                 )
                 return
             }
+
+            console.log(
+                "[DiagramContext] Setting collaborationEnabled to:",
+                enabled,
+            )
+            console.log(
+                "[DiagramContext] Setting collaborationRoomName to:",
+                roomName || "",
+            )
 
             setCollaborationEnabled(enabled)
             setCollaborationRoomName(roomName || "")
@@ -432,6 +518,7 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
                 resolverRef,
                 drawioRef,
                 handleDiagramExport,
+                handleAutoSave,
                 clearDiagram,
                 saveDiagramToFile,
                 isDrawioReady,

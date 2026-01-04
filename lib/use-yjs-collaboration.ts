@@ -34,10 +34,27 @@ export function useYjsCollaboration({
     const [userCount, setUserCount] = useState(0)
     const collabRef = useRef<YjsCollaboration | null>(null)
 
+    console.log("[useYjsCollaboration] Render with:", {
+        roomName,
+        diagramId,
+        enabled,
+        isReadOnly,
+    })
+
     useEffect(() => {
+        console.log("[useYjsCollaboration] useEffect triggered:", {
+            enabled,
+            roomName,
+        })
+
         if (!enabled || !roomName) {
+            console.log(
+                "[useYjsCollaboration] Skipping (not enabled or no roomName)",
+            )
             return
         }
+
+        console.log("[useYjsCollaboration] Creating collaboration instance...")
 
         // 创建协作实例
         const collab = createCollaboration({
@@ -48,30 +65,62 @@ export function useYjsCollaboration({
                 onRemoteChange?.(xml)
             },
             onConnectionStatusChange: (status) => {
+                console.log(
+                    "[useYjsCollaboration] Connection status changed:",
+                    status,
+                )
                 setIsConnected(status === "connected")
             },
             onUserCountChange: (count) => {
+                console.log("[useYjsCollaboration] User count changed:", count)
                 setUserCount(count)
             },
         })
 
         collabRef.current = collab
+        console.log("[useYjsCollaboration] Collaboration instance created")
 
         // 清理函数
         return () => {
+            console.log(
+                "[useYjsCollaboration] Cleaning up collaboration instance",
+            )
             collab.dispose()
             collabRef.current = null
         }
-    }, [roomName, diagramId, enabled, isReadOnly])
+        // 只依赖 roomName, diagramId, enabled - 移除 isReadOnly 和回调函数
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [roomName, diagramId, enabled])
 
     /**
      * 推送本地更新到协作服务器
      */
     const pushUpdate = (xml: string) => {
+        console.log(
+            "[useYjsCollaboration] pushUpdate called, XML length:",
+            xml.length,
+        )
+        console.log(
+            "[useYjsCollaboration] collabRef.current:",
+            collabRef.current,
+        )
+        console.log(
+            "[useYjsCollaboration] isReadyToPush:",
+            collabRef.current?.isReadyToPush(),
+        )
+
         const readyToPush = collabRef.current?.isReadyToPush() || false
 
         if (collabRef.current && readyToPush) {
+            console.log(
+                "[useYjsCollaboration] ✅ Pushing update to collab instance",
+            )
             collabRef.current.pushLocalUpdate(xml)
+        } else {
+            console.log("[useYjsCollaboration] ❌ Cannot push:", {
+                hasCollab: !!collabRef.current,
+                readyToPush,
+            })
         }
     }
 

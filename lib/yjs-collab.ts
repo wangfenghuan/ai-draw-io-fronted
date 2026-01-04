@@ -8,7 +8,7 @@
  * 4. 快照检测与上传
  */
 
-import { WebsocketProvider } from "y-websocket"
+import { HocuspocusProvider } from "@hocuspocus/provider"
 import * as Y from "yjs"
 import { checkLock, uploadSnapshot } from "@/api/diagramController"
 
@@ -41,9 +41,8 @@ export interface YjsCollaborationOptions {
 }
 
 export class YjsCollaboration {
-    private ydoc: Y.Doc
-    private provider: WebsocketProvider | null = null
-    private ytext: Y.Text
+    private provider: HocuspocusProvider | null = null
+    private ytext: Y.Text | null = null
     private roomName: string
     private options: YjsCollaborationOptions
     private updateCount = 0
@@ -51,16 +50,11 @@ export class YjsCollaboration {
     private lastXML = ""
     private syncTimeout: NodeJS.Timeout | null = null
     private isSynced = false // 标记是否已完成首次同步
+    private isConnectedFlag = false // 标记 WebSocket 连接状态
 
     constructor(options: YjsCollaborationOptions) {
         this.roomName = options.roomName
         this.options = options
-
-        // 初始化 Yjs 文档
-        this.ydoc = new Y.Doc()
-
-        // 获取或创建 Y.Text 实例（用于存储 XML）
-        this.ytext = this.ydoc.getText("diagram-xml")
 
         this.initialize()
     }
@@ -68,62 +62,97 @@ export class YjsCollaboration {
     private async initialize() {
         try {
             // 建立 WebSocket 连接
-            // 注意：WebsocketProvider 会自动在 URL 后面添加 roomName，所以基础 URL 不需要包含 roomName
-            const wsUrl = `${YJS_CONFIG.WS_URL}/yjs`
+            // HocuspocusProvider 使用 name 参数指定文档名
+            const wsUrl = YJS_CONFIG.WS_URL
 
-            this.provider = new WebsocketProvider(
+            console.log(
+                "[Yjs] Connecting to Hocuspocus:",
                 wsUrl,
+                "room:",
                 this.roomName,
-                this.ydoc,
-                {
-                    connect: YJS_CONFIG.RECONNECT,
-                    reconnect: YJS_CONFIG.RECONNECT,
-                    reconnectInterval: YJS_CONFIG.RECONNECT_INTERVAL,
-                    maxReconnectAttempts: YJS_CONFIG.RECONNECT_MAX_ATTEMPTS,
-                    // 只读模式通过 URL 参数传递
-                    params: this.options.isReadOnly
-                        ? { mode: "readonly" }
-                        : undefined,
-                },
             )
+
+            this.provider = new HocuspocusProvider({
+                url: wsUrl,
+                name: this.roomName,
+                // 不传递 document 参数，让 HocuspocusProvider 自动创建
+                // 只读模式通过 URL 参数传递
+                parameters: this.options.isReadOnly
+                    ? { mode: "readonly" }
+                    : undefined,
+            })
+
+            // 获取 HocuspocusProvider 自动创建的 Y.Doc 和 Y.Text
+            const ydoc = this.provider.document
+            this.ytext = ydoc.getText("diagram-xml")
+
+            console.log("[Yjs] Y.Doc created by HocuspocusProvider")
 
             // 监听连接状态
             this.provider.on("status", (event: { status: string }) => {
+                console.log("[Yjs] Connection status:", event.status)
                 this.options.onConnectionStatusChange?.(
                     event.status as "connecting" | "connected" | "disconnected",
                 )
 
+                // 更新连接标志
+                if (event.status === "connected") {
+                    this.isConnectedFlag = true
+                } else if (event.status === "disconnected") {
+                    this.isConnectedFlag = false
+                }
+
                 // 如果连接成功，标记为已同步（允许立即推送）
                 if (event.status === "connected" && !this.isSynced) {
+                    console.log("[Yjs] ✅ Connected, marking as synced")
                     this.isSynced = true
+                    console.log("[Yjs] isReadyToPush:", this.isReadyToPush())
                 }
             })
 
-            // 监听同步状态
-            this.provider.on("sync", (event: { status: boolean }) => {
-                if (event.status) {
-                    // 标记同步完成
-                    this.isSynced = true
+            // HocuspocusProvider 可能没有 sync 事件，连接成功后就认为已同步
+            // 检查服务器是否有数据
+            setTimeout(() => {
+                const serverHasData = this.ytext.length > 0
+                console.log(
+                    "[Yjs] Initial check - Server has data:",
+                    serverHasData,
+                    "length:",
+                    this.ytext.length,
+                )
 
-                    // 检查服务器是否有数据
-                    const serverHasData = this.ytext.length > 0
+                if (serverHasData) {
+                    // 服务器有数据，使用服务器数据
+                    this.lastXML = this.ytext.toString()
+                    console.log(
+                        "[Yjs] Loading XML from server, length:",
+                        this.lastXML.length,
+                    )
+                    console.log(
+                        "[Yjs] 📄 XML preview (first 200 chars):",
+                        this.lastXML.substring(0, 200),
+                    )
 
-                    if (serverHasData) {
-                        // 服务器有数据，使用服务器数据
-                        this.lastXML = this.ytext.toString()
+                    // 检查XML是否有效
+                    if (this.lastXML.includes("<mxfile")) {
+                        console.log(
+                            "[Yjs] ✅ Valid XML detected, calling onRemoteChange",
+                        )
                         this.options.onRemoteChange?.(this.lastXML)
                     } else {
-                        // 服务器没有数据，推送本地数据
-                        if (this.lastXML) {
-                            this.pushLocalUpdate(this.lastXML)
-                        }
+                        console.warn("[Yjs] ⚠️ Invalid XML format, not loading")
                     }
+                } else {
+                    console.log(
+                        "[Yjs] Server has no data, waiting for local changes",
+                    )
                 }
-            })
+            }, 500)
 
             // 监听在线用户数
-            this.provider.awareness.on("change", () => {
+            this.provider.on("awareness:change", () => {
                 const userCount = this.provider?.awareness.getStates().size || 0
+                console.log("[Yjs] User count changed:", userCount)
                 this.options.onUserCountChange?.(userCount)
             })
 
@@ -134,9 +163,19 @@ export class YjsCollaboration {
                 // 检查是否是本地更新（通过 transaction.origin 判断）
                 const isLocalUpdate = event.transaction.origin === this.provider
 
+                console.log("[Yjs] Ytext changed:", {
+                    isLocalUpdate,
+                    origin: event.transaction.origin,
+                    length: this.ytext.length,
+                })
+
                 // 只处理远程更新
                 if (!isLocalUpdate) {
                     const newXML = this.ytext.toString()
+                    console.log(
+                        "[Yjs] 📨 REMOTE UPDATE RECEIVED! XML length:",
+                        newXML.length,
+                    )
 
                     // 防抖处理，避免频繁更新
                     if (this.syncTimeout) {
@@ -145,6 +184,7 @@ export class YjsCollaboration {
 
                     this.syncTimeout = setTimeout(() => {
                         this.lastXML = newXML
+                        console.log("[Yjs] 🔔 Calling onRemoteChange callback")
                         this.options.onRemoteChange?.(newXML)
                     }, 100)
                 }
@@ -162,17 +202,31 @@ export class YjsCollaboration {
      * 推送本地更新到 Yjs
      */
     pushLocalUpdate(xml: string) {
-        if (this.isDisposed) return
+        if (this.isDisposed || !this.ytext) return
 
         this.lastXML = xml
 
         // 只有在内容真正改变时才推送
         const currentContent = this.ytext.toString()
         if (currentContent !== xml) {
-            this.ydoc.transact(() => {
-                this.ytext.delete(0, this.ytext.length)
-                this.ytext.insert(0, xml)
-            }, this.provider)
+            console.log(
+                "[Yjs] 📤 Pushing local update to Yjs, XML length:",
+                xml.length,
+            )
+
+            // 使用 provider.document 进行事务
+            const ydoc = this.provider?.document
+            if (ydoc) {
+                ydoc.transact(() => {
+                    if (this.ytext) {
+                        this.ytext.delete(0, this.ytext.length)
+                        this.ytext.insert(0, xml)
+                    }
+                }, this.provider)
+                console.log("[Yjs] ✅ Local update pushed to Yjs")
+            }
+        } else {
+            console.log("[Yjs] ⏭️ Content unchanged, skipping push")
         }
     }
 
@@ -230,14 +284,14 @@ export class YjsCollaboration {
      * 获取当前文档内容
      */
     getDocument(): string {
-        return this.ytext.toString()
+        return this.ytext?.toString() || ""
     }
 
     /**
      * 检查是否已连接
      */
     isConnected(): boolean {
-        return this.provider?.wsconnected === true
+        return this.isConnectedFlag
     }
 
     /**
@@ -265,7 +319,7 @@ export class YjsCollaboration {
         if (this.provider) {
             this.provider.destroy()
         }
-        this.ydoc.destroy()
+        // 不需要手动销毁 ydoc，因为是由 HocuspocusProvider 管理的
     }
 }
 
