@@ -23,21 +23,8 @@ const menus: MenuDataItem[] = [
     },
     {
         path: "/admin",
-        name: "管理",
-        children: [
-            {
-                path: "/admin/user",
-                name: "用户管理",
-            },
-            {
-                path: "/admin/diagram",
-                name: "题库管理",
-            },
-            {
-                path: "/admin/room",
-                name: "房间管理",
-            },
-        ],
+        name: "管理员控制台",
+        access: "admin",
     },
 ] as MenuDataItem[]
 

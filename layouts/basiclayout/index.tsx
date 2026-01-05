@@ -62,8 +62,10 @@ export default function BasicLayout({ children }: Props) {
     const router = useRouter()
     const dispatch = useDispatch<AppDispatch>()
 
-    // 判断是否是图表编辑页面
+    // 判断是否是图表编辑页面或管理员页面
     const isEditorPage = pathName.startsWith("/diagram/edit/")
+    const isAdminPage = pathName.startsWith("/admin")
+    const isFullPage = isEditorPage || isAdminPage
 
     const logout = useCallback(async () => {
         try {
@@ -103,10 +105,10 @@ export default function BasicLayout({ children }: Props) {
                     display: "flex",
                     flexDirection: "column",
                     width: "100%",
-                    // 编辑页：0 padding，隐藏溢出
+                    // 编辑页/管理员页：0 padding，隐藏溢出
                     // 普通页：保留 padding，允许 Y 轴滚动 (overflowY: "auto")
-                    padding: isEditorPage ? 0 : 24,
-                    overflowY: isEditorPage ? "hidden" : "auto",
+                    padding: isFullPage ? 0 : 24,
+                    overflowY: isFullPage ? "hidden" : "auto",
                     overflowX: "hidden",
                     height: "100%", // 让内容区撑满剩余高度，从而让滚动条出现在内容区内部
                 }}
@@ -163,16 +165,18 @@ export default function BasicLayout({ children }: Props) {
                         {dom}
                     </Link>
                 )}
-                // 编辑页不需要 Footer，普通页显示小 Footer
-                footerRender={() => (isEditorPage ? null : <GlobalFooter />)}
+                // 编辑页/管理员页不需要 Footer，普通页显示小 Footer
+                footerRender={() => (isFullPage ? null : <GlobalFooter />)}
+                // 编辑页/管理员页不需要顶部 Header，普通页显示
+                headerRender={isFullPage ? false : undefined}
             >
                 {/* --- 修复重点 2：子容器 Wrapper --- */}
                 <div
                     style={{
                         width: "100%",
-                        // 编辑页：强制占满高度，隐藏溢出（因为编辑器内部有滚动条）
+                        // 编辑页/管理员页：强制占满高度，隐藏溢出
                         // 普通页：不需要 height: 100%，让内容自然撑开；也不要 overflow: hidden
-                        ...(isEditorPage
+                        ...(isFullPage
                             ? {
                                   height: "100%",
                                   overflow: "hidden",
