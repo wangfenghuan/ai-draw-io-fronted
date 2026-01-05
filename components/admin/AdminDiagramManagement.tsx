@@ -127,7 +127,7 @@ export function AdminDiagramManagement() {
 
         try {
             const response = await downloadRemoteFile({
-                diagramId: parseInt(diagramId, 10) as any,
+                diagramId: diagramId, // 直接使用字符串，避免精度丢失
                 type: type,
             })
 
@@ -165,7 +165,7 @@ export function AdminDiagramManagement() {
 
         try {
             const response = await deleteDiagram({
-                id: parseInt(id, 10) as any,
+                id: id, // 直接使用字符串，避免精度丢失
             })
             if (response?.code === 0) {
                 message.success("删除成功")
@@ -185,6 +185,7 @@ export function AdminDiagramManagement() {
         editForm.setFieldsValue({
             name: diagram.name,
             description: diagram.description,
+            pictureUrl: diagram.pictureUrl,
         })
         setEditModalVisible(true)
     }
@@ -194,7 +195,7 @@ export function AdminDiagramManagement() {
         try {
             const values = await editForm.validateFields()
             const response = await updateDiagram({
-                id: editingDiagram?.id,
+                id: editingDiagram?.id?.toString(), // 使用字符串避免精度丢失
                 ...values,
             })
 
@@ -510,6 +511,9 @@ export function AdminDiagramManagement() {
                     </Form.Item>
                     <Form.Item label="图表描述" name="description">
                         <Input.TextArea placeholder="请输入图表描述" rows={3} />
+                    </Form.Item>
+                    <Form.Item label="图片URL" name="pictureUrl">
+                        <Input placeholder="请输入图片URL" />
                     </Form.Item>
                 </Form>
             </Modal>

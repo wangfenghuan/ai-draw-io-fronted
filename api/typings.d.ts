@@ -126,7 +126,7 @@ declare namespace API {
     }
 
     type DeleteRequest = {
-        id?: number
+        id?: number | string
     }
 
     type Diagram = {
@@ -222,9 +222,11 @@ declare namespace API {
 
     type DiagramUpdateRequest = {
         /** 图表ID */
-        id?: number
+        id?: number | string
         /** 图表标题 */
-        title?: string
+        name?: string
+        /** 图表描述 */
+        description?: string
         /** 图表代码 */
         diagramCode?: string
         /** 图片URL */
@@ -270,7 +272,7 @@ declare namespace API {
     type downloadRemoteFileParams = {
         fileName?: string
         type: string
-        diagramId: number
+        diagramId: number | string
     }
 
     type getDiagramRoomVOByIdParams = {

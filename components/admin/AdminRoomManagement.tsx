@@ -121,7 +121,7 @@ export function AdminRoomManagement() {
 
         try {
             const response = await deleteDiagramRoom({
-                id: parseInt(id, 10) as any,
+                id: id, // 直接使用字符串，避免精度丢失
             })
             if (response?.code === 0) {
                 message.success("删除成功")
