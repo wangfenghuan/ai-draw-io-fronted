@@ -63,6 +63,18 @@ declare namespace API {
         message?: string
     }
 
+    type BaseResponsePageSpace = {
+        code?: number
+        data?: PageSpace
+        message?: string
+    }
+
+    type BaseResponsePageSpaceVO = {
+        code?: number
+        data?: PageSpaceVO
+        message?: string
+    }
+
     type BaseResponsePageUser = {
         code?: number
         data?: PageUser
@@ -78,6 +90,18 @@ declare namespace API {
     type BaseResponseRoomVO = {
         code?: number
         data?: RoomVO
+        message?: string
+    }
+
+    type BaseResponseSpace = {
+        code?: number
+        data?: Space
+        message?: string
+    }
+
+    type BaseResponseSpaceVO = {
+        code?: number
+        data?: SpaceVO
         message?: string
     }
 
@@ -314,6 +338,34 @@ declare namespace API {
         id: number
     }
 
+    type getSpaceByIdParams = {
+        id: number | string // 支持 number 和 string，避免大整数精度丢失
+    }
+
+    type getSpaceVOByIdParams = {
+        id: number | string // 支持 number 和 string，避免大整数精度丢失
+    }
+
+    type listDiagramsBySpaceIdParams = {
+        spaceId: number | string // 支持 number 和 string，避免大整数精度丢失
+        current?: number
+        pageSize?: number
+        sortField?: string
+        sortOrder?: string
+        /** 图表ID */
+        id?: number
+        /** 搜索关键词 */
+        searchText?: string
+        /** 图表标题 */
+        title?: string
+        /** 图表代码 */
+        diagramCode?: string
+        /** 是否只查询 spaceId 为 null 的数据 */
+        nullSpaceId?: boolean
+        /** 创建用户ID */
+        userId?: number
+    }
+
     type getUserByIdParams = {
         id: number
     }
@@ -408,6 +460,34 @@ declare namespace API {
 
     type PageRoomVO = {
         records?: RoomVO[]
+        total?: number
+        size?: number
+        current?: number
+        orders?: OrderItem[]
+        optimizeCountSql?: any
+        searchCount?: any
+        optimizeJoinOfCountSql?: boolean
+        maxLimit?: number
+        countId?: string
+        pages?: number
+    }
+
+    type PageSpace = {
+        records?: Space[]
+        total?: number
+        size?: number
+        current?: number
+        orders?: OrderItem[]
+        optimizeCountSql?: any
+        searchCount?: any
+        optimizeJoinOfCountSql?: boolean
+        maxLimit?: number
+        countId?: string
+        pages?: number
+    }
+
+    type PageSpaceVO = {
+        records?: SpaceVO[]
         total?: number
         size?: number
         current?: number
@@ -542,10 +622,30 @@ declare namespace API {
         roomId: number
     }
 
+    type Space = {
+        id?: number
+        spaceName?: string
+        spaceLevel?: number
+        maxSize?: number
+        maxCount?: number
+        totalSize?: number
+        totalCount?: number
+        userId?: number
+        createTime?: string
+        editTime?: string
+        updateTime?: string
+        isDelete?: number
+    }
+
     type SpaceAddReqeust = {
         spaceName?: string
         spaceLevel?: number
         userId?: number
+    }
+
+    type SpaceEditRequest = {
+        id?: number
+        spaceName?: string
     }
 
     type SpaceLevel = {
@@ -559,6 +659,17 @@ declare namespace API {
         maxSize?: number
     }
 
+    type SpaceQueryRequest = {
+        current?: number
+        pageSize?: number
+        sortField?: string
+        sortOrder?: string
+        id?: number
+        userId?: number
+        spaceName?: string
+        spaceLevel?: number
+    }
+
     type SpaceUpdateRequest = {
         id?: number
         spaceName?: string
@@ -567,6 +678,21 @@ declare namespace API {
         maxCount?: number
         totalSize?: number
         totalCount?: number
+    }
+
+    type SpaceVO = {
+        id?: number
+        spaceName?: string
+        spaceLevel?: number
+        maxSize?: number
+        maxCount?: number
+        totalSize?: number
+        totalCount?: number
+        userId?: number
+        createTime?: string
+        editTime?: string
+        updateTime?: string
+        user?: UserVO
     }
 
     type SseEmitter = {

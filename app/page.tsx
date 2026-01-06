@@ -10,6 +10,7 @@ import { App, Button, Card, Space, Typography } from "antd"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
 import { addDiagram } from "@/api/diagramController"
+import { CreateDiagramDialog } from "@/components/create-diagram-dialog"
 import { CreateSpaceDialog } from "@/components/create-space-dialog"
 
 const { Title, Paragraph } = Typography
@@ -19,6 +20,8 @@ const Home: React.FC = () => {
     const router = useRouter()
     const [loading, setLoading] = React.useState(false)
     const [createSpaceDialogVisible, setCreateSpaceDialogVisible] =
+        useState(false)
+    const [createDiagramDialogVisible, setCreateDiagramDialogVisible] =
         useState(false)
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
     const [particles, setParticles] = useState<
@@ -50,34 +53,13 @@ const Home: React.FC = () => {
         setParticles(newParticles)
     }, [])
 
-    const handleCreateDiagram = async () => {
-        try {
-            setLoading(true)
+    const handleCreateDiagram = () => {
+        setCreateDiagramDialogVisible(true)
+    }
 
-            // 调用创建图表的 API
-            const response = await addDiagram({
-                name: "未命名图表",
-                diagramCode: "",
-                pictureUrl: "",
-            })
-
-            // 检查响应状态，code 为 0 表示成功
-            if (response && response.code === 0 && response.data) {
-                const diagramId = response.data
-
-                message.success("图表创建成功！")
-
-                // 跳转到编辑页面，将图表 ID 作为路由参数传递
-                router.push(`/diagram/edit/${diagramId}`)
-            } else {
-                message.error(response?.message || "创建图表失败，请稍后重试")
-            }
-        } catch (error) {
-            console.error("创建图表失败:", error)
-            message.error("创建图表失败，请稍后重试")
-        } finally {
-            setLoading(false)
-        }
+    const handleDiagramCreated = (diagramId: string | number) => {
+        // 跳转到编辑页面，将图表 ID 作为路由参数传递
+        router.push(`/diagram/edit/${diagramId}`)
     }
 
     const quickTemplates = [
@@ -441,6 +423,13 @@ const Home: React.FC = () => {
                 onSuccess={() => {
                     message.success("空间创建成功！")
                 }}
+            />
+
+            {/* 创建图表对话框 */}
+            <CreateDiagramDialog
+                open={createDiagramDialogVisible}
+                onOpenChange={setCreateDiagramDialogVisible}
+                onSuccess={handleDiagramCreated}
             />
         </div>
     )

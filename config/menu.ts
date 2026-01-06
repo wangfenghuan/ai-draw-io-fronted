@@ -6,6 +6,10 @@ const menus: MenuDataItem[] = [
         name: "主页",
     },
     {
+        path: "/my-spaces",
+        name: "我的空间",
+    },
+    {
         path: "/my-diagrams",
         name: "我的图表",
     },

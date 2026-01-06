@@ -62,10 +62,9 @@ export default function BasicLayout({ children }: Props) {
     const router = useRouter()
     const dispatch = useDispatch<AppDispatch>()
 
-    // 判断是否是图表编辑页面或管理员页面
-    const isEditorPage = pathName.startsWith("/diagram/edit/")
+    // 判断是否是管理员页面（管理员页面全屏显示，图表编辑页面显示导航栏）
     const isAdminPage = pathName.startsWith("/admin")
-    const isFullPage = isEditorPage || isAdminPage
+    const isFullPage = isAdminPage
 
     const logout = useCallback(async () => {
         try {
