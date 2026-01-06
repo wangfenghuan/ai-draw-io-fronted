@@ -31,21 +31,8 @@
         "lint": "biome lint .",
         "format": "biome check --write .",
         "check": "biome ci",
-        "prepare": "husky",
-        "electron:dev": "concurrently \"npm run dev\" \"wait-on http://localhost:6002 && electron electron/main.ts\"",
-        "electron:build": "npm run build && npm run electron:compile && electron-builder",
-        "electron:build:mac": "npm run build && npm run electron:compile && electron-builder --mac",
-        "electron:build:mac:arm64": "npm run build && npm run electron:compile && electron-builder --mac --config electron-builder-arm64.yml",
-        "electron:build:mac:universal": "npm run build && npm run electron:compile && electron-builder --mac --universal",
-        "electron:build:win": "npm run build && npm run electron:compile && electron-builder --win",
-        "electron:build:win:x64": "npm run build && npm run electron:compile && electron-builder --win --x64",
-        "electron:build:win:arm64": "npm run build && npm run electron:compile && electron-builder --win --arm64",
-        "electron:build:dir": "npm run build && npm run electron:compile && electron-builder --dir",
-        "electron:dist": "npm run build && npm run electron:compile && electron-builder",
-        "electron:compile": "tsc electron/main.ts electron/preload.ts --outDir dist-electron --module esnext --target es2020 --moduleResolution node --esModuleInterop --skipLibCheck",
-        "postinstall": "electron-builder install-app-deps"
+        "prepare": "husky"
     },
-    "main": "dist-electron/main.js",
     "dependencies": {
         "@ai-sdk/amazon-bedrock": "^3.0.70",
         "@ai-sdk/anthropic": "^2.0.44",
@@ -124,15 +111,11 @@
         "@types/react": "^19",
         "@types/react-dom": "^19",
         "@umijs/openapi": "^1.14.1",
-        "concurrently": "^9.1.2",
-        "electron": "^35.2.1",
-        "electron-builder": "^26.0.12",
         "eslint": "9.39.1",
         "eslint-config-next": "16.0.5",
         "husky": "^9.1.7",
         "lint-staged": "^16.2.7",
         "tailwindcss": "^4",
-        "typescript": "^5",
-        "wait-on": "^8.0.3"
+        "typescript": "^5"
     }
 }
