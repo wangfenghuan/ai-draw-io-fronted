@@ -140,3 +140,18 @@ export async function updateDiagramRoom(
         ...(options || {}),
     })
 }
+
+/** 修改房间访问地址 POST /room/updateRoomUrl */
+export async function updateRoomUrl(
+    body: API.RoomUrlEditRequest,
+    options?: { [key: string]: any },
+) {
+    return request<API.BaseResponseBoolean>("/room/updateRoomUrl", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        data: body,
+        ...(options || {}),
+    })
+}

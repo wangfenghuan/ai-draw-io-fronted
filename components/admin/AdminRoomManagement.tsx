@@ -5,6 +5,7 @@ import {
     DeleteOutlined,
     EditOutlined,
     EyeOutlined,
+    LoadingOutlined,
     SearchOutlined,
     TeamOutlined,
     UserOutlined,
@@ -19,11 +20,13 @@ import {
     Modal,
     Pagination,
     Popconfirm,
+    Spin,
     Tooltip,
 } from "antd"
 import { useEffect, useState } from "react"
 import {
     deleteDiagramRoom,
+    getDiagramRoomVoById,
     listDiagramRoomVoByPage,
     updateDiagramRoom,
 } from "@/api/roomController"
@@ -44,6 +47,7 @@ export function AdminRoomManagement() {
     const [searchText, setSearchText] = useState("")
     const [editModalVisible, setEditModalVisible] = useState(false)
     const [editingRoom, setEditingRoom] = useState<API.RoomVO | null>(null)
+    const [loadingRoomDetail, setLoadingRoomDetail] = useState(false)
     const [editForm] = Form.useForm()
 
     // 加载房间列表
@@ -136,15 +140,40 @@ export function AdminRoomManagement() {
     }
 
     // 打开编辑模态框
-    const handleOpenEditModal = (room: API.RoomVO) => {
-        setEditingRoom(room)
-        editForm.setFieldsValue({
-            roomName: room.roomName,
-            isPublic: room.isPublic,
-            isOpen: room.isOpen,
-            accessKey: room.accessKey,
-        })
-        setEditModalVisible(true)
+    const handleOpenEditModal = async (room: API.RoomVO) => {
+        if (!room.id) return
+
+        setLoadingRoomDetail(true)
+        setEditModalVisible(true) // 先打开模态框
+
+        try {
+            // 根据id查询房间详情，确保数据是最新的
+            const response = await getDiagramRoomVoById({ id: room.id })
+            console.log("getDiagramRoomVoById response:", response)
+            if (response?.code === 0 && response?.data) {
+                const roomData = response.data
+                console.log("Setting editing room:", roomData)
+                setEditingRoom(roomData)
+
+                // 设置表单值
+                editForm.setFieldsValue({
+                    roomName: roomData.roomName,
+                    isPublic: roomData.isPublic,
+                    isOpen: roomData.isOpen,
+                    accessKey: roomData.accessKey,
+                })
+                setLoadingRoomDetail(false)
+            } else {
+                message.error(response?.message || "获取房间详情失败")
+                setEditModalVisible(false)
+                setLoadingRoomDetail(false)
+            }
+        } catch (error) {
+            console.error("获取房间详情失败:", error)
+            message.error("获取房间详情失败，请稍后重试")
+            setEditModalVisible(false)
+            setLoadingRoomDetail(false)
+        }
     }
 
     // 保存编辑
@@ -359,6 +388,10 @@ export function AdminRoomManagement() {
                                         <Button
                                             size="small"
                                             icon={<EditOutlined />}
+                                            loading={
+                                                loadingRoomDetail &&
+                                                editingRoom?.id === room.id
+                                            }
                                             onClick={() =>
                                                 handleOpenEditModal(room)
                                             }
@@ -415,37 +448,47 @@ export function AdminRoomManagement() {
                 title="编辑房间信息"
                 open={editModalVisible}
                 onOk={handleSaveEdit}
-                onCancel={() => setEditModalVisible(false)}
+                onCancel={() => {
+                    setEditModalVisible(false)
+                    editForm.resetFields()
+                }}
                 okText="保存"
                 cancelText="取消"
-                destroyOnClose
+                forceRender
             >
-                <Form form={editForm} layout="vertical" preserve={false}>
-                    <Form.Item
-                        label="房间名称"
-                        name="roomName"
-                        rules={[{ required: true, message: "请输入房间名称" }]}
-                    >
-                        <Input placeholder="请输入房间名称" />
-                    </Form.Item>
-                    <Form.Item
-                        label="是否公开"
-                        name="isPublic"
-                        tooltip="0=公开，1=私有"
-                    >
-                        <Input type="number" placeholder="0=公开, 1=私有" />
-                    </Form.Item>
-                    <Form.Item
-                        label="是否开启"
-                        name="isOpen"
-                        tooltip="0=开启，1=关闭"
-                    >
-                        <Input type="number" placeholder="0=开启, 1=关闭" />
-                    </Form.Item>
-                    <Form.Item label="访问密码" name="accessKey">
-                        <Input placeholder="请输入访问密码" />
-                    </Form.Item>
-                </Form>
+                <Spin
+                    spinning={loadingRoomDetail}
+                    indicator={<LoadingOutlined spin />}
+                >
+                    <Form form={editForm} layout="vertical">
+                        <Form.Item
+                            label="房间名称"
+                            name="roomName"
+                            rules={[
+                                { required: true, message: "请输入房间名称" },
+                            ]}
+                        >
+                            <Input placeholder="请输入房间名称" />
+                        </Form.Item>
+                        <Form.Item
+                            label="是否公开"
+                            name="isPublic"
+                            tooltip="0=公开，1=私有"
+                        >
+                            <Input type="number" placeholder="0=公开, 1=私有" />
+                        </Form.Item>
+                        <Form.Item
+                            label="是否开启"
+                            name="isOpen"
+                            tooltip="0=开启，1=关闭"
+                        >
+                            <Input type="number" placeholder="0=开启, 1=关闭" />
+                        </Form.Item>
+                        <Form.Item label="访问密码" name="accessKey">
+                            <Input placeholder="请输入访问密码" />
+                        </Form.Item>
+                    </Form>
+                </Spin>
             </Modal>
         </>
     )

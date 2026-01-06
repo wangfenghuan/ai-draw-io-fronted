@@ -4,6 +4,7 @@ import {
     ClockCircleOutlined,
     DeleteOutlined,
     EditOutlined,
+    LoadingOutlined,
     PlusOutlined,
     SearchOutlined,
     UserOutlined,
@@ -17,6 +18,7 @@ import {
     Modal,
     Pagination,
     Popconfirm,
+    Spin,
     Table,
     Tag,
     Tooltip,
@@ -25,6 +27,7 @@ import { useEffect, useState } from "react"
 import {
     addUser,
     deleteUser,
+    getUserVoById,
     listUserVoByPage,
     updateUser,
 } from "@/api/userController"
@@ -46,6 +49,7 @@ export function AdminUserManagement() {
     const [editModalVisible, setEditModalVisible] = useState(false)
     const [addModalVisible, setAddModalVisible] = useState(false)
     const [editingUser, setEditingUser] = useState<API.UserVO | null>(null)
+    const [loadingUserDetail, setLoadingUserDetail] = useState(false)
     const [editForm] = Form.useForm()
     const [addForm] = Form.useForm()
 
@@ -137,15 +141,40 @@ export function AdminUserManagement() {
     }
 
     // 打开编辑模态框
-    const handleOpenEditModal = (user: API.UserVO) => {
-        setEditingUser(user)
-        editForm.setFieldsValue({
-            userName: user.userName,
-            userAvatar: user.userAvatar,
-            userProfile: user.userProfile,
-            userRole: user.userRole,
-        })
-        setEditModalVisible(true)
+    const handleOpenEditModal = async (user: API.UserVO) => {
+        if (!user.id) return
+
+        setLoadingUserDetail(true)
+        setEditModalVisible(true) // 先打开模态框
+
+        try {
+            // 根据id查询用户详情，确保数据是最新的
+            const response = await getUserVoById({ id: user.id })
+            console.log("getUserVoById response:", response)
+            if (response?.code === 0 && response?.data) {
+                const userData = response.data
+                console.log("Setting editing user:", userData)
+                setEditingUser(userData)
+
+                // 设置表单值
+                editForm.setFieldsValue({
+                    userName: userData.userName,
+                    userAvatar: userData.userAvatar,
+                    userProfile: userData.userProfile,
+                    userRole: userData.userRole,
+                })
+                setLoadingUserDetail(false)
+            } else {
+                message.error(response?.message || "获取用户详情失败")
+                setEditModalVisible(false)
+                setLoadingUserDetail(false)
+            }
+        } catch (error) {
+            console.error("获取用户详情失败:", error)
+            message.error("获取用户详情失败，请稍后重试")
+            setEditModalVisible(false)
+            setLoadingUserDetail(false)
+        }
     }
 
     // 保存编辑
@@ -258,6 +287,10 @@ export function AdminUserManagement() {
                         <Button
                             size="small"
                             icon={<EditOutlined />}
+                            loading={
+                                loadingUserDetail &&
+                                editingUser?.id === record.id
+                            }
                             onClick={() => handleOpenEditModal(record)}
                         />
                     </Tooltip>
@@ -355,33 +388,48 @@ export function AdminUserManagement() {
                 title="编辑用户信息"
                 open={editModalVisible}
                 onOk={handleSaveEdit}
-                onCancel={() => setEditModalVisible(false)}
+                onCancel={() => {
+                    setEditModalVisible(false)
+                    editForm.resetFields()
+                }}
                 okText="保存"
                 cancelText="取消"
-                destroyOnClose
+                forceRender
             >
-                <Form form={editForm} layout="vertical" preserve={false}>
-                    <Form.Item
-                        label="用户名"
-                        name="userName"
-                        rules={[{ required: true, message: "请输入用户名" }]}
-                    >
-                        <Input placeholder="请输入用户名" />
-                    </Form.Item>
-                    <Form.Item label="用户头像" name="userAvatar">
-                        <Input placeholder="请输入头像URL" />
-                    </Form.Item>
-                    <Form.Item label="用户简介" name="userProfile">
-                        <Input.TextArea placeholder="请输入用户简介" rows={3} />
-                    </Form.Item>
-                    <Form.Item
-                        label="用户角色"
-                        name="userRole"
-                        rules={[{ required: true, message: "请选择用户角色" }]}
-                    >
-                        <Input placeholder="admin 或 user" />
-                    </Form.Item>
-                </Form>
+                <Spin
+                    spinning={loadingUserDetail}
+                    indicator={<LoadingOutlined spin />}
+                >
+                    <Form form={editForm} layout="vertical">
+                        <Form.Item
+                            label="用户名"
+                            name="userName"
+                            rules={[
+                                { required: true, message: "请输入用户名" },
+                            ]}
+                        >
+                            <Input placeholder="请输入用户名" />
+                        </Form.Item>
+                        <Form.Item label="用户头像" name="userAvatar">
+                            <Input placeholder="请输入头像URL" />
+                        </Form.Item>
+                        <Form.Item label="用户简介" name="userProfile">
+                            <Input.TextArea
+                                placeholder="请输入用户简介"
+                                rows={3}
+                            />
+                        </Form.Item>
+                        <Form.Item
+                            label="用户角色"
+                            name="userRole"
+                            rules={[
+                                { required: true, message: "请选择用户角色" },
+                            ]}
+                        >
+                            <Input placeholder="admin 或 user" />
+                        </Form.Item>
+                    </Form>
+                </Spin>
             </Modal>
 
             {/* 添加用户模态框 */}

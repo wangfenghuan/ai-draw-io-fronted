@@ -6,6 +6,7 @@ import {
     DownloadOutlined,
     EditOutlined,
     FileTextOutlined,
+    LoadingOutlined,
     SearchOutlined,
     UserOutlined,
 } from "@ant-design/icons"
@@ -19,12 +20,14 @@ import {
     Modal,
     Pagination,
     Popconfirm,
+    Spin,
     Tooltip,
 } from "antd"
 import { useEffect, useState } from "react"
 import {
     deleteDiagram,
     downloadRemoteFile,
+    getDiagramVoById,
     listDiagramVoByPage,
     updateDiagram,
 } from "@/api/diagramController"
@@ -47,6 +50,7 @@ export function AdminDiagramManagement() {
     const [editingDiagram, setEditingDiagram] = useState<API.DiagramVO | null>(
         null,
     )
+    const [loadingDiagramDetail, setLoadingDiagramDetail] = useState(false)
     const [editForm] = Form.useForm()
 
     // 加载图表列表
@@ -180,14 +184,39 @@ export function AdminDiagramManagement() {
     }
 
     // 打开编辑模态框
-    const handleOpenEditModal = (diagram: API.DiagramVO) => {
-        setEditingDiagram(diagram)
-        editForm.setFieldsValue({
-            name: diagram.name,
-            description: diagram.description,
-            pictureUrl: diagram.pictureUrl,
-        })
-        setEditModalVisible(true)
+    const handleOpenEditModal = async (diagram: API.DiagramVO) => {
+        if (!diagram.id) return
+
+        setLoadingDiagramDetail(true)
+        setEditModalVisible(true) // 先打开模态框
+
+        try {
+            // 根据id查询图表详情，确保数据是最新的
+            const response = await getDiagramVoById({ id: diagram.id })
+            console.log("getDiagramVoById response:", response)
+            if (response?.code === 0 && response?.data) {
+                const diagramData = response.data
+                console.log("Setting editing diagram:", diagramData)
+                setEditingDiagram(diagramData)
+
+                // 设置表单值
+                editForm.setFieldsValue({
+                    name: diagramData.name,
+                    description: diagramData.description,
+                    pictureUrl: diagramData.pictureUrl,
+                })
+                setLoadingDiagramDetail(false)
+            } else {
+                message.error(response?.message || "获取图表详情失败")
+                setEditModalVisible(false)
+                setLoadingDiagramDetail(false)
+            }
+        } catch (error) {
+            console.error("获取图表详情失败:", error)
+            message.error("获取图表详情失败，请稍后重试")
+            setEditModalVisible(false)
+            setLoadingDiagramDetail(false)
+        }
     }
 
     // 保存编辑
@@ -440,6 +469,11 @@ export function AdminDiagramManagement() {
                                         <Button
                                             size="small"
                                             icon={<EditOutlined />}
+                                            loading={
+                                                loadingDiagramDetail &&
+                                                editingDiagram?.id ===
+                                                    diagram.id
+                                            }
                                             onClick={() =>
                                                 handleOpenEditModal(diagram)
                                             }
@@ -496,26 +530,39 @@ export function AdminDiagramManagement() {
                 title="编辑图表信息"
                 open={editModalVisible}
                 onOk={handleSaveEdit}
-                onCancel={() => setEditModalVisible(false)}
+                onCancel={() => {
+                    setEditModalVisible(false)
+                    editForm.resetFields()
+                }}
                 okText="保存"
                 cancelText="取消"
-                destroyOnClose
+                forceRender
             >
-                <Form form={editForm} layout="vertical" preserve={false}>
-                    <Form.Item
-                        label="图表标题"
-                        name="name"
-                        rules={[{ required: true, message: "请输入图表标题" }]}
-                    >
-                        <Input placeholder="请输入图表标题" />
-                    </Form.Item>
-                    <Form.Item label="图表描述" name="description">
-                        <Input.TextArea placeholder="请输入图表描述" rows={3} />
-                    </Form.Item>
-                    <Form.Item label="图片URL" name="pictureUrl">
-                        <Input placeholder="请输入图片URL" />
-                    </Form.Item>
-                </Form>
+                <Spin
+                    spinning={loadingDiagramDetail}
+                    indicator={<LoadingOutlined spin />}
+                >
+                    <Form form={editForm} layout="vertical">
+                        <Form.Item
+                            label="图表标题"
+                            name="name"
+                            rules={[
+                                { required: true, message: "请输入图表标题" },
+                            ]}
+                        >
+                            <Input placeholder="请输入图表标题" />
+                        </Form.Item>
+                        <Form.Item label="图表描述" name="description">
+                            <Input.TextArea
+                                placeholder="请输入图表描述"
+                                rows={3}
+                            />
+                        </Form.Item>
+                        <Form.Item label="图片URL" name="pictureUrl">
+                            <Input placeholder="请输入图片URL" />
+                        </Form.Item>
+                    </Form>
+                </Spin>
             </Modal>
         </>
     )

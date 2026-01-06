@@ -2,6 +2,7 @@
 
 import {
     BulbOutlined,
+    FolderOutlined,
     PlusOutlined,
     ThunderboltOutlined,
 } from "@ant-design/icons"
@@ -9,6 +10,7 @@ import { App, Button, Card, Space, Typography } from "antd"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
 import { addDiagram } from "@/api/diagramController"
+import { CreateSpaceDialog } from "@/components/create-space-dialog"
 
 const { Title, Paragraph } = Typography
 
@@ -16,6 +18,8 @@ const Home: React.FC = () => {
     const { message } = App.useApp()
     const router = useRouter()
     const [loading, setLoading] = React.useState(false)
+    const [createSpaceDialogVisible, setCreateSpaceDialogVisible] =
+        useState(false)
     const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
     const [particles, setParticles] = useState<
         Array<{ id: number; x: number; y: number; vx: number; vy: number }>
@@ -83,6 +87,12 @@ const Home: React.FC = () => {
             desc: "从零开始创建",
         },
         { icon: <BulbOutlined />, title: "AI 辅助", desc: "智能生成图表" },
+        {
+            icon: <FolderOutlined />,
+            title: "创建空间",
+            desc: "新建私有空间",
+            onClick: () => setCreateSpaceDialogVisible(true),
+        },
     ]
 
     return (
@@ -314,6 +324,7 @@ const Home: React.FC = () => {
                             <Card
                                 key={index}
                                 hoverable
+                                onClick={() => item.onClick && item.onClick()}
                                 style={{
                                     flex: 1,
                                     borderRadius: "16px",
@@ -323,6 +334,9 @@ const Home: React.FC = () => {
                                     transition: "all 0.3s ease",
                                     position: "relative",
                                     overflow: "hidden",
+                                    cursor: item.onClick
+                                        ? "pointer"
+                                        : "default",
                                 }}
                                 styles={{
                                     body: {
@@ -419,6 +433,15 @@ const Home: React.FC = () => {
                     }
                 }
             `}</style>
+
+            {/* 创建空间对话框 */}
+            <CreateSpaceDialog
+                open={createSpaceDialogVisible}
+                onOpenChange={setCreateSpaceDialogVisible}
+                onSuccess={() => {
+                    message.success("空间创建成功！")
+                }}
+            />
         </div>
     )
 }
