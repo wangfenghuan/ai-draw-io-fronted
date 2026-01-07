@@ -5,6 +5,7 @@ import {
     DeleteOutlined,
     EditOutlined,
     FileTextOutlined,
+    LoadingOutlined,
     PlusOutlined,
     SearchOutlined,
 } from "@ant-design/icons"
@@ -14,20 +15,25 @@ import {
     Button,
     Card,
     Empty,
+    Form,
     Input,
+    Modal,
     Pagination,
     Popconfirm,
+    Spin,
     Tooltip,
 } from "antd"
 import { useParams, useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
     addDiagram,
     deleteDiagram,
     downloadRemoteFile,
     editDiagram,
+    getDiagramVoById,
 } from "@/api/diagramController"
 import { getSpaceVoById, listDiagramsBySpaceId } from "@/api/spaceController"
+import { toNumber } from "@/lib/utils"
 
 const { Search } = Input
 
@@ -50,16 +56,27 @@ export default function SpaceDiagramsPage() {
     const [editingDiagram, setEditingDiagram] = useState<API.DiagramVO | null>(
         null,
     )
-    const [editForm] = useState({
+    const [loadingDiagramDetail, setLoadingDiagramDetail] = useState(false)
+    const [editFormState] = useState({
         name: "",
         description: "",
     })
+    const [editForm] = Form.useForm()
     const [spaceInfo, setSpaceInfo] = useState<API.SpaceVO | null>(null)
     const [createLoading, setCreateLoading] = useState(false)
+
+    // 添加防重复请求的标记
+    const isLoadingRef = useRef(false)
+    const isSpaceInfoLoadingRef = useRef(false)
 
     // 加载空间信息
     const loadSpaceInfo = async () => {
         if (!spaceId) return
+        // 防止重复请求
+        if (isSpaceInfoLoadingRef.current) {
+            return
+        }
+        isSpaceInfoLoadingRef.current = true
 
         try {
             const response = await getSpaceVoById({ id: spaceId as any })
@@ -68,6 +85,8 @@ export default function SpaceDiagramsPage() {
             }
         } catch (error) {
             console.error("加载空间信息失败:", error)
+        } finally {
+            isSpaceInfoLoadingRef.current = false
         }
     }
 
@@ -78,7 +97,13 @@ export default function SpaceDiagramsPage() {
     ) => {
         if (!spaceId) return
 
+        // 防止重复请求
+        if (isLoadingRef.current) {
+            return
+        }
+        isLoadingRef.current = true
         setLoading(true)
+
         try {
             const response = await listDiagramsBySpaceId({
                 spaceId: spaceId,
@@ -93,9 +118,9 @@ export default function SpaceDiagramsPage() {
                 const data = response.data
                 const records = data.records || []
 
-                const serverCurrent = Number(data.current) || 1
-                const serverSize = Number(data.size) || 12
-                let serverTotal = Number(data.total) || 0
+                const serverCurrent = toNumber(data.current) || 1
+                const serverSize = toNumber(data.size) || 12
+                let serverTotal = toNumber(data.total) || 0
 
                 if (serverTotal === 0 && records.length > 0) {
                     if (records.length > serverSize) {
@@ -121,6 +146,7 @@ export default function SpaceDiagramsPage() {
             console.error("加载图表列表失败:", error)
             message.error("系统繁忙，请稍后重试")
         } finally {
+            isLoadingRef.current = false
             setLoading(false)
         }
     }
@@ -205,34 +231,64 @@ export default function SpaceDiagramsPage() {
     }
 
     // 打开编辑模态框
-    const handleOpenEditModal = (diagram: API.DiagramVO) => {
-        setEditingDiagram(diagram)
-        setEditForm({
-            name: diagram.name || "",
-            description: diagram.description || "",
-        })
+    const handleOpenEditModal = async (diagram: API.DiagramVO) => {
+        if (!diagram.id) return
+
+        setLoadingDiagramDetail(true)
         setEditModalVisible(true)
+
+        try {
+            // 从后端查询图表详情，确保数据是最新的
+            const response = await getDiagramVoById({
+                id: diagram.id as any,
+            })
+
+            if (response?.code === 0 && response?.data) {
+                const diagramData = response.data
+                setEditingDiagram(diagramData)
+
+                // 设置表单值
+                editForm.setFieldsValue({
+                    name: diagramData.name || "",
+                    description: diagramData.description || "",
+                })
+                setLoadingDiagramDetail(false)
+            } else {
+                message.error(response?.message || "获取图表详情失败")
+                setEditModalVisible(false)
+                setLoadingDiagramDetail(false)
+            }
+        } catch (error) {
+            console.error("获取图表详情失败:", error)
+            message.error("获取图表详情失败，请稍后重试")
+            setEditModalVisible(false)
+            setLoadingDiagramDetail(false)
+        }
     }
 
     // 保存编辑
     const handleSaveEdit = async () => {
         try {
+            const values = await editForm.validateFields()
             const response = await editDiagram({
                 id: editingDiagram?.id,
-                name: editForm.name,
-                description: editForm.description,
+                name: values.name,
+                description: values.description,
             })
 
             if (response?.code === 0) {
                 message.success("保存成功")
                 setEditModalVisible(false)
+                editForm.resetFields()
                 loadDiagrams()
             } else {
                 message.error(response?.message || "保存失败")
             }
         } catch (error) {
             console.error("保存失败:", error)
-            message.error("保存失败")
+            if (!error.errorFields) {
+                message.error("保存失败")
+            }
         }
     }
 
@@ -568,7 +624,39 @@ export default function SpaceDiagramsPage() {
             </Card>
 
             {/* 编辑信息模态框 */}
-            {/* 这里可以添加编辑模态框，如果需要的话 */}
+            <Modal
+                title="编辑图表信息"
+                open={editModalVisible}
+                onOk={handleSaveEdit}
+                onCancel={() => {
+                    setEditModalVisible(false)
+                    editForm.resetFields()
+                }}
+                okText="保存"
+                cancelText="取消"
+                destroyOnClose
+                forceRender
+            >
+                <Spin
+                    spinning={loadingDiagramDetail}
+                    indicator={<LoadingOutlined spin />}
+                >
+                    <Form form={editForm} layout="vertical" preserve={false}>
+                        <Form.Item
+                            label="图表名称"
+                            name="name"
+                            rules={[
+                                { required: true, message: "请输入图表名称" },
+                            ]}
+                        >
+                            <Input placeholder="请输入图表名称" />
+                        </Form.Item>
+                        <Form.Item label="描述" name="description">
+                            <Input.TextArea rows={4} placeholder="请输入描述" />
+                        </Form.Item>
+                    </Form>
+                </Spin>
+            </Modal>
         </div>
     )
 }

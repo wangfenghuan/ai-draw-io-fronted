@@ -6,6 +6,10 @@ const menus: MenuDataItem[] = [
         name: "主页",
     },
     {
+        path: "/diagrams",
+        name: "图表广场",
+    },
+    {
         path: "/my-spaces",
         name: "我的空间",
     },
@@ -15,15 +19,7 @@ const menus: MenuDataItem[] = [
     },
     {
         path: "/my-rooms",
-        name: "我的协作房间",
-    },
-    {
-        path: "/diagrams",
-        name: "图表广场",
-    },
-    {
-        path: "/room",
-        name: "协作空间",
+        name: "协作房间",
     },
     {
         path: "/admin",

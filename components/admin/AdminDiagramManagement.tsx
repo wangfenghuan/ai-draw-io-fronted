@@ -23,7 +23,7 @@ import {
     Spin,
     Tooltip,
 } from "antd"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
     deleteDiagram,
     downloadRemoteFile,
@@ -53,12 +53,21 @@ export function AdminDiagramManagement() {
     const [loadingDiagramDetail, setLoadingDiagramDetail] = useState(false)
     const [editForm] = Form.useForm()
 
+    // 添加防重复请求的标记
+    const isLoadingRef = useRef(false)
+
     // 加载图表列表
     const loadDiagrams = async (
         current = pagination.current,
         pageSize = pagination.pageSize,
     ) => {
+        // 防止重复请求
+        if (isLoadingRef.current) {
+            return
+        }
+        isLoadingRef.current = true
         setLoading(true)
+
         try {
             const response = await listDiagramVoByPage({
                 current: current,
@@ -100,6 +109,7 @@ export function AdminDiagramManagement() {
             console.error("加载图表列表失败:", error)
             message.error("系统繁忙，请稍后重试")
         } finally {
+            isLoadingRef.current = false
             setLoading(false)
         }
     }

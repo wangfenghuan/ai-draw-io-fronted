@@ -27,7 +27,7 @@ import {
     Tooltip,
 } from "antd"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
     addSpace,
     deleteSpace,
@@ -36,6 +36,7 @@ import {
     listMySpaceVoByPage,
     listSpaceLevel,
 } from "@/api/spaceController"
+import { calculatePercentage, formatFileSize, toNumber } from "@/lib/utils"
 
 const { Search } = Input
 
@@ -62,8 +63,18 @@ export default function MySpacesPage() {
     const [createForm] = Form.useForm()
     const [editForm] = Form.useForm()
 
+    // 添加防重复请求的标记
+    const isLoadingRef = useRef(false)
+    const isLevelsLoadingRef = useRef(false)
+
     // 加载空间级别列表
     const loadSpaceLevels = async () => {
+        // 防止重复请求
+        if (isLevelsLoadingRef.current) {
+            return
+        }
+        isLevelsLoadingRef.current = true
+
         try {
             const response = await listSpaceLevel()
             if (response?.code === 0 && response?.data) {
@@ -71,6 +82,8 @@ export default function MySpacesPage() {
             }
         } catch (error) {
             console.error("加载空间级别失败:", error)
+        } finally {
+            isLevelsLoadingRef.current = false
         }
     }
 
@@ -101,7 +114,13 @@ export default function MySpacesPage() {
         current = pagination.current,
         pageSize = pagination.pageSize,
     ) => {
+        // 防止重复请求
+        if (isLoadingRef.current) {
+            return
+        }
+        isLoadingRef.current = true
         setLoading(true)
+
         try {
             const response = await listMySpaceVoByPage({
                 current: current,
@@ -143,6 +162,7 @@ export default function MySpacesPage() {
             console.error("加载空间列表失败:", error)
             antMessage.error("系统繁忙，请稍后重试")
         } finally {
+            isLoadingRef.current = false
             setLoading(false)
         }
     }
@@ -227,11 +247,11 @@ export default function MySpacesPage() {
     }
 
     // 删除空间
-    const handleDeleteSpace = async (id: number | undefined) => {
+    const handleDeleteSpace = async (id: number | string | undefined) => {
         if (!id) return
 
         try {
-            const response = await deleteSpace({ id })
+            const response = await deleteSpace({ id: id as any })
             if (response?.code === 0) {
                 antMessage.success("删除成功")
                 loadSpaces()
@@ -247,7 +267,7 @@ export default function MySpacesPage() {
     // 查看空间详情
     const handleViewDetail = async (space: API.SpaceVO) => {
         try {
-            const response = await getSpaceVoById({ id: space.id })
+            const response = await getSpaceVoById({ id: space.id as any })
             if (response?.code === 0 && response?.data) {
                 setViewingSpace(response.data)
                 setDetailModalVisible(true)
@@ -263,21 +283,6 @@ export default function MySpacesPage() {
     // 查看空间内的图表
     const handleViewDiagrams = (spaceId: number) => {
         router.push(`/my-spaces/${spaceId}/diagrams`)
-    }
-
-    // 格式化文件大小
-    const formatSize = (bytes: number | undefined) => {
-        if (!bytes) return "0 B"
-        const k = 1024
-        const sizes = ["B", "KB", "MB", "GB"]
-        const i = Math.floor(Math.log(bytes) / Math.log(k))
-        return Math.round((bytes / k ** i) * 100) / 100 + " " + sizes[i]
-    }
-
-    // 计算使用百分比
-    const calculatePercentage = (used: number, total: number) => {
-        if (!total || total === 0) return 0
-        return Math.round((used / total) * 100)
     }
 
     return (
@@ -389,12 +394,12 @@ export default function MySpacesPage() {
                                 space.spaceLevel || 0,
                             )
                             const countPercent = calculatePercentage(
-                                space.totalCount || 0,
-                                space.maxCount || 0,
+                                toNumber(space.totalCount),
+                                toNumber(space.maxCount),
                             )
                             const sizePercent = calculatePercentage(
-                                space.totalSize || 0,
-                                space.maxSize || 0,
+                                toNumber(space.totalSize),
+                                toNumber(space.maxSize),
                             )
 
                             return (
@@ -527,8 +532,8 @@ export default function MySpacesPage() {
                                                             : "#1890ff",
                                                 }}
                                             >
-                                                {space.totalCount || 0} /{" "}
-                                                {space.maxCount || 0}
+                                                {toNumber(space.totalCount)} /{" "}
+                                                {toNumber(space.maxCount)}
                                             </div>
                                         </div>
                                         <div style={{ flex: 1 }}>
@@ -555,8 +560,11 @@ export default function MySpacesPage() {
                                                             : "#1890ff",
                                                 }}
                                             >
-                                                {formatSize(space.totalSize)} /{" "}
-                                                {formatSize(space.maxSize)}
+                                                {formatFileSize(
+                                                    space.totalSize,
+                                                )}{" "}
+                                                /{" "}
+                                                {formatFileSize(space.maxSize)}
                                             </div>
                                         </div>
                                     </div>
@@ -650,8 +658,9 @@ export default function MySpacesPage() {
                                                 color: "#999",
                                             }}
                                         >
-                                            最大 {level.maxCount} 个图表，
-                                            {formatSize(level.maxSize)} 存储
+                                            最大 {toNumber(level.maxCount)}{" "}
+                                            个图表，
+                                            {formatFileSize(level.maxSize)} 存储
                                         </div>
                                     </div>
                                 </Select.Option>
@@ -756,14 +765,14 @@ export default function MySpacesPage() {
                         >
                             <Statistic
                                 title="图表数量"
-                                value={viewingSpace.totalCount || 0}
-                                suffix={`/ ${viewingSpace.maxCount || 0}`}
+                                value={toNumber(viewingSpace.totalCount)}
+                                suffix={`/ ${toNumber(viewingSpace.maxCount)}`}
                                 prefix={<FileTextOutlined />}
                                 valueStyle={{
                                     color:
                                         calculatePercentage(
-                                            viewingSpace.totalCount || 0,
-                                            viewingSpace.maxCount || 0,
+                                            toNumber(viewingSpace.totalCount),
+                                            toNumber(viewingSpace.maxCount),
                                         ) > 90
                                             ? "#ff4d4f"
                                             : "#1890ff",
@@ -771,14 +780,14 @@ export default function MySpacesPage() {
                             />
                             <Statistic
                                 title="存储空间"
-                                value={formatSize(viewingSpace.totalSize)}
-                                suffix={`/ ${formatSize(viewingSpace.maxSize)}`}
+                                value={formatFileSize(viewingSpace.totalSize)}
+                                suffix={`/ ${formatFileSize(viewingSpace.maxSize)}`}
                                 prefix={<DatabaseOutlined />}
                                 valueStyle={{
                                     color:
                                         calculatePercentage(
-                                            viewingSpace.totalSize || 0,
-                                            viewingSpace.maxSize || 0,
+                                            toNumber(viewingSpace.totalSize),
+                                            toNumber(viewingSpace.maxSize),
                                         ) > 90
                                             ? "#ff4d4f"
                                             : "#1890ff",

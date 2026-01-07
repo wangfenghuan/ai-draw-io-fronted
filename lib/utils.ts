@@ -1627,3 +1627,47 @@ export function parseXmlAndLoadDiagram(
     console.log("[parseXmlAndLoadDiagram] No XML found in response")
     return null
 }
+
+// ============================================================================
+// Space Utility Functions
+// ============================================================================
+
+/**
+ * 安全地转换数字（支持字符串和数字类型）
+ * 用于处理后端返回的数字字符串（避免大整数精度丢失）
+ */
+export function toNumber(value: number | string | undefined | null): number {
+    if (value === undefined || value === null) return 0
+    return typeof value === "string" ? Number(value) : value
+}
+
+/**
+ * 格式化文件大小
+ * 支持字符串和数字类型的字节值
+ */
+export function formatFileSize(
+    bytes: number | string | undefined | null,
+): string {
+    const numBytes = toNumber(bytes)
+    if (!numBytes || numBytes === 0) return "0 B"
+
+    const k = 1024
+    const sizes = ["B", "KB", "MB", "GB", "TB"]
+    const i = Math.floor(Math.log(numBytes) / Math.log(k))
+
+    return parseFloat((numBytes / k ** i).toFixed(2)) + " " + sizes[i]
+}
+
+/**
+ * 计算百分比
+ */
+export function calculatePercentage(
+    used: number | string,
+    total: number | string,
+): number {
+    const usedNum = toNumber(used)
+    const totalNum = toNumber(total)
+
+    if (!totalNum || totalNum === 0) return 0
+    return Math.round((usedNum / totalNum) * 100)
+}

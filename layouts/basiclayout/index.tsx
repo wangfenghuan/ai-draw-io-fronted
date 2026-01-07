@@ -1,9 +1,11 @@
 "use client"
 import {
     GithubFilled,
+    LoginOutlined,
     LogoutOutlined,
     PlusCircleFilled,
     SearchOutlined,
+    UserOutlined,
 } from "@ant-design/icons"
 import { ProLayout } from "@ant-design/pro-components"
 import { App, Dropdown, Input, theme } from "antd"
@@ -69,15 +71,84 @@ export default function BasicLayout({ children }: Props) {
     const logout = useCallback(async () => {
         try {
             const res = await userLogout()
-            if (res.data.code === 0) {
+            // 后端返回结构: { code: 0, data: true, message: "ok" }
+            if (res?.code === 0) {
                 message.success("账号已经退出")
                 dispatch(setLoginUser(DefauleUser))
                 router.push("/user/login")
+            } else {
+                message.error(res?.message || "退出失败")
             }
         } catch (_e) {
-            message.error("退出失败")
+            message.error("退出失败，请稍后重试")
         }
     }, [dispatch, router, message])
+
+    // 判断用户是否登录
+    const isLoggedIn = loginUser?.userRole !== "notLogin" && loginUser?.id
+
+    // 跳转到登录页
+    const goToLogin = useCallback(() => {
+        router.push("/user/login")
+    }, [router])
+
+    // 跳转到个人信息页
+    const goToProfile = useCallback(() => {
+        if (loginUser?.id) {
+            router.push(`/user/profile/${loginUser.id}`)
+        } else {
+            message.warning("请先登录")
+        }
+    }, [router, loginUser, message])
+
+    // 构建下拉菜单项
+    const getMenuItems = useCallback(() => {
+        if (isLoggedIn) {
+            // 已登录用户
+            return [
+                {
+                    key: "profile",
+                    icon: <UserOutlined />,
+                    label: "个人信息",
+                },
+                {
+                    type: "divider" as const,
+                },
+                {
+                    key: "logout",
+                    icon: <LogoutOutlined />,
+                    label: "退出登录",
+                },
+            ]
+        } else {
+            // 未登录用户
+            return [
+                {
+                    key: "login",
+                    icon: <LoginOutlined />,
+                    label: "去登录",
+                },
+            ]
+        }
+    }, [isLoggedIn])
+
+    // 处理菜单点击
+    const handleMenuClick = useCallback(
+        async ({ key }: { key: string }) => {
+            switch (key) {
+                case "logout":
+                    await logout()
+                    break
+                case "login":
+                    goToLogin()
+                    break
+                case "profile":
+                    goToProfile()
+                    break
+            }
+        },
+        [logout, goToLogin, goToProfile],
+    )
 
     return (
         <div
@@ -116,20 +187,12 @@ export default function BasicLayout({ children }: Props) {
                         loginUser.userAvatar ||
                         "https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png",
                     size: "small",
-                    title: loginUser.userName || "用户",
+                    title: isLoggedIn ? loginUser.userName || "用户" : "未登录",
                     render: (_props, dom) => (
                         <Dropdown
                             menu={{
-                                items: [
-                                    {
-                                        key: "logout",
-                                        icon: <LogoutOutlined />,
-                                        label: "退出登录",
-                                    },
-                                ],
-                                onClick: async ({ key }) => {
-                                    if (key === "logout") await logout()
-                                },
+                                items: getMenuItems(),
+                                onClick: handleMenuClick,
                             }}
                         >
                             {dom}

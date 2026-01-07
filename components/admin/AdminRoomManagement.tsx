@@ -23,7 +23,7 @@ import {
     Spin,
     Tooltip,
 } from "antd"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
     deleteDiagramRoom,
     getDiagramRoomVoById,
@@ -50,12 +50,21 @@ export function AdminRoomManagement() {
     const [loadingRoomDetail, setLoadingRoomDetail] = useState(false)
     const [editForm] = Form.useForm()
 
+    // 添加防重复请求的标记
+    const isLoadingRef = useRef(false)
+
     // 加载房间列表
     const loadRooms = async (
         current = pagination.current,
         pageSize = pagination.pageSize,
     ) => {
+        // 防止重复请求
+        if (isLoadingRef.current) {
+            return
+        }
+        isLoadingRef.current = true
         setLoading(true)
+
         try {
             const response = await listDiagramRoomVoByPage({
                 current: current,
@@ -97,6 +106,7 @@ export function AdminRoomManagement() {
             console.error("加载房间列表失败:", error)
             message.error("系统繁忙，请稍后重试")
         } finally {
+            isLoadingRef.current = false
             setLoading(false)
         }
     }

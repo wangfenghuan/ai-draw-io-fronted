@@ -21,7 +21,7 @@ import {
     Tooltip,
 } from "antd"
 import { useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
     deleteDiagram,
     downloadRemoteFile,
@@ -52,12 +52,21 @@ export default function MyDiagramsPage() {
     )
     const [editForm] = Form.useForm()
 
+    // 添加防重复请求的标记
+    const isLoadingRef = useRef(false)
+
     // 加载图表列表
     const loadDiagrams = async (
         current = pagination.current,
         pageSize = pagination.pageSize,
     ) => {
+        // 防止重复请求
+        if (isLoadingRef.current) {
+            return
+        }
+        isLoadingRef.current = true
         setLoading(true)
+
         try {
             const response = await listMyDiagramVoByPage({
                 current: current,
@@ -104,6 +113,7 @@ export default function MyDiagramsPage() {
             console.error("加载图表列表失败:", error)
             message.error("系统繁忙，请稍后重试")
         } finally {
+            isLoadingRef.current = false
             setLoading(false)
         }
     }

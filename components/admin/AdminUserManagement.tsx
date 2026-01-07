@@ -23,7 +23,7 @@ import {
     Tag,
     Tooltip,
 } from "antd"
-import { useEffect, useState } from "react"
+import { useEffect, useRef, useState } from "react"
 import {
     addUser,
     deleteUser,
@@ -53,12 +53,21 @@ export function AdminUserManagement() {
     const [editForm] = Form.useForm()
     const [addForm] = Form.useForm()
 
+    // 添加防重复请求的标记
+    const isLoadingRef = useRef(false)
+
     // 加载用户列表
     const loadUsers = async (
         current = pagination.current,
         pageSize = pagination.pageSize,
     ) => {
+        // 防止重复请求
+        if (isLoadingRef.current) {
+            return
+        }
+        isLoadingRef.current = true
         setLoading(true)
+
         try {
             const response = await listUserVoByPage({
                 current: current,
@@ -100,6 +109,7 @@ export function AdminUserManagement() {
             console.error("加载用户列表失败:", error)
             message.error("系统繁忙，请稍后重试")
         } finally {
+            isLoadingRef.current = false
             setLoading(false)
         }
     }

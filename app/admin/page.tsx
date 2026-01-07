@@ -2,6 +2,7 @@
 
 import {
     ClockCircleOutlined,
+    DatabaseOutlined,
     MenuFoldOutlined,
     MenuUnfoldOutlined,
     SafetyOutlined,
@@ -13,11 +14,12 @@ import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { AdminDiagramManagement } from "@/components/admin/AdminDiagramManagement"
 import { AdminRoomManagement } from "@/components/admin/AdminRoomManagement"
+import { AdminSpaceManagement } from "@/components/admin/AdminSpaceManagement"
 import { AdminUserManagement } from "@/components/admin/AdminUserManagement"
 
 const { Sider, Content, Header } = Layout
 
-type AdminTab = "users" | "rooms" | "diagrams"
+type AdminTab = "users" | "rooms" | "diagrams" | "spaces"
 
 interface MenuItem {
     key: AdminTab
@@ -41,6 +43,11 @@ const menuItems: MenuItem[] = [
         label: "图表管理",
         icon: <ClockCircleOutlined />,
     },
+    {
+        key: "spaces",
+        label: "空间管理",
+        icon: <DatabaseOutlined />,
+    },
 ]
 
 export default function AdminPage() {
@@ -58,6 +65,8 @@ export default function AdminPage() {
                 return <AdminRoomManagement />
             case "diagrams":
                 return <AdminDiagramManagement />
+            case "spaces":
+                return <AdminSpaceManagement />
             default:
                 return <AdminUserManagement />
         }
