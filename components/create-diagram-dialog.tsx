@@ -24,7 +24,7 @@ export function CreateDiagramDialog({
     const [spaces, setSpaces] = useState<API.SpaceVO[]>([])
     const [spacesLoading, setSpacesLoading] = useState(false)
     const [spaceLevels, setSpaceLevels] = useState<API.SpaceLevel[]>([])
-    const [spaceLevelsLoading, setSpaceLevelsLoading] = useState(false)
+    const [_spaceLevelsLoading, setSpaceLevelsLoading] = useState(false)
 
     useEffect(() => {
         if (open) {

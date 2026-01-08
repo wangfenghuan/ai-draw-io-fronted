@@ -2,13 +2,11 @@
 
 import {
     ClockCircleOutlined,
-    EditOutlined,
-    FileTextOutlined,
     GlobalOutlined,
     SearchOutlined,
     UserOutlined,
 } from "@ant-design/icons"
-import { App, Button, Card, Empty, Input, Pagination, Spin, Tooltip } from "antd"
+import { App, Button, Card, Empty, Input, Pagination, Tooltip } from "antd"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { getByPage } from "@/api/diagramController"

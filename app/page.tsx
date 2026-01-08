@@ -9,7 +9,6 @@ import {
 import { App, Button, Card, Space, Typography } from "antd"
 import { useRouter } from "next/navigation"
 import React, { useEffect, useState } from "react"
-import { addDiagram } from "@/api/diagramController"
 import { CreateDiagramDialog } from "@/components/create-diagram-dialog"
 import { CreateSpaceDialog } from "@/components/create-space-dialog"
 
@@ -18,7 +17,7 @@ const { Title, Paragraph } = Typography
 const Home: React.FC = () => {
     const { message } = App.useApp()
     const router = useRouter()
-    const [loading, setLoading] = React.useState(false)
+    const [loading, _setLoading] = React.useState(false)
     const [createSpaceDialogVisible, setCreateSpaceDialogVisible] =
         useState(false)
     const [createDiagramDialogVisible, setCreateDiagramDialogVisible] =
@@ -306,7 +305,7 @@ const Home: React.FC = () => {
                             <Card
                                 key={index}
                                 hoverable
-                                onClick={() => item.onClick && item.onClick()}
+                                onClick={() => item.onClick?.()}
                                 style={{
                                     flex: 1,
                                     borderRadius: "16px",

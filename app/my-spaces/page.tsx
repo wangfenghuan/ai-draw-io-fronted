@@ -19,7 +19,6 @@ import {
     Form,
     Input,
     Modal,
-    message,
     Pagination,
     Popconfirm,
     Select,
@@ -57,7 +56,7 @@ export default function MySpacesPage() {
     const [createModalVisible, setCreateModalVisible] = useState(false)
     const [editModalVisible, setEditModalVisible] = useState(false)
     const [detailModalVisible, setDetailModalVisible] = useState(false)
-    const [editingSpace, setEditingSpace] = useState<API.SpaceVO | null>(null)
+    const [_editingSpace, setEditingSpace] = useState<API.SpaceVO | null>(null)
     const [viewingSpace, setViewingSpace] = useState<API.SpaceVO | null>(null)
     const [spaceLevels, setSpaceLevels] = useState<API.SpaceLevel[]>([])
 

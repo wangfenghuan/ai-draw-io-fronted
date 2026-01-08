@@ -9,7 +9,7 @@ import {
     TeamOutlined,
     UserOutlined,
 } from "@ant-design/icons"
-import { App, Layout, theme } from "antd"
+import { Layout, theme } from "antd"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { AdminDiagramManagement } from "@/components/admin/AdminDiagramManagement"

@@ -13,7 +13,6 @@ import {
 } from "@ant-design/icons"
 import {
     App,
-    message as antMessage,
     Button,
     Card,
     Empty,
@@ -59,7 +58,7 @@ export default function SpaceDiagramsPage() {
         null,
     )
     const [loadingDiagramDetail, setLoadingDiagramDetail] = useState(false)
-    const [editFormState] = useState({
+    const [_editFormState] = useState({
         name: "",
         description: "",
     })
@@ -377,9 +376,7 @@ export default function SpaceDiagramsPage() {
                                         gap: "8px",
                                     }}
                                 >
-                                    <span>
-                                        共 {pagination.total} 个图表
-                                    </span>
+                                    <span>共 {pagination.total} 个图表</span>
                                     {spaceInfo?.userVO && (
                                         <span
                                             style={{

@@ -442,7 +442,9 @@ export default function MyDiagramsPage() {
                                                 flex: 1,
                                             }}
                                         >
-                                            {diagram.spaceId ? "私有空间" : "开放空间"}
+                                            {diagram.spaceId
+                                                ? "私有空间"
+                                                : "开放空间"}
                                         </span>
                                     </div>
                                 </div>

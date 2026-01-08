@@ -23,7 +23,6 @@ import {
     Popconfirm,
     Select,
     Spin,
-    Tag,
     Tooltip,
 } from "antd"
 import { useRouter } from "next/navigation"
@@ -63,7 +62,7 @@ export default function MyRoomsPage() {
 
     // 空间相关状态
     const [spaces, setSpaces] = useState<API.SpaceVO[]>([])
-    const [filteredSpaces, setFilteredSpaces] = useState<API.SpaceVO[]>([])
+    const [_filteredSpaces, setFilteredSpaces] = useState<API.SpaceVO[]>([])
     const [selectedSpaceId, setSelectedSpaceId] = useState<number | undefined>(
         undefined,
     )
