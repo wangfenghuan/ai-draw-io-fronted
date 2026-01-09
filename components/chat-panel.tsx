@@ -15,6 +15,7 @@ import type React from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { flushSync } from "react-dom"
 import { FaGithub } from "react-icons/fa"
+import { useSelector } from "react-redux"
 import { Toaster, toast } from "sonner"
 import { listDiagramChatHistory } from "@/api/conversionController"
 import { ButtonWithTooltip } from "@/components/button-with-tooltip"
@@ -33,6 +34,7 @@ import {
     isMxCellXmlComplete,
     wrapWithMxFile,
 } from "@/lib/utils"
+import type { RootState } from "@/stores"
 import { ChatMessageDisplay } from "./chat-message-display"
 
 // localStorage keys for persistence
@@ -141,6 +143,10 @@ export default function ChatPanel({
         clearDiagram,
         isDrawioReady,
     } = useDiagram()
+
+    // 获取当前用户ID
+    const loginUser = useSelector((state: RootState) => state.loginUser)
+    const userId = loginUser?.id
 
     const onFetchChart = (saveToHistory = true) => {
         return Promise.race([
@@ -1498,6 +1504,8 @@ Continue from EXACTLY where you stopped.`,
                     error={error}
                     minimalStyle={minimalStyle}
                     onMinimalStyleChange={setMinimalStyle}
+                    userId={userId}
+                    diagramId={diagramId}
                 />
             </footer>
 

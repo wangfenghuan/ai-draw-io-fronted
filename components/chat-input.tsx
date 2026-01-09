@@ -140,6 +140,8 @@ interface ChatInputProps {
     error?: Error | null
     minimalStyle?: boolean
     onMinimalStyleChange?: (value: boolean) => void
+    userId?: string
+    diagramId?: string
 }
 
 export function ChatInput({
@@ -159,6 +161,8 @@ export function ChatInput({
     error = null,
     minimalStyle = false,
     onMinimalStyleChange = () => {},
+    userId,
+    diagramId,
 }: ChatInputProps) {
     const { diagramHistory, saveDiagramToFile } = useDiagram()
     const textareaRef = useRef<HTMLTextAreaElement>(null)
@@ -424,9 +428,11 @@ export function ChatInput({
                             onSave={(filename, format) =>
                                 saveDiagramToFile(filename, format, sessionId)
                             }
-                            defaultFilename={`diagram-${new Date()
-                                .toISOString()
-                                .slice(0, 10)}`}
+                            defaultFilename={
+                                userId && diagramId
+                                    ? `${userId}-${diagramId}`
+                                    : `diagram-${new Date().toISOString().slice(0, 10)}`
+                            }
                         />
 
                         <ButtonWithTooltip

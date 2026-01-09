@@ -39,18 +39,26 @@ export function CreateDiagramDialog({
     const loadSpaces = async () => {
         setSpacesLoading(true)
         try {
+            console.log("[创建图表] 开始获取空间列表...")
             const response = await listMySpaceVoByPage({
                 current: 1,
-                pageSize: 100, // 获取所有空间
+                pageSize: 20, // 每页最多20条（接口限制）
                 sortField: "createTime",
                 sortOrder: "desc",
             })
 
+            console.log("[创建图表] 空间列表响应:", response)
+
             if (response?.code === 0 && response?.data) {
-                setSpaces(response.data.records || [])
+                const records = response.data.records || []
+                console.log("[创建图表] 获取到空间数量:", records.length)
+                console.log("[创建图表] 空间列表详情:", records)
+                setSpaces(records)
+            } else {
+                console.error("[创建图表] 获取空间列表失败:", response?.message)
             }
         } catch (error) {
-            console.error("获取空间列表失败:", error)
+            console.error("[创建图表] 获取空间列表异常:", error)
         } finally {
             setSpacesLoading(false)
         }
