@@ -57,13 +57,19 @@ export default function DrawioHome() {
     const chatPanelRef = useRef<ImperativePanelHandle>(null)
     const containerRef = useRef<HTMLDivElement>(null)
 
+    // 组件挂载时，重置 DrawIo ready 状态，确保 onLoad 回调能正常执行
+    useEffect(() => {
+        console.log("[编辑页面] 组件挂载，重置 DrawIo ready 状态")
+        resetDrawioReady()
+    }, [])
+
     // 当 diagramId 改变时，从后端加载对应的图表数据
     useEffect(() => {
         const loadDiagramData = async () => {
-            if (!diagramId || !isDrawioReady) return
+            if (!diagramId) return
 
             try {
-                console.log("正在加载图表，ID:", diagramId)
+                console.log("[1/3] 正在从后端获取图表数据，ID:", diagramId)
                 const response = await getDiagramVoById({ id: diagramId })
 
                 if (response?.code === 0 && response?.data) {
@@ -74,22 +80,82 @@ export default function DrawioHome() {
                         setDiagramTitle(diagramData.name)
                     }
 
-                    // 如果有图表代码，渲染到画布上
-                    if (diagramData.diagramCode) {
-                        console.log("正在渲染图表代码到画布...")
-                        const error = loadDiagram(diagramData.diagramCode)
+                    // 确定要加载的图表代码
+                    const diagramCode =
+                        diagramData.diagramCode ||
+                        `<mxfile><diagram name="Page-1" id="page-1"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel></diagram></mxfile>`
 
-                        if (error) {
-                            console.error("加载图表失败:", error)
-                            toast.error("加载图表失败: " + error)
-                        } else {
-                            toast.success("图表加载成功")
-                        }
+                    if (!diagramData.diagramCode) {
+                        console.warn("图表代码为空，将使用空白画布")
+                    }
+
+                    console.log(
+                        "[2/3] 数据获取成功，等待 DrawIo ref 和实例准备就绪...",
+                    )
+                    console.log("当前状态:", {
+                        isDrawioReady,
+                        hasRef: !!drawioRef.current,
+                    })
+
+                    // 等待 DrawIo ref 真正可用（不仅要 isDrawioReady=true，还要 drawioRef.current 存在）
+                    const waitForDrawioReady = () => {
+                        return new Promise<void>((resolve) => {
+                            if (isDrawioReady && drawioRef.current) {
+                                console.log("✅ DrawIo 已经完全就绪 (ref 存在)")
+                                resolve()
+                            } else {
+                                console.log("⏳ DrawIo 未就绪，开始轮询等待...")
+                                let checkCount = 0
+                                const maxChecks = 100 // 最多等待10秒 (100 * 100ms)
+
+                                const checkInterval = setInterval(() => {
+                                    checkCount++
+
+                                    console.log(
+                                        `[${checkCount}/${maxChecks}] 检查状态:`,
+                                        {
+                                            isDrawioReady,
+                                            hasRef: !!drawioRef.current,
+                                        },
+                                    )
+
+                                    if (isDrawioReady && drawioRef.current) {
+                                        console.log(
+                                            `✅ DrawIo 完全就绪! (轮询 ${checkCount} 次)`,
+                                        )
+                                        clearInterval(checkInterval)
+                                        resolve()
+                                    } else if (checkCount >= maxChecks) {
+                                        console.error("❌ DrawIo 等待超时!")
+                                        console.error("最终状态:", {
+                                            isDrawioReady,
+                                            hasRef: !!drawioRef.current,
+                                            refValue: drawioRef.current,
+                                        })
+                                        clearInterval(checkInterval)
+                                        resolve() // 超时也继续，让 loadDiagram 自己处理
+                                    }
+                                }, 100)
+                            }
+                        })
+                    }
+
+                    await waitForDrawioReady()
+
+                    console.log("[3/3] 正在渲染图表到画布...")
+                    console.log(
+                        "调用 loadDiagram 前，ref 状态:",
+                        !!drawioRef.current,
+                    )
+
+                    const error = loadDiagram(diagramCode)
+
+                    if (error) {
+                        console.error("加载图表失败:", error)
+                        toast.error("加载图表失败: " + error)
                     } else {
-                        console.warn("图表代码为空，使用空白画布")
-                        // 如果没有图表代码，加载空白画布
-                        const emptyDiagram = `<mxfile><diagram name="Page-1" id="page-1"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel></diagram></mxfile>`
-                        loadDiagram(emptyDiagram, true)
+                        console.log("✅ 图表加载成功!")
+                        toast.success("图表加载成功")
                     }
                 } else {
                     console.error("获取图表信息失败:", response?.message)
@@ -105,7 +171,7 @@ export default function DrawioHome() {
         }
 
         loadDiagramData()
-    }, [diagramId, isDrawioReady])
+    }, [diagramId, isDrawioReady, drawioRef])
 
     // Load preferences from localStorage after mount
     useEffect(() => {

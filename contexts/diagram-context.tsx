@@ -206,10 +206,18 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
     }, [collaborationEnabled, flushPersistence])
 
     const onDrawioLoad = () => {
+        console.log("[DiagramContext] onDrawioLoad 被调用", {
+            hasCalledBefore: hasCalledOnLoadRef.current,
+            isReady: isDrawioReady,
+        })
+
         // Only set ready state once to prevent infinite loops
-        if (hasCalledOnLoadRef.current) return
+        if (hasCalledOnLoadRef.current) {
+            console.warn("[DiagramContext] onDrawioLoad 已经被调用过，跳过")
+            return
+        }
         hasCalledOnLoadRef.current = true
-        // console.log("[DiagramContext] DrawIO loaded, setting ready state")
+        console.log("[DiagramContext] 设置 isDrawioReady = true")
         setIsDrawioReady(true)
     }
 
