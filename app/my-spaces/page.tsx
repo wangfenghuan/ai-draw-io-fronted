@@ -228,7 +228,17 @@ export default function MySpacesPage() {
     // 保存编辑
     const handleSaveEdit = async () => {
         try {
-            const values = await editForm.validateFields()
+            // 先验证表单
+            await editForm.validateFields()
+            // 获取所有字段值（包括隐藏字段）
+            const values = editForm.getFieldsValue(true) // true 参数表示获取所有字段，包括未设置的
+            console.log("[编辑空间] 提交的值:", values)
+
+            if (!values.id) {
+                antMessage.error("空间ID缺失，请重新操作")
+                return
+            }
+
             const response = await editSpace(values)
 
             if (response?.code === 0) {
@@ -699,8 +709,8 @@ export default function MySpacesPage() {
                 cancelText="取消"
                 destroyOnClose
             >
-                <Form form={editForm} layout="vertical" preserve={false}>
-                    <Form.Item label="空间ID" name="id" hidden>
+                <Form form={editForm} layout="vertical">
+                    <Form.Item name="id" hidden>
                         <Input />
                     </Form.Item>
                     <Form.Item
