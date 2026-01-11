@@ -11,11 +11,11 @@
  */
 
 import { useEffect, useRef, useState } from "react"
+import type { PointerData, UserRole } from "./collab-protocol"
 import {
     createWebSocketCollaboration,
     type WebSocketCollaboration,
 } from "./websocket-collab"
-import { UserRole, PointerData } from "./collab-protocol"
 
 export interface UseWebSocketCollaborationOptions {
     roomName: string
@@ -167,7 +167,7 @@ export function useWebSocketCollaboration({
      * 发送光标位置
      */
     const sendPointer = (x: number, y: number) => {
-        if (collabRef.current && collabRef.current.isConnected()) {
+        if (collabRef.current?.isConnected()) {
             collabRef.current.sendPointer(x, y)
         }
     }
@@ -176,7 +176,7 @@ export function useWebSocketCollaboration({
      * 请求全量同步
      */
     const requestFullSync = () => {
-        if (collabRef.current && collabRef.current.isConnected()) {
+        if (collabRef.current?.isConnected()) {
             collabRef.current.requestFullSync()
         }
     }

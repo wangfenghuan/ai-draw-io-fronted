@@ -81,6 +81,33 @@ export async function getDiagramRoomVoById(
     })
 }
 
+/** 获取房间内的图表详情 根据ID获取图表的详细信息。
+
+**权限要求：**
+- 需要登录
+- 公共图库：仅图表创建人或管理员可查看
+- 私有空间：需要空间权限校验
+-
+**返回内容：**
+- 图表基本信息（ID、名称、描述等）
+- 文件URL（svgUrl、pictureUrl）
+- 文件大小（svgSize、pngSize、picSize）
+- 所属空间信息（spaceId）
+ GET /room/getDiagram */
+export async function getRoomDiagramVo(
+    // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
+    params: API.getRoomDiagramVOParams,
+    options?: { [key: string]: any },
+) {
+    return request<API.BaseResponseDiagramVO>("/room/getDiagram", {
+        method: "GET",
+        params: {
+            ...params,
+        },
+        ...(options || {}),
+    })
+}
+
 /** 分页获取房间列表（仅管理员可用） POST /room/list/page */
 export async function listDiagramRoomByPage(
     body: API.RoomQueryRequest,

@@ -1,4 +1,5 @@
 // @ts-expect-error
+/* eslint-disable */
 import request from "@/lib/request"
 
 /** 创建用户 POST /user/add */

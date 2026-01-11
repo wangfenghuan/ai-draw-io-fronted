@@ -68,14 +68,10 @@ const InitLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background:
-                        "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
+                    background: "#f5f5f5",
                 }}
             >
-                <div style={{ textAlign: "center", color: "white" }}>
-                    <div className="animate-spin h-8 w-8 border-4 border-white border-t-transparent rounded-full mx-auto mb-4" />
-                    <p>加载中...</p>
-                </div>
+                <div className="animate-spin h-6 w-6 border-2 border-gray-300 border-t-gray-600 rounded-full" />
             </div>
         )
     }

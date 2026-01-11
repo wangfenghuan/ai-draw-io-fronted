@@ -53,7 +53,9 @@ export default function DrawioHome() {
     const [closeProtection, setCloseProtection] = useState(false)
     const [isFullscreen, setIsFullscreen] = useState(false)
     const [diagramTitle, setDiagramTitle] = useState(`图表_${diagramId}`)
-    const [currentSpaceId, setCurrentSpaceId] = useState<number | undefined>(undefined) // 当前图表所属的空间ID
+    const [currentSpaceId, setCurrentSpaceId] = useState<number | undefined>(
+        undefined,
+    ) // 当前图表所属的空间ID
 
     const chatPanelRef = useRef<ImperativePanelHandle>(null)
     const containerRef = useRef<HTMLDivElement>(null)
@@ -82,7 +84,10 @@ export default function DrawioHome() {
 
                     // 保存 spaceId 到状态中
                     if (diagramData.spaceId !== undefined) {
-                        console.log("[编辑页面] 当前图表所属空间ID:", diagramData.spaceId)
+                        console.log(
+                            "[编辑页面] 当前图表所属空间ID:",
+                            diagramData.spaceId,
+                        )
                         setCurrentSpaceId(diagramData.spaceId)
                     }
 

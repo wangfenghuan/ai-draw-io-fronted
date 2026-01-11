@@ -33,6 +33,41 @@ export async function deriveKey(secretKey: string): Promise<CryptoKey> {
 }
 
 /**
+ * 基于房间 ID 生成固定的加密密钥
+ * 这样同一个房间的所有用户都会使用相同的密钥
+ * @param roomId 房间 ID
+ * @returns 密钥字符串（64位十六进制）
+ */
+export async function deriveKeyFromRoomId(roomId: string): Promise<string> {
+    const encoder = new TextEncoder()
+    const keyMaterial = await crypto.subtle.importKey(
+        "raw",
+        encoder.encode(`room-${roomId}`), // 使用房间 ID 作为基础
+        "PBKDF2",
+        false,
+        ["deriveBits", "deriveKey"],
+    )
+
+    // 导出为原始密钥材料
+    const rawKey = await crypto.subtle.deriveBits(
+        {
+            name: "PBKDF2",
+            salt: encoder.encode("drawio-room-salt"), // 固定 salt
+            iterations: 100000,
+            hash: "SHA-256",
+        },
+        keyMaterial,
+        256, // 导出 256 位
+    )
+
+    // 转换为十六进制字符串
+    const keyArray = new Uint8Array(rawKey)
+    return Array.from(keyArray, (byte) =>
+        byte.toString(16).padStart(2, "0"),
+    ).join("")
+}
+
+/**
  * 加密数据
  * @param data 要加密的字符串(通常是 XML)
  * @param secretKey 密钥字符串

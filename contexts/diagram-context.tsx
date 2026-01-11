@@ -10,15 +10,19 @@ import {
     useState,
 } from "react"
 import type { DrawIoEmbedRef } from "react-drawio"
+import { useSelector } from "react-redux"
 import { STORAGE_DIAGRAM_XML_KEY } from "@/components/chat-panel"
 import type { ExportFormat } from "@/components/save-dialog"
-import { generateSecretKey, getSecretKeyFromHash } from "../lib/cryptoUtils"
+import type { RootState } from "@/stores/index"
+import { UserRole } from "../lib/collab-protocol"
+import {
+    deriveKeyFromRoomId,
+    generateSecretKey,
+    getSecretKeyFromHash,
+} from "../lib/cryptoUtils"
 import { usePersistence } from "../lib/use-persistence"
 import { useWebSocketCollaboration } from "../lib/use-websocket-collaboration"
 import { extractDiagramXML, validateAndFixXml } from "../lib/utils"
-import { UserRole } from "../lib/collab-protocol"
-import { useSelector } from "react-redux"
-import type { RootState } from "@/stores/index"
 
 interface DiagramContextType {
     chartXML: string
@@ -71,7 +75,8 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
     // 获取当前用户信息
     const loginUser = useSelector((state: RootState) => state.loginUser)
     const currentUserId = loginUser?.id?.toString()
-    const currentUserName = loginUser?.username || loginUser?.nickname || "Anonymous"
+    const currentUserName =
+        loginUser?.username || loginUser?.nickname || "Anonymous"
 
     // WebSocket 协作状态
     const [collaborationEnabled, setCollaborationEnabled] = useState(false)
@@ -92,30 +97,52 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
         collaborationStateRef.current.enabled = collaborationEnabled
     }, [collaborationEnabled])
 
-    // 初始化密钥: 从 URL hash 获取或生成新密钥
+    // 初始化密钥: 基于房间 ID 生成固定密钥（多人协作共享密钥）
     useEffect(() => {
-        const key = getSecretKeyFromHash()
-        if (key) {
-            console.log("[DiagramContext] 🔑 Loaded secret key from URL hash")
-            setSecretKey(key)
-        } else {
-            const newKey = generateSecretKey()
-            console.log("[DiagramContext] 🔑 Generated new secret key")
-            setSecretKey(newKey)
-            // 将密钥添加到 URL hash(如果启用了协作)
-            if (collaborationEnabled) {
-                window.location.hash = `key=${newKey}`
+        const initKey = async () => {
+            if (collaborationRoomName) {
+                // 如果有房间 ID，使用房间 ID 生成固定密钥
+                // 这样同一房间的所有用户都会使用相同的密钥
+                const roomBasedKey = await deriveKeyFromRoomId(
+                    collaborationRoomName,
+                )
+                console.log(
+                    "[DiagramContext] 🔑 Generated room-based secret key for room:",
+                    collaborationRoomName,
+                )
+                setSecretKey(roomBasedKey)
+            } else {
+                // 没有房间时，从 URL hash 获取或生成新密钥
+                const key = getSecretKeyFromHash()
+                if (key) {
+                    console.log(
+                        "[DiagramContext] 🔑 Loaded secret key from URL hash",
+                    )
+                    setSecretKey(key)
+                } else {
+                    const newKey = generateSecretKey()
+                    console.log(
+                        "[DiagramContext] 🔑 Generated new random secret key",
+                    )
+                    setSecretKey(newKey)
+                    // 将密钥添加到 URL hash(如果启用了协作)
+                    if (collaborationEnabled) {
+                        window.location.hash = `key=${newKey}`
+                    }
+                }
             }
         }
-    }, [collaborationEnabled])
+
+        initKey()
+    }, [collaborationRoomName, collaborationEnabled])
 
     // 初始化 WebSocket 协作 Hook（带协议头版本）
     const {
         isConnected: collaborationConnected,
         userCount: collaborationUserCount,
         pushUpdate,
-        sendPointer,
-        requestFullSync,
+        // sendPointer,  // 暂时未使用，保留供将来功能
+        // requestFullSync,  // 暂时未使用，保留供将来功能
         getDocument,
     } = useWebSocketCollaboration({
         roomName: collaborationRoomName,
@@ -570,7 +597,10 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
             // 设置只读模式
             if (isReadOnly !== undefined) {
                 setIsReadOnly(isReadOnly)
-                console.log("[DiagramContext] Setting isReadOnly to:", isReadOnly)
+                console.log(
+                    "[DiagramContext] Setting isReadOnly to:",
+                    isReadOnly,
+                )
             }
 
             console.log(

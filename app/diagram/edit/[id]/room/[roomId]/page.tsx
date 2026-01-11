@@ -6,8 +6,7 @@ import { DrawIoEmbed } from "react-drawio"
 import { useSelector } from "react-redux"
 import type { ImperativePanelHandle } from "react-resizable-panels"
 import { toast } from "sonner"
-import { getDiagramVoById } from "@/api/diagramController"
-import { editDiagramRoom } from "@/api/roomController"
+import { editDiagramRoom, getRoomDiagramVo } from "@/api/roomController"
 import { CollaborationPanel } from "@/components/collaboration-panel"
 import { DiagramToolbar } from "@/components/diagram-toolbar"
 import { STORAGE_CLOSE_PROTECTION_KEY } from "@/components/settings-dialog"
@@ -59,7 +58,9 @@ export default function DrawioHome() {
     const [diagramTitle, setDiagramTitle] = useState(`图表_${diagramId}`)
     const [collaborationStarted, setCollaborationStarted] = useState(false)
     const [roomUrlUpdated, setRoomUrlUpdated] = useState(false)
-    const [currentSpaceId, setCurrentSpaceId] = useState<number | undefined>(undefined) // 当前图表所属的空间ID
+    const [currentSpaceId, setCurrentSpaceId] = useState<number | undefined>(
+        undefined,
+    ) // 当前图表所属的空间ID
 
     const chatPanelRef = useRef<ImperativePanelHandle>(null)
     const containerRef = useRef<HTMLDivElement>(null)
@@ -91,14 +92,20 @@ export default function DrawioHome() {
 
             try {
                 console.log("[1/3] 正在从后端获取图表数据，ID:", diagramId)
-                const response = await getDiagramVoById({ id: diagramId })
+                const response = await getRoomDiagramVo({
+                    diagramId: diagramId,
+                    roomId: roomId,
+                })
 
                 if (response?.code === 0 && response?.data) {
                     const diagramData = response.data
 
                     // 保存 spaceId 到状态中
                     if (diagramData.spaceId !== undefined) {
-                        console.log("[协同编辑页面] 当前图表所属空间ID:", diagramData.spaceId)
+                        console.log(
+                            "[协同编辑页面] 当前图表所属空间ID:",
+                            diagramData.spaceId,
+                        )
                         setCurrentSpaceId(diagramData.spaceId)
                     }
 

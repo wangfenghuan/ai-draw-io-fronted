@@ -13,7 +13,7 @@ export async function addSpace(
         params: {
             ...params,
             spaceAddReqeust: undefined,
-            ...params.spaceAddReqeust,
+            ...params["spaceAddReqeust"],
         },
         ...(options || {}),
     })

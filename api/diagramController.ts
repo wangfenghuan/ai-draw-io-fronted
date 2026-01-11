@@ -130,12 +130,7 @@ export async function getDiagramVoById(
     })
 }
 
-/** 获取公共空间图表列表 获取所有开放空间的图表（图表广场）
-**功能说明：**
-- 查询所有 spaceId 为 null 的图表（公共图库）
-- 所有登录用户都可以查看
-- 支持分页查询和搜索
-POST /diagram/getDiagrams */
+/** 此处后端没有提供注释 POST /diagram/getDiagrams */
 export async function getByPage(
     body: API.DiagramQueryRequest,
     options?: { [key: string]: any },

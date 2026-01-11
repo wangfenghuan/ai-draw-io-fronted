@@ -181,11 +181,11 @@ declare namespace API {
         /** 矢量图URL */
         svgUrl?: string
         /** SVG文件大小（字节） */
-        svgSize?: string
+        svgSize?: number
         /** PNG文件大小（字节） */
-        pngSize?: string
+        pngSize?: number
         /** 图片总大小（字节） */
-        picSize?: string
+        picSize?: number
         /** 创建时间 */
         createTime?: string
         /** 更新时间 */
@@ -221,7 +221,7 @@ declare namespace API {
 
     type DiagramQueryRequest = {
         current?: number
-        pageSize?: string
+        pageSize?: number
         sortField?: string
         sortOrder?: string
         /** 图表ID */
@@ -342,6 +342,11 @@ declare namespace API {
         id: number
     }
 
+    type getRoomDiagramVOParams = {
+        diagramId: string
+        roomId: string
+    }
+
     type getSpaceByIdParams = {
         id: number
     }
@@ -358,9 +363,13 @@ declare namespace API {
         id: number
     }
 
+    type GrantedAuthority = {
+        authority?: string
+    }
+
     type listDiagramChatHistoryParams = {
         diagramId: number
-        pageSize?: string
+        pageSize?: number
         lasteCreateTime?: string
     }
 
@@ -444,13 +453,6 @@ declare namespace API {
         maxLimit?: number
         countId?: string
         pages?: number
-    }
-
-    type PageRequest = {
-        current?: number
-        pageSize?: string
-        sortField?: string
-        sortOrder?: string
     }
 
     type PageRoomVO = {
@@ -549,7 +551,7 @@ declare namespace API {
 
     type RoomQueryRequest = {
         current?: number
-        pageSize?: string
+        pageSize?: number
         sortField?: string
         sortOrder?: string
         /** 房间ID */
@@ -666,7 +668,7 @@ declare namespace API {
 
     type SpaceQueryRequest = {
         current?: number
-        pageSize?: string
+        pageSize?: number
         sortField?: string
         sortOrder?: string
         id?: number
@@ -728,7 +730,6 @@ declare namespace API {
         unionId?: string
         /** 公众号OpenID */
         mpOpenId?: string
-        /** 用户昵称 */
         userName?: string
         /** 用户头像 */
         userAvatar?: string
@@ -740,8 +741,15 @@ declare namespace API {
         createTime?: string
         /** 更新时间 */
         updateTime?: string
+        authorities?: GrantedAuthority[]
         /** 是否删除（0未删除，1已删除） */
         isDelete?: number
+        enabled?: boolean
+        accountNonExpired?: boolean
+        accountNonLocked?: boolean
+        username?: string
+        password?: string
+        credentialsNonExpired?: boolean
     }
 
     type UserAddRequest = {
@@ -764,7 +772,7 @@ declare namespace API {
 
     type UserQueryRequest = {
         current?: number
-        pageSize?: string
+        pageSize?: number
         sortField?: string
         sortOrder?: string
         /** 用户ID */

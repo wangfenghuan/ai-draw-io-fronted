@@ -10,20 +10,21 @@
  */
 
 import {
-    UserRole,
-    PointerData,
-    canSend,
-    getOpCodeName,
-} from "./collab-protocol"
-import {
-    packPointerMessage,
     packElementsMessage,
+    packPointerMessage,
     packSyncMessage,
+    unpackElementsMessage,
     unpackMessage,
     unpackPointerMessage,
-    unpackElementsMessage,
     unpackSyncMessage,
 } from "./collab-packet"
+import {
+    canSend,
+    getOpCodeName,
+    type PointerData,
+    type UserRole,
+} from "./collab-protocol"
+import { decryptData } from "./cryptoUtils"
 
 export interface WebSocketCollaborationOptions {
     roomName: string
@@ -128,8 +129,23 @@ export class WebSocketCollaboration {
                     data.byteLength,
                 )
 
+                // 检查数据长度是否合法（至少需要 1 字节 OpCode）
+                if (data.byteLength < 1) {
+                    console.warn(
+                        "[WebSocketCollab] ⚠️ Received empty binary data",
+                    )
+                    return
+                }
+
                 // 解包消息（解析协议头）
                 const { opcode, payload } = unpackMessage(data)
+
+                console.log(
+                    "[WebSocketCollab] 📦 Unpacked message: OpCode=",
+                    opcode.toString(16),
+                    "Payload size:",
+                    payload.length,
+                )
 
                 // 根据 OpCode 分发到不同的处理器
                 await this.handleProtocolMessage(opcode, payload)
@@ -151,7 +167,17 @@ export class WebSocketCollaboration {
                 }
             }
         } catch (error) {
-            console.error("[WebSocketCollab] Failed to handle message:", error)
+            console.error(
+                "[WebSocketCollab] ❌ Failed to handle message:",
+                error,
+            )
+
+            // 打印更详细的错误信息
+            if (error instanceof Error) {
+                console.error("[WebSocketCollab] Error name:", error.name)
+                console.error("[WebSocketCollab] Error message:", error.message)
+                console.error("[WebSocketCollab] Error stack:", error.stack)
+            }
         }
     }
 
@@ -160,41 +186,113 @@ export class WebSocketCollaboration {
      */
     private async handleProtocolMessage(opcode: number, payload: Uint8Array) {
         const opcodeName = getOpCodeName(opcode)
-        console.log(`[WebSocketCollab] Processing ${opcodeName}`)
+        console.log(
+            `[WebSocketCollab] 🔍 Processing ${opcodeName}, payload size:`,
+            payload.length,
+        )
 
-        switch (opcode) {
-            case 0x00: // FULL_SYNC
-                {
-                    const syncData = await unpackSyncMessage(payload, this.secretKey)
-                    console.log("[WebSocketCollab] 📥 Full sync request received")
-                    // 全量同步通常由服务器处理，客户端可能不需要处理
-                    // 或者这里可以触发回调，让应用层决定如何响应
-                }
-                break
+        try {
+            switch (opcode) {
+                case 0x00: // FULL_SYNC
+                    {
+                        console.log("[WebSocketCollab] 📥 Processing FULL_SYNC")
+                        try {
+                            // 服务器直接发送加密的 XML 数据，不需要先解包成 syncData
+                            const xml = await decryptData(
+                                payload,
+                                this.secretKey,
+                            )
+                            console.log(
+                                "[WebSocketCollab] 📄 Full sync XML length:",
+                                xml.length,
+                            )
+                            console.log(
+                                "[WebSocketCollab] 📄 XML preview (first 200 chars):",
+                                xml.substring(0, 200),
+                            )
 
-            case 0x01: // POINTER
-                {
-                    const pointer = await unpackPointerMessage(payload, this.secretKey)
-                    console.log(
-                        `[WebSocketCollab] 👆 Pointer: ${pointer.userName} (${pointer.x}, ${pointer.y})`,
+                            // 调用 onRemoteChange 加载到画布
+                            this.options.onRemoteChange?.(xml)
+                            console.log(
+                                "[WebSocketCollab] ✅ Full sync loaded to canvas",
+                            )
+                        } catch (decryptError) {
+                            console.error(
+                                "[WebSocketCollab] ❌ Full sync decryption failed:",
+                                decryptError,
+                            )
+                            // FULL_SYNC 解密失败时，使用空白画布
+                            console.log(
+                                "[WebSocketCollab] 💡 Using blank canvas instead",
+                            )
+                            const blankXml = `<mxfile><diagram name="Page-1" id="page-1"><mxGraphModel><root><mxCell id="0"/><mxCell id="1" parent="0"/></root></mxGraphModel></diagram></mxfile>`
+                            this.options.onRemoteChange?.(blankXml)
+                        }
+                    }
+                    break
+
+                case 0x01: // POINTER
+                    {
+                        console.log("[WebSocketCollab] 👆 Processing POINTER")
+                        const pointer = await unpackPointerMessage(
+                            payload,
+                            this.secretKey,
+                        )
+                        console.log(
+                            `[WebSocketCollab] ✅ Pointer: ${pointer.userName} (${pointer.x}, ${pointer.y})`,
+                        )
+                        this.options.onPointerMove?.(pointer)
+                    }
+                    break
+
+                case 0x02: // ELEMENTS_UPDATE
+                    {
+                        console.log(
+                            "[WebSocketCollab] 🎨 Processing ELEMENTS_UPDATE",
+                        )
+                        const xml = await unpackElementsMessage(
+                            payload,
+                            this.secretKey,
+                        )
+                        console.log(
+                            "[WebSocketCollab] ✅ Elements update received, XML length:",
+                            xml.length,
+                        )
+                        this.options.onRemoteChange?.(xml)
+                    }
+                    break
+
+                default:
+                    console.warn(
+                        `[WebSocketCollab] ⚠️ Unknown OpCode: 0x${opcode.toString(16)}`,
                     )
-                    this.options.onPointerMove?.(pointer)
-                }
-                break
+            }
+        } catch (error) {
+            console.error(
+                `[WebSocketCollab] ❌ Failed to process ${opcodeName}:`,
+                error,
+            )
 
-            case 0x02: // ELEMENTS_UPDATE
-                {
-                    const xml = await unpackElementsMessage(payload, this.secretKey)
-                    console.log(
-                        "[WebSocketCollab] 📥 Elements update, XML length:",
-                        xml.length,
+            if (error instanceof Error) {
+                console.error("[WebSocketCollab] Error details:", {
+                    name: error.name,
+                    message: error.message,
+                })
+
+                // 如果是 OperationError，通常是解密失败
+                if (error.name === "OperationError") {
+                    console.error(
+                        "[WebSocketCollab] 🔐 Decryption failed! Possible causes:",
                     )
-                    this.options.onRemoteChange?.(xml)
+                    console.error("  1. Secret key mismatch")
+                    console.error("  2. Data corruption during transmission")
+                    console.error("  3. Payload size:", payload.length)
+                    console.error(
+                        "  4. Secret key length:",
+                        this.secretKey.length,
+                    )
                 }
-                break
-
-            default:
-                console.warn(`[WebSocketCollab] Unknown OpCode: 0x${opcode.toString(16)}`)
+            }
         }
     }
 
@@ -234,9 +332,7 @@ export class WebSocketCollaboration {
         // 权限检查
         const permission = canSend(0x02, this.userRole)
         if (!permission.allowed) {
-            console.warn(
-                `[WebSocketCollab] ❌ ${permission.reason}`,
-            )
+            console.warn(`[WebSocketCollab] ❌ ${permission.reason}`)
             return
         }
 
@@ -271,9 +367,7 @@ export class WebSocketCollaboration {
         // 权限检查
         const permission = canSend(0x01, this.userRole)
         if (!permission.allowed) {
-            console.warn(
-                `[WebSocketCollab] ❌ ${permission.reason}`,
-            )
+            console.warn(`[WebSocketCollab] ❌ ${permission.reason}`)
             return
         }
 
@@ -311,9 +405,7 @@ export class WebSocketCollaboration {
         // 权限检查
         const permission = canSend(0x00, this.userRole)
         if (!permission.allowed) {
-            console.warn(
-                `[WebSocketCollab] ❌ ${permission.reason}`,
-            )
+            console.warn(`[WebSocketCollab] ❌ ${permission.reason}`)
             return
         }
 
