@@ -48,10 +48,9 @@ export class WebSocketCollaboration {
     // 从环境变量获取 WebSocket URL
     private static getWSUrl(): string {
         const wsUrl =
-            process.env.NEXT_PUBLIC_WS_URL ||
-            "ws://localhost:8081/api/excalidraw"
-        // 移除可能的 /yjs 后缀，直接使用基础 URL
-        return wsUrl.replace(/\/yjs$/, "").replace(/\/$/, "")
+            process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8081/yjs"
+        // 移除尾部斜杠
+        return wsUrl.replace(/\/$/, "")
     }
 
     constructor(options: WebSocketCollaborationOptions) {
