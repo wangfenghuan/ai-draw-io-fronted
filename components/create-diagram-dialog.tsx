@@ -1,11 +1,12 @@
 "use client"
 
-import { App, Form, Modal, Select, Space } from "antd"
+import { App, Form, Input, Modal, Select, Space } from "antd"
 import { useEffect, useState } from "react"
 import { addDiagram } from "@/api/diagramController"
 import { listMySpaceVoByPage, listSpaceLevel } from "@/api/spaceController"
 
 const { Option } = Select
+const { TextArea } = Input
 
 interface CreateDiagramDialogProps {
     open: boolean
@@ -89,7 +90,7 @@ export function CreateDiagramDialog({
             setLoading(true)
 
             const response = await addDiagram({
-                name: "未命名图表",
+                name: values.name || "未命名图表",
                 diagramCode: "",
                 pictureUrl: "",
                 spaceId: values.spaceId === "none" ? undefined : values.spaceId,
@@ -127,6 +128,23 @@ export function CreateDiagramDialog({
             width={500}
         >
             <Form form={form} layout="vertical" style={{ marginTop: "24px" }}>
+                <Form.Item
+                    label="图表名称"
+                    name="name"
+                    rules={[
+                        { required: true, message: "请输入图表名称" },
+                        { max: 50, message: "图表名称最多50个字符" },
+                    ]}
+                    tooltip="给您的图表起一个易于识别的名称"
+                >
+                    <Input
+                        placeholder="请输入图表名称"
+                        maxLength={50}
+                        showCount
+                        allowClear
+                    />
+                </Form.Item>
+
                 <Form.Item
                     label="选择空间"
                     name="spaceId"
