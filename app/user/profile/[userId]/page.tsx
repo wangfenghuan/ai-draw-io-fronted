@@ -30,7 +30,7 @@ export default function UserProfilePage() {
         setLoading(true)
         try {
             const response = await getUserVoById({
-                id: userId as any,
+                id: userId,
             })
 
             if (response?.code === 0 && response?.data) {

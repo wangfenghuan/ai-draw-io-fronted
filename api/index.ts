@@ -9,9 +9,11 @@ import * as diagramController from "./diagramController"
 import * as fileController from "./fileController"
 import * as roomController from "./roomController"
 import * as spaceController from "./spaceController"
+import * as spaceUserController from "./spaceUserController"
 import * as userController from "./userController"
 export default {
     userController,
+    spaceUserController,
     spaceController,
     roomController,
     fileController,

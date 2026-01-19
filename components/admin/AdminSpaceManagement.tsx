@@ -7,6 +7,7 @@ import {
     EditOutlined,
     FolderOutlined,
     SearchOutlined,
+    TeamOutlined,
     TrophyOutlined,
     UserOutlined,
 } from "@ant-design/icons"
@@ -36,6 +37,21 @@ import {
 } from "@/api/spaceController"
 
 const { Search } = Input
+
+// 空间类型枚举
+enum SpaceType {
+    PERSONAL = 0, // 个人空间
+    TEAM = 1, // 团队空间
+}
+
+// 空间类型映射
+const SPACE_TYPE_MAP: Record<
+    number,
+    { text: string; color: string; icon: any }
+> = {
+    0: { text: "个人空间", color: "default", icon: <UserOutlined /> },
+    1: { text: "团队空间", color: "green", icon: <TeamOutlined /> },
+}
 
 // 空间级别映射
 const SPACE_LEVEL_MAP: Record<number, { text: string; color: string }> = {
@@ -185,7 +201,7 @@ export function AdminSpaceManagement() {
 
         try {
             const response = await deleteSpace({
-                id: id as any, // 保持字符串类型避免精度丢失
+                id,
             })
             if (response?.code === 0) {
                 message.success("删除成功")
@@ -208,7 +224,7 @@ export function AdminSpaceManagement() {
 
         try {
             const response = await getSpaceVoById({
-                id: space.id as any, // 保持字符串类型避免精度丢失
+                id: space.id,
             })
             if (response?.code === 0 && response?.data) {
                 const spaceData = response.data
@@ -240,7 +256,7 @@ export function AdminSpaceManagement() {
         try {
             const values = await editForm.validateFields()
             const response = await updateSpace({
-                id: editingSpace?.id as any, // 保持字符串类型避免精度丢失
+                id: editingSpace?.id,
                 ...values,
             })
 
@@ -262,6 +278,17 @@ export function AdminSpaceManagement() {
     // 获取空间级别信息
     const getSpaceLevelInfo = (level: number) => {
         return SPACE_LEVEL_MAP[level] || { text: "未知", color: "default" }
+    }
+
+    // 获取空间类型信息
+    const getSpaceTypeInfo = (type?: number) => {
+        return (
+            SPACE_TYPE_MAP[type || 0] || {
+                text: "个人空间",
+                color: "default",
+                icon: <UserOutlined />,
+            }
+        )
     }
 
     return (
@@ -334,6 +361,7 @@ export function AdminSpaceManagement() {
                             const levelInfo = getSpaceLevelInfo(
                                 space.spaceLevel || 0,
                             )
+                            const typeInfo = getSpaceTypeInfo(space.spaceType)
                             return (
                                 <Card
                                     key={space.id}
@@ -345,7 +373,7 @@ export function AdminSpaceManagement() {
                                     }}
                                     bodyStyle={{ padding: "16px" }}
                                 >
-                                    {/* 空间名称和级别 */}
+                                    {/* 空间名称、类型和级别 */}
                                     <div
                                         style={{
                                             marginBottom: "12px",
@@ -371,12 +399,28 @@ export function AdminSpaceManagement() {
                                             />
                                             {space.spaceName || "未命名空间"}
                                         </h3>
-                                        <Tag color={levelInfo.color}>
-                                            <TrophyOutlined
-                                                style={{ marginRight: "4px" }}
-                                            />
-                                            {levelInfo.text}
-                                        </Tag>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                gap: "8px",
+                                                flexWrap: "wrap",
+                                            }}
+                                        >
+                                            <Tag
+                                                color={typeInfo.color}
+                                                icon={typeInfo.icon}
+                                            >
+                                                {typeInfo.text}
+                                            </Tag>
+                                            <Tag color={levelInfo.color}>
+                                                <TrophyOutlined
+                                                    style={{
+                                                        marginRight: "4px",
+                                                    }}
+                                                />
+                                                {levelInfo.text}
+                                            </Tag>
+                                        </div>
                                     </div>
 
                                     {/* 空间详情 */}

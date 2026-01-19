@@ -47,7 +47,7 @@ export async function checkLock(
     options?: { [key: string]: any },
 ) {
     const { roomId: param0, ...queryParams } = params
-    return request<boolean>(`/diagram/check-lock/${param0}`, {
+    return request<API.BaseResponseBoolean>(`/diagram/check-lock/${param0}`, {
         method: "GET",
         params: { ...queryParams },
         ...(options || {}),
@@ -55,6 +55,12 @@ export async function checkLock(
 }
 
 /** 删除图表 删除指定的图表，并自动释放空间额度。
+
+**空间类型说明：**
+- **spaceId == null：** 公共空间，不参与RBAC权限控制
+  - 仅图表创建人或管理员可删除
+- **spaceId != null：** 私有空间或团队空间，需要RBAC权限控制
+  - 需要有空间的删除图表权限
 
 **空间额度影响：**
 - **私有空间：**
@@ -66,8 +72,8 @@ export async function checkLock(
 
 **权限要求：**
 - 需要登录
-- 仅图表创建人或管理员可删除
-- 私有空间的图表需要额外的空间权限校验
+- 公共空间：仅图表创建人或管理员可删除
+- 私有/团队空间：需要有空间的删除权限
 
 **注意事项：**
 - 删除操作使用事务，确保额度释放和图表删除原子性
@@ -88,7 +94,19 @@ export async function deleteDiagram(
     })
 }
 
-/** 编辑图表信息（给用户使用） POST /diagram/edit */
+/** 编辑图表信息（给用户使用） 编辑图表的基本信息。
+
+**空间类型说明：**
+- **spaceId == null：** 公共空间，不参与RBAC权限控制
+  - 仅图表创建人或管理员可编辑
+- **spaceId != null：** 私有空间或团队空间，需要RBAC权限控制
+  - 需要有空间的编辑图表权限
+
+**权限要求：**
+- 需要登录
+- 公共空间：仅图表创建人或管理员可编辑
+- 私有/团队空间：需要有空间的编辑权限
+ POST /diagram/edit */
 export async function editDiagram(
     body: API.DiagramEditRequest,
     options?: { [key: string]: any },

@@ -1,6 +1,6 @@
 "use client"
 
-import { App, Form, Input, Modal, Select, Space } from "antd"
+import { App, Form, Input, Modal, Radio, Select, Space } from "antd"
 import { useEffect, useState } from "react"
 import { addSpace, listSpaceLevel } from "@/api/spaceController"
 
@@ -12,6 +12,12 @@ interface CreateSpaceDialogProps {
     onSuccess?: () => void
 }
 
+// 空间类型枚举
+enum SpaceType {
+    PERSONAL = 0, // 个人空间
+    TEAM = 1, // 团队空间
+}
+
 export function CreateSpaceDialog({
     open,
     onOpenChange,
@@ -21,11 +27,15 @@ export function CreateSpaceDialog({
     const [form] = Form.useForm()
     const [loading, setLoading] = useState(false)
     const [spaceLevels, setSpaceLevels] = useState<API.SpaceLevel[]>([])
+    const [spaceType, setSpaceType] = useState<SpaceType>(SpaceType.PERSONAL)
 
     useEffect(() => {
         if (open) {
             loadSpaceLevels()
             form.resetFields()
+            // 默认选择个人空间
+            setSpaceType(SpaceType.PERSONAL)
+            form.setFieldValue("spaceType", SpaceType.PERSONAL)
         }
     }, [open, form])
 
@@ -49,10 +59,9 @@ export function CreateSpaceDialog({
             setLoading(true)
 
             const response = await addSpace({
-                spaceAddReqeust: {
-                    spaceName: values.spaceName,
-                    spaceLevel: values.spaceLevel,
-                },
+                spaceName: values.spaceName,
+                spaceLevel: values.spaceLevel,
+                spaceType: values.spaceType,
             })
 
             if (response?.code === 0) {
@@ -109,6 +118,47 @@ export function CreateSpaceDialog({
                     ]}
                 >
                     <Input placeholder="例如：我的设计空间" />
+                </Form.Item>
+
+                <Form.Item
+                    label="空间类型"
+                    name="spaceType"
+                    rules={[{ required: true, message: "请选择空间类型" }]}
+                    initialValue={SpaceType.PERSONAL}
+                >
+                    <Radio.Group
+                        onChange={(e) => setSpaceType(e.target.value)}
+                        style={{ width: "100%" }}
+                    >
+                        <Space direction="vertical" style={{ width: "100%" }}>
+                            <Radio value={SpaceType.PERSONAL}>
+                                <Space>
+                                    <span>个人空间</span>
+                                    <span
+                                        style={{
+                                            color: "#999",
+                                            fontSize: "12px",
+                                        }}
+                                    >
+                                        仅供个人使用
+                                    </span>
+                                </Space>
+                            </Radio>
+                            <Radio value={SpaceType.TEAM}>
+                                <Space>
+                                    <span>团队空间</span>
+                                    <span
+                                        style={{
+                                            color: "#999",
+                                            fontSize: "12px",
+                                        }}
+                                    >
+                                        可邀请团队成员协作
+                                    </span>
+                                </Space>
+                            </Radio>
+                        </Space>
+                    </Radio.Group>
                 </Form.Item>
 
                 <Form.Item

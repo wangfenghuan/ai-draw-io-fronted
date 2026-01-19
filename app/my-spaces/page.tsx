@@ -9,6 +9,7 @@ import {
     FolderOutlined,
     PlusOutlined,
     SearchOutlined,
+    TeamOutlined,
     UserOutlined,
 } from "@ant-design/icons"
 import {
@@ -21,7 +22,9 @@ import {
     Modal,
     Pagination,
     Popconfirm,
+    Radio,
     Select,
+    Space,
     Statistic,
     Tag,
     Tooltip,
@@ -36,9 +39,16 @@ import {
     listMySpaceVoByPage,
     listSpaceLevel,
 } from "@/api/spaceController"
+import { TeamSpaceMemberManager } from "@/components/team-space-member-manager"
 import { calculatePercentage, formatFileSize, toNumber } from "@/lib/utils"
 
 const { Search } = Input
+
+// 空间类型枚举
+enum SpaceType {
+    PERSONAL = 0, // 个人空间
+    TEAM = 1, // 团队空间
+}
 
 export default function MySpacesPage() {
     const { message: antMessage } = App.useApp()
@@ -53,15 +63,37 @@ export default function MySpacesPage() {
     })
 
     const [searchText, setSearchText] = useState("")
+    const [spaceTypeFilter, setSpaceTypeFilter] = useState<number | undefined>(
+        undefined,
+    )
     const [createModalVisible, setCreateModalVisible] = useState(false)
     const [editModalVisible, setEditModalVisible] = useState(false)
     const [detailModalVisible, setDetailModalVisible] = useState(false)
+    const [memberManageVisible, setMemberManageVisible] = useState(false)
+    const [memberManageSpace, setMemberManageSpace] =
+        useState<API.SpaceVO | null>(null)
     const [_editingSpace, setEditingSpace] = useState<API.SpaceVO | null>(null)
     const [viewingSpace, setViewingSpace] = useState<API.SpaceVO | null>(null)
     const [spaceLevels, setSpaceLevels] = useState<API.SpaceLevel[]>([])
 
     const [createForm] = Form.useForm()
     const [editForm] = Form.useForm()
+
+    // 获取空间类型显示信息
+    const getSpaceTypeDisplay = (type?: number) => {
+        if (type === SpaceType.TEAM) {
+            return {
+                text: "团队空间",
+                color: "green",
+                icon: <TeamOutlined />,
+            }
+        }
+        return {
+            text: "个人空间",
+            color: "default",
+            icon: <UserOutlined />,
+        }
+    }
 
     // 添加防重复请求的标记
     const isLoadingRef = useRef(false)
@@ -126,6 +158,9 @@ export default function MySpacesPage() {
                 current: current,
                 pageSize: pageSize,
                 ...(searchText && { spaceName: searchText }),
+                ...(spaceTypeFilter !== undefined && {
+                    spaceType: spaceTypeFilter,
+                }),
                 sortField: "createTime",
                 sortOrder: "desc",
             })
@@ -180,6 +215,13 @@ export default function MySpacesPage() {
         loadSpaces(1, pagination.pageSize)
     }
 
+    // 空间类型筛选触发
+    const handleSpaceTypeFilter = (value: number | undefined) => {
+        setSpaceTypeFilter(value)
+        setPagination((prev) => ({ ...prev, current: 1 }))
+        loadSpaces(1, pagination.pageSize)
+    }
+
     // 分页、页大小变化触发
     const handleTableChange = (page: number, pageSize: number) => {
         setPagination({ ...pagination, current: page, pageSize })
@@ -196,9 +238,7 @@ export default function MySpacesPage() {
     const handleCreateSpace = async () => {
         try {
             const values = await createForm.validateFields()
-            const response = await addSpace({
-                spaceAddReqeust: values,
-            })
+            const response = await addSpace(values)
 
             if (response?.code === 0) {
                 antMessage.success("创建成功")
@@ -257,11 +297,11 @@ export default function MySpacesPage() {
     }
 
     // 删除空间
-    const handleDeleteSpace = async (id: number | string | undefined) => {
+    const handleDeleteSpace = async (id: string | undefined) => {
         if (!id) return
 
         try {
-            const response = await deleteSpace({ id: id as any })
+            const response = await deleteSpace({ id })
             if (response?.code === 0) {
                 antMessage.success("删除成功")
                 loadSpaces()
@@ -277,7 +317,7 @@ export default function MySpacesPage() {
     // 查看空间详情
     const handleViewDetail = async (space: API.SpaceVO) => {
         try {
-            const response = await getSpaceVoById({ id: space.id as any })
+            const response = await getSpaceVoById({ id: space.id })
             if (response?.code === 0 && response?.data) {
                 setViewingSpace(response.data)
                 setDetailModalVisible(true)
@@ -291,8 +331,14 @@ export default function MySpacesPage() {
     }
 
     // 查看空间内的图表
-    const handleViewDiagrams = (spaceId: number) => {
+    const handleViewDiagrams = (spaceId: string) => {
         router.push(`/my-spaces/${spaceId}/diagrams`)
+    }
+
+    // 打开成员管理
+    const handleOpenMemberManage = (space: API.SpaceVO) => {
+        setMemberManageSpace(space)
+        setMemberManageVisible(true)
     }
 
     return (
@@ -334,7 +380,14 @@ export default function MySpacesPage() {
                 }
             >
                 {/* 搜索栏 */}
-                <div style={{ marginBottom: "24px" }}>
+                <div
+                    style={{
+                        marginBottom: "24px",
+                        display: "flex",
+                        gap: "16px",
+                        alignItems: "center",
+                    }}
+                >
                     <Search
                         placeholder="搜索空间名称..."
                         allowClear
@@ -345,6 +398,27 @@ export default function MySpacesPage() {
                         onSearch={handleSearch}
                         style={{ maxWidth: "400px" }}
                     />
+                    <Select
+                        placeholder="筛选空间类型"
+                        allowClear
+                        size="large"
+                        style={{ width: "150px" }}
+                        onChange={handleSpaceTypeFilter}
+                        value={spaceTypeFilter}
+                    >
+                        <Select.Option value={SpaceType.PERSONAL}>
+                            <Space size="small">
+                                <UserOutlined />
+                                个人空间
+                            </Space>
+                        </Select.Option>
+                        <Select.Option value={SpaceType.TEAM}>
+                            <Space size="small">
+                                <TeamOutlined />
+                                团队空间
+                            </Space>
+                        </Select.Option>
+                    </Select>
                 </div>
 
                 {/* 空间列表 Grid */}
@@ -403,6 +477,9 @@ export default function MySpacesPage() {
                             const levelConfig = getSpaceLevelDisplay(
                                 space.spaceLevel || 0,
                             )
+                            const typeConfig = getSpaceTypeDisplay(
+                                space.spaceType,
+                            )
                             const countPercent = calculatePercentage(
                                 toNumber(space.totalCount),
                                 toNumber(space.maxCount),
@@ -445,9 +522,31 @@ export default function MySpacesPage() {
                                                 {space.spaceName ||
                                                     "未命名空间"}
                                             </h3>
-                                            <Tag color={levelConfig.color}>
-                                                {levelConfig.text}
-                                            </Tag>
+                                            <div
+                                                style={{
+                                                    display: "flex",
+                                                    gap: "8px",
+                                                    flexWrap: "wrap",
+                                                }}
+                                            >
+                                                <Tag
+                                                    color={levelConfig.color}
+                                                    icon={
+                                                        levelConfig.color !==
+                                                        "default" ? undefined : (
+                                                            <UserOutlined />
+                                                        )
+                                                    }
+                                                >
+                                                    {levelConfig.text}
+                                                </Tag>
+                                                <Tag
+                                                    color={typeConfig.color}
+                                                    icon={typeConfig.icon}
+                                                >
+                                                    {typeConfig.text}
+                                                </Tag>
+                                            </div>
                                         </div>
                                         <div
                                             style={{
@@ -467,6 +566,21 @@ export default function MySpacesPage() {
                                                     }
                                                 />
                                             </Tooltip>
+                                            {space.spaceType ===
+                                                SpaceType.TEAM && (
+                                                <Tooltip title="成员管理">
+                                                    <Button
+                                                        size="small"
+                                                        type="text"
+                                                        icon={<TeamOutlined />}
+                                                        onClick={() =>
+                                                            handleOpenMemberManage(
+                                                                space,
+                                                            )
+                                                        }
+                                                    />
+                                                </Tooltip>
+                                            )}
                                             <Tooltip title="查看详情">
                                                 <Button
                                                     size="small"
@@ -667,6 +781,48 @@ export default function MySpacesPage() {
                     >
                         <Input placeholder="请输入空间名称" />
                     </Form.Item>
+
+                    <Form.Item
+                        label="空间类型"
+                        name="spaceType"
+                        rules={[{ required: true, message: "请选择空间类型" }]}
+                        initialValue={SpaceType.PERSONAL}
+                    >
+                        <Radio.Group style={{ width: "100%" }}>
+                            <Space
+                                direction="vertical"
+                                style={{ width: "100%" }}
+                            >
+                                <Radio value={SpaceType.PERSONAL}>
+                                    <Space>
+                                        <span>个人空间</span>
+                                        <span
+                                            style={{
+                                                color: "#999",
+                                                fontSize: "12px",
+                                            }}
+                                        >
+                                            仅供个人使用
+                                        </span>
+                                    </Space>
+                                </Radio>
+                                <Radio value={SpaceType.TEAM}>
+                                    <Space>
+                                        <span>团队空间</span>
+                                        <span
+                                            style={{
+                                                color: "#999",
+                                                fontSize: "12px",
+                                            }}
+                                        >
+                                            可邀请团队成员协作
+                                        </span>
+                                    </Space>
+                                </Radio>
+                            </Space>
+                        </Radio.Group>
+                    </Form.Item>
+
                     <Form.Item
                         label="空间级别"
                         name="spaceLevel"
@@ -866,6 +1022,19 @@ export default function MySpacesPage() {
                     </div>
                 )}
             </Modal>
+
+            {/* 成员管理器 */}
+            {memberManageSpace && (
+                <TeamSpaceMemberManager
+                    spaceId={memberManageSpace.id!}
+                    spaceName={memberManageSpace.spaceName || ""}
+                    open={memberManageVisible}
+                    onCancel={() => {
+                        setMemberManageVisible(false)
+                        setMemberManageSpace(null)
+                    }}
+                />
+            )}
         </div>
     )
 }

@@ -80,7 +80,7 @@ export default function SpaceDiagramsPage() {
         isSpaceInfoLoadingRef.current = true
 
         try {
-            const response = await getSpaceVoById({ id: spaceId as any })
+            const response = await getSpaceVoById({ id: spaceId })
             if (response?.code === 0 && response?.data) {
                 setSpaceInfo(response.data)
             }
@@ -218,7 +218,7 @@ export default function SpaceDiagramsPage() {
         if (!id) return
 
         try {
-            const response = await deleteDiagram({ id: id as any })
+            const response = await deleteDiagram({ id })
             if (response?.code === 0) {
                 message.success("删除成功")
                 loadDiagrams()
@@ -241,7 +241,7 @@ export default function SpaceDiagramsPage() {
         try {
             // 从后端查询图表详情，确保数据是最新的
             const response = await getDiagramVoById({
-                id: diagram.id as any,
+                id: diagram.id,
             })
 
             if (response?.code === 0 && response?.data) {

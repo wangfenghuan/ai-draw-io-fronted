@@ -120,7 +120,7 @@ export function usePersistence({
                     console.log("[usePersistence] 🔒 Trying to acquire lock...")
                     try {
                         const lockResponse = await checkLock({
-                            roomId: roomId as any, // 使用字符串避免精度丢失
+                            roomId,
                         })
 
                         console.log(
@@ -193,7 +193,7 @@ export function usePersistence({
                 // Step 3: 上传快照到后端
                 console.log("[usePersistence] 📤 Uploading snapshot...")
                 const uploadResponse = await uploadSnapshot(
-                    { roomId: roomId as any }, // 使用字符串避免精度丢失
+                    { roomId },
                     base64Data,
                 )
 
@@ -257,7 +257,7 @@ export function usePersistence({
                 console.log("[usePersistence] 🔒 Trying to acquire lock...")
                 try {
                     const lockResponse = await checkLock({
-                        roomId: roomId as any, // 使用字符串避免精度丢失
+                        roomId,
                     })
 
                     console.log(
@@ -323,10 +323,7 @@ export function usePersistence({
 
             // Step 3: 上传快照
             console.log("[usePersistence] 📤 Uploading snapshot...")
-            const uploadResponse = await uploadSnapshot(
-                { roomId: roomId as any }, // 使用字符串避免精度丢失
-                base64Data,
-            )
+            const uploadResponse = await uploadSnapshot({ roomId }, base64Data)
 
             if (uploadResponse?.code === 0) {
                 console.log("[usePersistence] ✅ Manual save succeeded")

@@ -152,9 +152,7 @@ export default function MyDiagramsPage() {
         if (!id) return
 
         try {
-            // 注意：deleteDiagram 如果接受 Number，需要把 id 转为 number
-            // 如果后端接受 String id，则无需 Number()
-            const response = await deleteDiagram({ id: id as any })
+            const response = await deleteDiagram({ id })
             if (response?.code === 0) {
                 message.success("删除成功")
                 // 删除后刷新当前页

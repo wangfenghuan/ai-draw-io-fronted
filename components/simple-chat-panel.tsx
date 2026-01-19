@@ -297,18 +297,18 @@ export default function SimpleChatPanel({
         <div className="h-full w-full flex flex-col bg-gradient-to-b from-slate-900 to-slate-800 rounded-r-2xl overflow-hidden relative">
             {/* 顶部工具栏 */}
             <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-white/10 bg-black/20 z-10">
-                <div className="flex items-center gap-2 flex-shrink-0">
-                    <MessageSquare className="h-4 w-4 text-blue-400" />
-                    <h2 className="text-base font-semibold text-white whitespace-nowrap">
+                <div className="flex items-center gap-2 flex-shrink-0 min-w-0">
+                    <MessageSquare className="h-4 w-4 text-blue-400 flex-shrink-0" />
+                    <h2 className="text-sm font-semibold text-white whitespace-nowrap">
                         AI 对话
                     </h2>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-5 flex-shrink-0">
                     <button
                         onClick={handleSaveDiagram}
                         disabled={isSaving || !chartXML}
-                        className={`p-2 rounded-lg transition-all duration-200 hover:scale-110 border 
+                        className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 border flex-shrink-0
                             ${
                                 isSaving || !chartXML
                                     ? "bg-gray-500/10 text-gray-500 border-transparent cursor-not-allowed opacity-50"
@@ -325,7 +325,7 @@ export default function SimpleChatPanel({
 
                     <button
                         onClick={() => setConfigDialogOpen(true)}
-                        className={`p-2 rounded-lg transition-all duration-200 hover:scale-110 ${
+                        className={`p-2 rounded-lg transition-all duration-200 hover:scale-105 flex-shrink-0 ${
                             aiConfig.mode === "custom"
                                 ? "bg-green-500/20 text-green-400 border border-green-500/30"
                                 : "bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10"
@@ -341,7 +341,7 @@ export default function SimpleChatPanel({
 
                     <button
                         onClick={() => setDownloadDialogOpen(true)}
-                        className="p-2 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10 transition-all duration-200 hover:scale-110"
+                        className="p-2 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10 transition-all duration-200 hover:scale-105 flex-shrink-0"
                         title="下载图表"
                     >
                         <Download className="h-4 w-4" />
@@ -350,17 +350,17 @@ export default function SimpleChatPanel({
                     <button
                         onClick={handleClearChat}
                         disabled={messages.length === 0}
-                        className="p-2 rounded-lg bg-white/5 text-white/60 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all duration-200 hover:scale-110 disabled:opacity-30 disabled:cursor-not-allowed"
+                        className="p-2 rounded-lg bg-white/5 text-white/60 hover:text-red-400 hover:bg-red-500/10 border border-transparent hover:border-red-500/20 transition-all duration-200 hover:scale-105 disabled:opacity-30 disabled:cursor-not-allowed flex-shrink-0"
                         title="清空对话"
                     >
                         <Trash2 className="h-4 w-4" />
                     </button>
 
-                    <div className="w-px h-4 bg-white/10 mx-1"></div>
+                    <div className="w-px h-5 bg-white/10 flex-shrink-0"></div>
 
                     <button
                         onClick={onToggleVisibility}
-                        className="p-2 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10 transition-all duration-200 hover:scale-110"
+                        className="p-2 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10 transition-all duration-200 hover:scale-105 flex-shrink-0"
                         title="隐藏面板"
                     >
                         <Square className="h-4 w-4" />

@@ -36,7 +36,13 @@ export async function addRoom(
     })
 }
 
-/** 删除房间 POST /room/delete */
+/** 删除房间 删除指定的协作房间。
+
+**权限要求：**
+- 需要登录
+- 协作房间：需要有房间用户管理权限
+- 管理员可以删除任何房间
+ POST /room/delete */
 export async function deleteDiagramRoom(
     body: API.DeleteRequest,
     options?: { [key: string]: any },
@@ -85,9 +91,9 @@ export async function getDiagramRoomVoById(
 
 **权限要求：**
 - 需要登录
-- 公共图库：仅图表创建人或管理员可查看
-- 私有空间：需要空间权限校验
--
+- 协作房间：需要有房间查看权限
+- 管理员可以查看所有房间
+
 **返回内容：**
 - 图表基本信息（ID、名称、描述等）
 - 文件URL（svgUrl、pictureUrl）

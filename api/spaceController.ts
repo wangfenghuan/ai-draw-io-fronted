@@ -4,17 +4,19 @@ import request from "@/lib/request"
 
 /** 创建空间 POST /space/add */
 export async function addSpace(
-    // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-    params: API.addSpaceParams,
+    body: {
+        spaceName?: string
+        spaceLevel?: number
+        spaceType?: number
+    },
     options?: { [key: string]: any },
 ) {
     return request<API.BaseResponseLong>("/space/add", {
         method: "POST",
-        params: {
-            ...params,
-            spaceAddReqeust: undefined,
-            ...params["spaceAddReqeust"],
+        headers: {
+            "Content-Type": "application/json",
         },
+        data: body,
         ...(options || {}),
     })
 }
@@ -127,7 +129,8 @@ export async function getSpaceVoById(
 
 **权限要求：**
 - 需要登录
-- 仅空间创建人可查询
+- 团队空间：需要是空间成员且有查看权限
+- 私有空间：仅空间创建人可查询
 
 **功能说明：**
 - 返回指定空间下的所有图表
@@ -138,24 +141,17 @@ export async function getSpaceVoById(
 - 每页最多20条（防止爬虫）
  POST /space/list/diagrams/${param0} */
 export async function listDiagramsBySpaceId(
-    // 叠加生成的Param类型 (非body参数swagger默认没有生成对象)
-    params: API.listDiagramsBySpaceIdParams,
     body: API.DiagramQueryRequest,
     options?: { [key: string]: any },
 ) {
-    const { spaceId: param0, ...queryParams } = params
-    return request<API.BaseResponsePageDiagramVO>(
-        `/space/list/diagrams/${param0}`,
-        {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            params: { ...queryParams },
-            data: body,
-            ...(options || {}),
+    return request<API.BaseResponsePageDiagramVO>("/space/list/diagrams", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
         },
-    )
+        data: body,
+        ...(options || {}),
+    })
 }
 
 /** 查询空间级别列表 获取所有可用的空间级别信息，用于前端展示空间等级和对应的额度限制。

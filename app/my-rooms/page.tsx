@@ -190,7 +190,7 @@ export default function MyRoomsPage() {
         if (!id) return
 
         try {
-            const response = await deleteDiagramRoom({ id: id as any })
+            const response = await deleteDiagramRoom({ id })
             if (response?.code === 0) {
                 message.success("删除成功")
                 loadRooms()
@@ -213,7 +213,7 @@ export default function MyRoomsPage() {
         try {
             // 从后端查询房间详情，确保数据是最新的
             const response = await getDiagramRoomVoById({
-                id: room.id as any,
+                id: room.id,
             })
 
             if (response?.code === 0 && response?.data) {
