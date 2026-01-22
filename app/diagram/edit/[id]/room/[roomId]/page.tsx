@@ -1,22 +1,16 @@
 "use client"
-import { Maximize2, Minimize2, Users } from "lucide-react"
+import { Download, Maximize2, Minimize2, Save, Users } from "lucide-react"
 import { useParams } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { DrawIoEmbed } from "react-drawio"
 import { useSelector } from "react-redux"
-import type { ImperativePanelHandle } from "react-resizable-panels"
 import { toast } from "sonner"
 import { editDiagramRoom, getRoomDiagramVo } from "@/api/roomController"
 import { CollaborationPanel } from "@/components/collaboration-panel"
-import { DiagramToolbar } from "@/components/diagram-toolbar"
+import { DownloadDialog } from "@/components/download-dialog"
 import { RoomMemberManagement } from "@/components/room/RoomMemberManagement"
 import { STORAGE_CLOSE_PROTECTION_KEY } from "@/components/settings-dialog"
-import SimpleChatPanel from "@/components/simple-chat-panel"
-import {
-    ResizableHandle,
-    ResizablePanel,
-    ResizablePanelGroup,
-} from "@/components/ui/resizable"
+import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
 import { useDiagram } from "@/contexts/diagram-context"
 import { useDiagramSave } from "@/lib/use-diagram-save"
 import type { RootState } from "@/stores"
@@ -50,7 +44,6 @@ export default function DrawioHome() {
         useDiagramSave(drawioRef)
 
     const [isMobile, setIsMobile] = useState(false)
-    const [isChatVisible, setIsChatVisible] = useState(true)
     const [drawioUi, setDrawioUi] = useState<"min" | "sketch">("min")
     const [darkMode, setDarkMode] = useState(false)
     const [isLoaded, setIsLoaded] = useState(false)
@@ -63,8 +56,9 @@ export default function DrawioHome() {
         undefined,
     ) // 当前图表所属的空间ID
     const [memberModalVisible, setMemberModalVisible] = useState(false)
+    const [downloadDialogOpen, setDownloadDialogOpen] = useState(false)
+    const [isSaving, setIsSaving] = useState(false)
 
-    const chatPanelRef = useRef<ImperativePanelHandle>(null)
     const containerRef = useRef<HTMLDivElement>(null)
 
     // 当 diagramId 改变时，重置 DrawIo 状态
@@ -282,32 +276,6 @@ export default function DrawioHome() {
         return () => window.removeEventListener("resize", checkMobile)
     }, [])
 
-    const toggleChatPanel = () => {
-        const panel = chatPanelRef.current
-        if (panel) {
-            if (panel.isCollapsed()) {
-                panel.expand()
-                setIsChatVisible(true)
-            } else {
-                panel.collapse()
-                setIsChatVisible(false)
-            }
-        }
-    }
-
-    // Keyboard shortcut for toggling chat panel
-    useEffect(() => {
-        const handleKeyDown = (event: KeyboardEvent) => {
-            if ((event.ctrlKey || event.metaKey) && event.key === "b") {
-                event.preventDefault()
-                toggleChatPanel()
-            }
-        }
-
-        window.addEventListener("keydown", handleKeyDown)
-        return () => window.removeEventListener("keydown", handleKeyDown)
-    }, [])
-
     // Show confirmation dialog when user tries to leave the page
     useEffect(() => {
         if (!closeProtection) return
@@ -366,6 +334,66 @@ export default function DrawioHome() {
         })
     }
 
+    // 保存按钮的保存逻辑（带加载状态）
+    const handleSaveButtonClick = async () => {
+        if (isSaving) return
+
+        const isLogin = userId && loginUser?.userRole !== "notLogin"
+        if (!isLogin) {
+            toast.error("请先登录后再保存图表")
+            return
+        }
+
+        setIsSaving(true)
+
+        try {
+            toast.loading("正在获取最新图表数据...", { id: "save-diagram" })
+
+            const latestXML = await Promise.race([
+                new Promise<string>((resolve) => {
+                    if (resolverRef && "current" in resolverRef) {
+                        resolverRef.current = resolve
+                    }
+                    handleExportWithoutHistory()
+                }),
+                new Promise<string>((_, reject) =>
+                    setTimeout(
+                        () => reject(new Error("导出超时（10秒）")),
+                        10000,
+                    ),
+                ),
+            ])
+
+            const timeoutPromise = new Promise((_, reject) => {
+                setTimeout(() => {
+                    reject(new Error("保存请求超时，请检查网络"))
+                }, 15000)
+            })
+
+            await Promise.race([
+                saveDiagram({
+                    diagramId: diagramId,
+                    userId: userId,
+                    title: diagramTitle,
+                    xml: latestXML,
+                }),
+                timeoutPromise,
+            ])
+
+            setTimeout(() => {
+                setIsSaving(false)
+            }, 1000)
+        } catch (error) {
+            console.error("保存图表异常:", error)
+            toast.error(
+                error instanceof Error ? error.message : "保存失败，请稍后重试",
+            )
+            setTimeout(() => {
+                setIsSaving(false)
+            }, 1000)
+        }
+    }
+
     // 覆盖 handleDiagramExport，同时调用原始的和我们新的回调
     // 使用 useCallback 避免闭包陷阱
     const handleExport = useCallback(
@@ -422,15 +450,32 @@ export default function DrawioHome() {
                             <Users className="h-6 w-6" />
                         </button>
 
-                        {/* 保存按钮组 */}
-                        <div className="flex items-center gap-3">
-                            <DiagramToolbar
-                                diagramId={diagramId}
-                                title={diagramTitle}
-                                xml={chartXML}
-                                onSave={handleSave}
-                            />
-                        </div>
+                        {/* 保存按钮 */}
+                        <button
+                            onClick={handleSaveButtonClick}
+                            disabled={isSaving || !chartXML}
+                            className={`p-3 rounded-xl transition-all duration-200 hover:scale-105 border shadow-md ${
+                                isSaving || !chartXML
+                                    ? "bg-gray-400/50 text-gray-500 border-gray-300 cursor-not-allowed opacity-50"
+                                    : "bg-blue-500/95 hover:bg-blue-500 text-white border-blue-600"
+                            }`}
+                            title={isSaving ? "正在保存..." : "保存图表"}
+                        >
+                            {isSaving ? (
+                                <span className="animate-spin h-5 w-5 block border-2 border-current border-t-transparent rounded-full" />
+                            ) : (
+                                <Save className="h-6 w-6" />
+                            )}
+                        </button>
+
+                        {/* 下载按钮 */}
+                        <button
+                            onClick={() => setDownloadDialogOpen(true)}
+                            className="p-3 rounded-xl bg-white/95 hover:bg-white text-gray-800 border border-gray-300 hover:border-gray-400 shadow-md transition-all duration-200 hover:scale-105"
+                            title="下载图表"
+                        >
+                            <Download className="h-6 w-6" />
+                        </button>
 
                         {/* 分隔线 */}
                         <div className="h-8 w-px bg-white/40"></div>
@@ -457,10 +502,10 @@ export default function DrawioHome() {
                     {/* Draw.io Canvas */}
                     <ResizablePanel
                         id="drawio-panel"
-                        defaultSize={isMobile ? 50 : 67}
+                        defaultSize={100}
                         minSize={20}
                     >
-                        <div className="w-full h-full relative bg-white rounded-l-2xl overflow-hidden">
+                        <div className="w-full h-full relative bg-white rounded-2xl overflow-hidden">
                             {isLoaded ? (
                                 <DrawIoEmbed
                                     key={`${drawioUi}-${darkMode}`}
@@ -486,35 +531,6 @@ export default function DrawioHome() {
                             )}
                         </div>
                     </ResizablePanel>
-
-                    <ResizableHandle
-                        withHandle
-                        className="bg-white/10 hover:bg-white/20 transition-colors"
-                    />
-
-                    {/* Chat Panel */}
-                    <ResizablePanel
-                        id="chat-panel"
-                        ref={chatPanelRef}
-                        defaultSize={isMobile ? 50 : 33}
-                        minSize={isMobile ? 20 : 15}
-                        maxSize={isMobile ? 80 : 50}
-                        collapsible={!isMobile}
-                        collapsedSize={isMobile ? 0 : 3}
-                        onCollapse={() => setIsChatVisible(false)}
-                        onExpand={() => setIsChatVisible(true)}
-                        className="overflow-hidden"
-                    >
-                        <div className="h-full w-full overflow-hidden">
-                            <SimpleChatPanel
-                                diagramId={diagramId}
-                                isVisible={isChatVisible}
-                                onToggleVisibility={toggleChatPanel}
-                                darkMode={darkMode}
-                                diagramTitle={diagramTitle}
-                            />
-                        </div>
-                    </ResizablePanel>
                 </ResizablePanelGroup>
             </div>
 
@@ -523,6 +539,13 @@ export default function DrawioHome() {
                 visible={memberModalVisible}
                 onClose={() => setMemberModalVisible(false)}
                 roomId={roomId}
+            />
+
+            {/* 下载对话框 */}
+            <DownloadDialog
+                open={downloadDialogOpen}
+                onOpenChange={setDownloadDialogOpen}
+                diagramId={diagramId}
             />
         </div>
     )
