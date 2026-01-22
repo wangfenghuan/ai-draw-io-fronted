@@ -70,6 +70,14 @@ export async function getUserVoById(
     })
 }
 
+/** 查询所有的角色以及对应的权限 GET /user/getAuth */
+export async function getAllRoleAndAuth(options?: { [key: string]: any }) {
+    return request<API.BaseResponseListRoleWithAuthoritiesVO>("/user/getAuth", {
+        method: "GET",
+        ...(options || {}),
+    })
+}
+
 /** 分页获取用户列表（仅管理员） POST /user/list/page */
 export async function listUserByPage(
     body: API.UserQueryRequest,
@@ -138,6 +146,21 @@ export async function userRegister(
     })
 }
 
+/** 修改角色权限 POST /user/role/update/authorities */
+export async function updateRoleAuthorities(
+    body: API.RoleAuthorityUpdateRequest,
+    options?: { [key: string]: any },
+) {
+    return request<API.BaseResponseBoolean>("/user/role/update/authorities", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        data: body,
+        ...(options || {}),
+    })
+}
+
 /** 更新用户 POST /user/update */
 export async function updateUser(
     body: API.UserUpdateRequest,
@@ -159,6 +182,21 @@ export async function updateMyUser(
     options?: { [key: string]: any },
 ) {
     return request<API.BaseResponseBoolean>("/user/update/my", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        data: body,
+        ...(options || {}),
+    })
+}
+
+/** 修改用户角色 POST /user/update/roles */
+export async function updateUserRoles(
+    body: API.UserRoleUpdateRequest,
+    options?: { [key: string]: any },
+) {
+    return request<API.BaseResponseBoolean>("/user/update/roles", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

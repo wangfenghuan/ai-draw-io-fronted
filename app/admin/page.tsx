@@ -13,13 +13,14 @@ import { Layout, theme } from "antd"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
 import { AdminDiagramManagement } from "@/components/admin/AdminDiagramManagement"
+import { AdminRoleManagement } from "@/components/admin/AdminRoleManagement"
 import { AdminRoomManagement } from "@/components/admin/AdminRoomManagement"
 import { AdminSpaceManagement } from "@/components/admin/AdminSpaceManagement"
 import { AdminUserManagement } from "@/components/admin/AdminUserManagement"
 
 const { Sider, Content, Header } = Layout
 
-type AdminTab = "users" | "rooms" | "diagrams" | "spaces"
+type AdminTab = "users" | "roles" | "rooms" | "diagrams" | "spaces"
 
 interface MenuItem {
     key: AdminTab
@@ -32,6 +33,11 @@ const menuItems: MenuItem[] = [
         key: "users",
         label: "用户管理",
         icon: <UserOutlined />,
+    },
+    {
+        key: "roles",
+        label: "角色权限",
+        icon: <SafetyOutlined />,
     },
     {
         key: "rooms",
@@ -61,6 +67,8 @@ export default function AdminPage() {
         switch (selectedTab) {
             case "users":
                 return <AdminUserManagement />
+            case "roles":
+                return <AdminRoleManagement />
             case "rooms":
                 return <AdminRoomManagement />
             case "diagrams":
