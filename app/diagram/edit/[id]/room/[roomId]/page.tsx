@@ -1,5 +1,5 @@
 "use client"
-import { Maximize2, Minimize2 } from "lucide-react"
+import { Maximize2, Minimize2, Users } from "lucide-react"
 import { useParams } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { DrawIoEmbed } from "react-drawio"
@@ -9,6 +9,7 @@ import { toast } from "sonner"
 import { editDiagramRoom, getRoomDiagramVo } from "@/api/roomController"
 import { CollaborationPanel } from "@/components/collaboration-panel"
 import { DiagramToolbar } from "@/components/diagram-toolbar"
+import { RoomMemberManagement } from "@/components/room/RoomMemberManagement"
 import { STORAGE_CLOSE_PROTECTION_KEY } from "@/components/settings-dialog"
 import SimpleChatPanel from "@/components/simple-chat-panel"
 import {
@@ -61,6 +62,7 @@ export default function DrawioHome() {
     const [currentSpaceId, setCurrentSpaceId] = useState<number | undefined>(
         undefined,
     ) // 当前图表所属的空间ID
+    const [memberModalVisible, setMemberModalVisible] = useState(false)
 
     const chatPanelRef = useRef<ImperativePanelHandle>(null)
     const containerRef = useRef<HTMLDivElement>(null)
@@ -411,6 +413,15 @@ export default function DrawioHome() {
 
                     {/* 右侧按钮组 */}
                     <div className="flex items-center gap-4">
+                        {/* 成员管理按钮 */}
+                        <button
+                            onClick={() => setMemberModalVisible(true)}
+                            className="p-3 rounded-xl bg-white/95 hover:bg-white text-gray-800 border border-gray-300 hover:border-gray-400 shadow-md transition-all duration-200 hover:scale-105"
+                            title="成员管理"
+                        >
+                            <Users className="h-6 w-6" />
+                        </button>
+
                         {/* 保存按钮组 */}
                         <div className="flex items-center gap-3">
                             <DiagramToolbar
@@ -506,6 +517,13 @@ export default function DrawioHome() {
                     </ResizablePanel>
                 </ResizablePanelGroup>
             </div>
+
+            {/* 房间成员管理模态框 */}
+            <RoomMemberManagement
+                visible={memberModalVisible}
+                onClose={() => setMemberModalVisible(false)}
+                roomId={roomId}
+            />
         </div>
     )
 }

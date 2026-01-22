@@ -17,6 +17,12 @@ declare namespace API {
         message?: string
     }
 
+    type BaseResponseListRoomMemberVO = {
+        code?: number
+        data?: RoomMemberVO[]
+        message?: string
+    }
+
     type BaseResponseListSpaceLevel = {
         code?: number
         data?: SpaceLevel[]
@@ -95,6 +101,12 @@ declare namespace API {
         message?: string
     }
 
+    type BaseResponseRoomMember = {
+        code?: number
+        data?: RoomMember
+        message?: string
+    }
+
     type BaseResponseRoomVO = {
         code?: number
         data?: RoomVO
@@ -143,7 +155,7 @@ declare namespace API {
 
     type Conversion = {
         /** 主键ID */
-        id?: string
+        id?: number
         /** 用户ID */
         userId?: number
         /** 图表ID */
@@ -174,12 +186,12 @@ declare namespace API {
     }
 
     type DeleteRequest = {
-        id?: string
+        id?: number
     }
 
     type Diagram = {
         /** 图表主键ID */
-        id?: string
+        id?: number
         /** 用户ID */
         userId?: number
         /** 图表代码 */
@@ -221,7 +233,7 @@ declare namespace API {
 
     type DiagramEditRequest = {
         /** 图表ID */
-        id?: string
+        id?: number
         /** 图表标题 */
         title?: string
         /** 图表描述 */
@@ -239,7 +251,7 @@ declare namespace API {
         sortField?: string
         sortOrder?: string
         /** 图表ID */
-        id?: string
+        id?: number
         /** 空间id（可选，空代表查询公共空间） */
         spaceId?: number
         /** 搜索关键词 */
@@ -256,7 +268,7 @@ declare namespace API {
 
     type DiagramRoom = {
         /** 房间ID */
-        id?: string
+        id?: number
         /** 房间名称 */
         roomName?: string
         /** 图表ID */
@@ -287,7 +299,7 @@ declare namespace API {
 
     type DiagramUpdateRequest = {
         /** 图表ID */
-        id?: string
+        id?: number
         /** 图表标题 */
         name?: string
         /** 图表代码 */
@@ -313,7 +325,7 @@ declare namespace API {
 
     type DiagramVO = {
         /** 图表ID */
-        id?: string
+        id?: number
         /** 图表标题 */
         name?: string
         /** 创建用户ID */
@@ -389,7 +401,7 @@ declare namespace API {
 
     type LoginUserVO = {
         /** 用户ID */
-        id?: string
+        id?: number
         /** 用户昵称 */
         userName?: string
         /** 用户头像 */
@@ -538,13 +550,13 @@ declare namespace API {
 
     type RoleAuthorityUpdateRequest = {
         /** 角色ID */
-        roleId: string
+        roleId: number
         /** 权限ID列表 */
-        authorityIds: string[]
+        authorityIds: number[]
     }
 
     type RoleWithAuthoritiesVO = {
-        id?: string
+        id?: number
         roleName?: string
         description?: string
         createTime?: string
@@ -563,7 +575,7 @@ declare namespace API {
 
     type RoomEditRequest = {
         /** 房间ID */
-        id?: string
+        id?: number
         /** 房间名称 */
         roomName?: string
         /** 是否公开（0公开，1私有） */
@@ -576,13 +588,78 @@ declare namespace API {
         accessKey?: string
     }
 
+    type RoomMember = {
+        /** 房间成员表ID */
+        id?: string
+        /** 成员ID */
+        userId?: string
+        /** 房间ID */
+        roomId?: string
+        /** 是否删除（0未删除，1已删除） */
+        isDelete?: number
+        /** 创建时间 */
+        createTime?: string
+        /** 房间角色 */
+        roomRole?: string
+        /** 更新时间 */
+        updateTime?: string
+    }
+
+    type RoomMemberAddRequest = {
+        /** 房间ID */
+        roomId: string
+        /** 用户ID */
+        userId: string
+        /** 房间角色 */
+        roomRole: string
+    }
+
+    type RoomMemberEditRequest = {
+        /** 房间成员关系ID */
+        id: string
+        /** 房间角色 */
+        roomRole: string
+    }
+
+    type RoomMemberQueryRequest = {
+        /** 房间成员关系ID */
+        id?: string
+        /** 房间ID */
+        roomId?: string
+        /** 用户ID */
+        userId?: string
+        /** 房间角色 */
+        roomRole?: string
+    }
+
+    type RoomMemberVO = {
+        /** 房间成员关系ID */
+        id?: string
+        /** 房间ID */
+        roomId?: string
+        /** 用户ID */
+        userId?: string
+        /** 用户昵称 */
+        userName?: string
+        /** 用户账号 */
+        userAccount?: string
+        /** 用户头像 */
+        userAvatar?: string
+        /** 房间角色 */
+        roomRole?: string
+        /** 创建时间 */
+        createTime?: string
+        /** 更新时间 */
+        updateTime?: string
+    }
+
     type RoomQueryRequest = {
         current?: number
         pageSize?: number
         sortField?: string
         sortOrder?: string
         /** 房间ID */
-        id?: string
+        id?: number
         /** 房间名称 */
         roomName?: string
         /** 搜索关键词 */
@@ -607,7 +684,7 @@ declare namespace API {
 
     type RoomUpdateRequest = {
         /** 房间ID */
-        id?: string
+        id?: number
         /** 房间名称 */
         roomName?: string
         /** 是否公开（0公开，1私有） */
@@ -620,14 +697,14 @@ declare namespace API {
 
     type RoomUrlEditRequest = {
         /** 房间ID */
-        id?: string
+        id?: number
         /** 访问地址 */
         roomUrl?: string
     }
 
     type RoomVO = {
         /** 房间ID */
-        id?: string
+        id?: number
         /** 房间名称 */
         roomName?: string
         /** 图表ID */
@@ -657,7 +734,7 @@ declare namespace API {
     }
 
     type Space = {
-        id?: string
+        id?: number
         spaceName?: string
         spaceLevel?: number
         maxSize?: number
@@ -680,7 +757,7 @@ declare namespace API {
     }
 
     type SpaceEditRequest = {
-        id?: string
+        id?: number
         spaceName?: string
     }
 
@@ -700,7 +777,7 @@ declare namespace API {
         pageSize?: number
         sortField?: string
         sortOrder?: string
-        id?: string
+        id?: number
         userId?: number
         spaceName?: string
         spaceType?: number
@@ -708,7 +785,7 @@ declare namespace API {
     }
 
     type SpaceUpdateRequest = {
-        id?: string
+        id?: number
         spaceName?: string
         spaceLevel?: number
         maxSize?: number
@@ -718,7 +795,7 @@ declare namespace API {
     }
 
     type SpaceUser = {
-        id?: string
+        id?: number
         spaceId?: number
         userId?: number
         spaceRole?: string
@@ -741,19 +818,19 @@ declare namespace API {
     }
 
     type SpaceUserEditRequest = {
-        id?: string
+        id?: number
         spaceRole?: string
     }
 
     type SpaceUserQueryRequest = {
-        id?: string
+        id?: number
         spaceId?: number
         userId?: number
         spaceRole?: string
     }
 
     type SpaceUserVO = {
-        id?: string
+        id?: number
         spaceId?: number
         userId?: number
         spaceRole?: string
@@ -764,7 +841,7 @@ declare namespace API {
     }
 
     type SpaceVO = {
-        id?: string
+        id?: number
         spaceName?: string
         spaceType?: number
         spaceLevel?: number
@@ -784,7 +861,7 @@ declare namespace API {
     }
 
     type SysAuthority = {
-        id?: string
+        id?: number
         parentId?: number
         name?: string
         description?: string
@@ -810,7 +887,7 @@ declare namespace API {
 
     type User = {
         /** 用户ID */
-        id?: string
+        id?: number
         /** 用户账号 */
         userAccount?: string
         /** 用户密码 */
@@ -865,7 +942,7 @@ declare namespace API {
         sortField?: string
         sortOrder?: string
         /** 用户ID */
-        id?: string
+        id?: number
         /** 开放平台ID */
         unionId?: string
         /** 公众号OpenID */
@@ -891,9 +968,9 @@ declare namespace API {
 
     type UserRoleUpdateRequest = {
         /** 用户ID */
-        userId: string
+        userId: number
         /** 角色ID列表 */
-        roleIds: string[]
+        roleIds: number[]
     }
 
     type UserUpdateMyRequest = {
@@ -907,7 +984,7 @@ declare namespace API {
 
     type UserUpdateRequest = {
         /** 用户ID */
-        id?: string
+        id?: number
         /** 用户昵称 */
         userName?: string
         /** 用户头像 */
@@ -920,7 +997,7 @@ declare namespace API {
 
     type UserVO = {
         /** 用户ID */
-        id?: string
+        id?: number
         /** 用户昵称 */
         userName?: string
         /** 用户头像 */
