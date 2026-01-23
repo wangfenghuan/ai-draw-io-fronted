@@ -1,18 +1,19 @@
 "use client"
 
 import {
+    AppstoreOutlined,
     BulbOutlined,
     FolderOutlined,
     PlusOutlined,
     ThunderboltOutlined,
 } from "@ant-design/icons"
-import { App, Button, Card, Space, Typography } from "antd"
+import { App, Button, Card, Col, Row, Space, Typography } from "antd"
 import { useRouter } from "next/navigation"
-import React, { useEffect, useState } from "react"
+import React, { useState } from "react"
 import { CreateDiagramDialog } from "@/components/create-diagram-dialog"
 import { CreateSpaceDialog } from "@/components/create-space-dialog"
 
-const { Title, Paragraph } = Typography
+const { Title, Paragraph, Text } = Typography
 
 const Home: React.FC = () => {
     const { message } = App.useApp()
@@ -22,57 +23,49 @@ const Home: React.FC = () => {
         useState(false)
     const [createDiagramDialogVisible, setCreateDiagramDialogVisible] =
         useState(false)
-    const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 })
-    const [particles, setParticles] = useState<
-        Array<{ id: number; x: number; y: number; vx: number; vy: number }>
-    >([])
-
-    // 鼠标移动效果
-    useEffect(() => {
-        const handleMouseMove = (e: MouseEvent) => {
-            setMousePosition({
-                x: (e.clientX / window.innerWidth) * 100,
-                y: (e.clientY / window.innerHeight) * 100,
-            })
-        }
-
-        window.addEventListener("mousemove", handleMouseMove)
-        return () => window.removeEventListener("mousemove", handleMouseMove)
-    }, [])
-
-    // 初始化粒子
-    useEffect(() => {
-        const newParticles = Array.from({ length: 50 }, (_, i) => ({
-            id: i,
-            x: Math.random() * 100,
-            y: Math.random() * 100,
-            vx: (Math.random() - 0.5) * 0.02,
-            vy: (Math.random() - 0.5) * 0.02,
-        }))
-        setParticles(newParticles)
-    }, [])
 
     const handleCreateDiagram = () => {
         setCreateDiagramDialogVisible(true)
     }
 
     const handleDiagramCreated = (diagramId: string | number) => {
-        // 跳转到编辑页面，将图表 ID 作为路由参数传递
         router.push(`/diagram/edit/${diagramId}`)
     }
 
     const quickTemplates = [
         {
-            icon: <ThunderboltOutlined />,
+            icon: (
+                <ThunderboltOutlined
+                    style={{ fontSize: 24, color: "#1677ff" }}
+                />
+            ),
             title: "快速开始",
-            desc: "从零开始创建",
+            desc: "创建一个空白图表，从零开始绘制",
+            action: handleCreateDiagram,
+            bg: "#e6f7ff",
         },
-        { icon: <BulbOutlined />, title: "AI 辅助", desc: "智能生成图表" },
         {
-            icon: <FolderOutlined />,
-            title: "创建空间",
-            desc: "新建私有空间",
-            onClick: () => setCreateSpaceDialogVisible(true),
+            icon: <BulbOutlined style={{ fontSize: 24, color: "#faad14" }} />,
+            title: "AI 智能生成",
+            desc: "输入描述，让 AI 帮你生成专业图表",
+            action: () => message.info("AI 功能即将上线"), // Placeholder logic
+            bg: "#fff7e6",
+        },
+        {
+            icon: <FolderOutlined style={{ fontSize: 24, color: "#52c41a" }} />,
+            title: "新建空间",
+            desc: "创建团队或个人空间，管理图表",
+            action: () => setCreateSpaceDialogVisible(true),
+            bg: "#f6ffed",
+        },
+        {
+            icon: (
+                <AppstoreOutlined style={{ fontSize: 24, color: "#722ed1" }} />
+            ),
+            title: "浏览模板",
+            desc: "从海量模板库中选择",
+            action: () => message.info("模板库即将上线"),
+            bg: "#f9f0ff",
         },
     ]
 
@@ -80,342 +73,174 @@ const Home: React.FC = () => {
         <div
             style={{
                 minHeight: "100vh",
-                background: `
-                    radial-gradient(circle at ${mousePosition.x}% ${mousePosition.y}%, rgba(102, 126, 234, 0.15) 0%, transparent 50%),
-                    radial-gradient(circle at ${100 - mousePosition.x}% ${mousePosition.y}%, rgba(168, 85, 247, 0.15) 0%, transparent 50%),
-                    radial-gradient(circle at ${mousePosition.x}% ${100 - mousePosition.y}%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-                    linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 50%, #0f0f1a 100%)
-                `,
+                background: "#f8fafc",
+                backgroundImage:
+                    "radial-gradient(#e2e8f0 1px, transparent 1px)",
+                backgroundSize: "24px 24px",
                 display: "flex",
+                flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                padding: "20px",
-                position: "relative",
-                overflow: "hidden",
-                transition: "background 0.3s ease-out",
+                padding: "40px 20px",
             }}
         >
-            {/* 网格背景 */}
-            <div
-                style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    right: 0,
-                    bottom: 0,
-                    backgroundImage: `
-                        linear-gradient(rgba(102, 126, 234, 0.03) 1px, transparent 1px),
-                        linear-gradient(90deg, rgba(102, 126, 234, 0.03) 1px, transparent 1px)
-                    `,
-                    backgroundSize: "50px 50px",
-                    pointerEvents: "none",
-                }}
-            />
-
-            {/* 动态粒子 */}
-            {particles.map((particle) => (
+            <div style={{ maxWidth: 1000, width: "100%", zIndex: 1 }}>
+                {/* Hero Section */}
                 <div
-                    key={particle.id}
                     style={{
-                        position: "absolute",
-                        left: `${particle.x}%`,
-                        top: `${particle.y}%`,
-                        width: "2px",
-                        height: "2px",
-                        background: "rgba(102, 126, 234, 0.3)",
-                        borderRadius: "50%",
-                        boxShadow: "0 0 6px rgba(102, 126, 234, 0.5)",
-                        pointerEvents: "none",
-                        animation: "float 8s infinite ease-in-out",
-                    }}
-                />
-            ))}
-
-            {/* 主内容卡片 */}
-            <Card
-                hoverable
-                style={{
-                    width: "100%",
-                    maxWidth: "700px",
-                    borderRadius: "20px",
-                    background: "rgba(255, 255, 255, 0.03)",
-                    backdropFilter: "blur(20px)",
-                    border: "1px solid rgba(255, 255, 255, 0.08)",
-                    boxShadow: `
-                        0 8px 32px rgba(0, 0, 0, 0.3),
-                        0 0 80px rgba(102, 126, 234, 0.1),
-                        inset 0 1px 0 rgba(255, 255, 255, 0.05)
-                    `,
-                    overflow: "hidden",
-                    position: "relative",
-                    zIndex: 1,
-                }}
-                styles={{
-                    body: {
-                        padding: "60px 48px",
                         textAlign: "center",
-                    },
-                }}
-            >
-                {/* 卡片光晕效果 */}
-                <div
-                    style={{
-                        position: "absolute",
-                        top: `${mousePosition.y * 0.8}%`,
-                        left: `${mousePosition.x * 0.8}%`,
-                        width: "300px",
-                        height: "300px",
-                        background:
-                            "radial-gradient(circle, rgba(102, 126, 234, 0.1) 0%, transparent 70%)",
-                        borderRadius: "50%",
-                        pointerEvents: "none",
-                        transition: "all 0.3s ease-out",
-                        filter: "blur(40px)",
+                        marginBottom: 64,
+                        animation: "fadeIn 0.8s ease-out",
                     }}
-                />
-
-                {/* 图标 */}
-                <div style={{ marginBottom: "32px", position: "relative" }}>
+                >
                     <div
                         style={{
-                            width: "100px",
-                            height: "100px",
-                            margin: "0 auto 24px",
-                            background:
-                                "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                            borderRadius: "24px",
-                            display: "flex",
+                            display: "inline-flex",
                             alignItems: "center",
                             justifyContent: "center",
-                            boxShadow: `
-                                0 8px 32px rgba(102, 126, 234, 0.4),
-                                0 0 0 1px rgba(255, 255, 255, 0.1),
-                                inset 0 1px 0 rgba(255, 255, 255, 0.2)
-                            `,
-                            position: "relative",
-                            animation: "pulse-glow 3s infinite",
+                            marginBottom: 24,
+                            background: "#fff",
+                            padding: "8px 16px",
+                            borderRadius: 20,
+                            boxShadow: "0 2px 8px rgba(0,0,0,0.05)",
+                            border: "1px solid #f0f0f0",
                         }}
                     >
-                        <div
-                            style={{
-                                position: "absolute",
-                                inset: -2,
-                                background:
-                                    "linear-gradient(135deg, #667eea, #764ba2, #667eea)",
-                                borderRadius: "26px",
-                                zIndex: -1,
-                                opacity: 0.5,
-                                filter: "blur(8px)",
-                            }}
-                        />
-                        <PlusOutlined
-                            style={{ fontSize: "48px", color: "#fff" }}
-                        />
+                        <Text strong style={{ color: "#1677ff" }}>
+                            ✨ 新一代在线绘图工具
+                        </Text>
                     </div>
+
                     <Title
                         level={1}
                         style={{
-                            marginBottom: "16px",
-                            color: "#ffffff",
-                            fontWeight: 700,
-                            fontSize: "42px",
-                            letterSpacing: "-1px",
-                            textShadow: "0 2px 20px rgba(102, 126, 234, 0.3)",
+                            fontSize: "48px",
+                            marginBottom: 24,
+                            fontWeight: 800,
+                            color: "#1e293b",
+                            letterSpacing: "-0.02em",
                         }}
                     >
-                        智能协同云画图
+                        智能协同，
+                        <span style={{ color: "#1677ff" }}>无限创意</span>
                     </Title>
+
                     <Paragraph
                         style={{
                             fontSize: "18px",
-                            color: "rgba(255, 255, 255, 0.7)",
-                            marginBottom: "40px",
-                            lineHeight: "1.6",
+                            color: "#64748b",
+                            maxWidth: 600,
+                            margin: "0 auto 40px",
+                            lineHeight: 1.8,
                         }}
                     >
-                        使用 AI
-                        技术快速创建专业图表，支持多种图表类型和实时协同编辑
+                        简单好用的在线作图工具，支持流程图、思维导图、UML
+                        等多种图形。
+                        <br />
+                        AI 辅助生成，实时团队协作，让想法即刻落地。
                     </Paragraph>
-                </div>
 
-                <Space
-                    direction="vertical"
-                    size="large"
-                    style={{ width: "100%" }}
-                >
-                    <Button
-                        type="primary"
-                        size="large"
-                        icon={<PlusOutlined />}
-                        onClick={handleCreateDiagram}
-                        loading={loading}
-                        style={{
-                            height: "64px",
-                            fontSize: "20px",
-                            fontWeight: 600,
-                            borderRadius: "16px",
-                            background:
-                                "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                            border: "none",
-                            boxShadow: `
-                                0 8px 32px rgba(102, 126, 234, 0.5),
-                                0 0 0 1px rgba(255, 255, 255, 0.1),
-                                inset 0 1px 0 rgba(255, 255, 255, 0.2)
-                            `,
-                            transition: "all 0.3s ease",
-                            position: "relative",
-                            overflow: "hidden",
-                        }}
-                        onMouseEnter={(e) => {
-                            e.currentTarget.style.transform = "translateY(-2px)"
-                            e.currentTarget.style.boxShadow = `
-                                0 12px 48px rgba(102, 126, 234, 0.6),
-                                0 0 0 1px rgba(255, 255, 255, 0.15),
-                                inset 0 1px 0 rgba(255, 255, 255, 0.2)
-                            `
-                        }}
-                        onMouseLeave={(e) => {
-                            e.currentTarget.style.transform = "translateY(0)"
-                            e.currentTarget.style.boxShadow = `
-                                0 8px 32px rgba(102, 126, 234, 0.5),
-                                0 0 0 1px rgba(255, 255, 255, 0.1),
-                                inset 0 1px 0 rgba(255, 255, 255, 0.2)
-                            `
-                        }}
-                    >
-                        <span
+                    <Space size="large">
+                        <Button
+                            type="primary"
+                            size="large"
+                            icon={<PlusOutlined />}
+                            onClick={handleCreateDiagram}
                             style={{
-                                position: "relative",
-                                zIndex: 1,
+                                height: 52,
+                                padding: "0 32px",
+                                fontSize: 16,
+                                borderRadius: 8,
+                                boxShadow: "0 4px 12px rgba(22, 119, 255, 0.3)",
                             }}
                         >
-                            立即创建我的图表
-                        </span>
-                    </Button>
+                            立即免费使用
+                        </Button>
+                        <Button
+                            size="large"
+                            style={{
+                                height: 52,
+                                padding: "0 32px",
+                                fontSize: 16,
+                                borderRadius: 8,
+                                background: "#fff",
+                                borderColor: "#d9d9d9",
+                            }}
+                            onClick={() => message.info("演示视频即将上线")}
+                        >
+                            观看演示
+                        </Button>
+                    </Space>
+                </div>
 
-                    <div
-                        style={{
-                            display: "flex",
-                            gap: "20px",
-                            justifyContent: "center",
-                            marginTop: "32px",
-                        }}
-                    >
-                        {quickTemplates.map((item, index) => (
+                {/* Quick Action Cards */}
+                <Row gutter={[24, 24]} justify="center">
+                    {quickTemplates.map((item, index) => (
+                        <Col xs={24} sm={12} md={6} key={index}>
                             <Card
-                                key={index}
                                 hoverable
-                                onClick={() => item.onClick?.()}
+                                onClick={item.action}
                                 style={{
-                                    flex: 1,
-                                    borderRadius: "16px",
-                                    background: "rgba(255, 255, 255, 0.03)",
-                                    backdropFilter: "blur(10px)",
-                                    border: "1px solid rgba(255, 255, 255, 0.08)",
-                                    transition: "all 0.3s ease",
-                                    position: "relative",
-                                    overflow: "hidden",
-                                    cursor: item.onClick
-                                        ? "pointer"
-                                        : "default",
+                                    height: "100%",
+                                    borderRadius: 12,
+                                    border: "none",
+                                    boxShadow: "0 2px 8px rgba(0,0,0,0.04)",
+                                    transition: "all 0.3s",
                                 }}
                                 styles={{
                                     body: {
-                                        padding: "24px 20px",
+                                        padding: 24,
+                                        display: "flex",
+                                        flexDirection: "column",
+                                        alignItems: "center",
                                         textAlign: "center",
+                                        height: "100%",
                                     },
-                                }}
-                                onMouseEnter={(e) => {
-                                    e.currentTarget.style.transform =
-                                        "translateY(-4px)"
-                                    e.currentTarget.style.background =
-                                        "rgba(255, 255, 255, 0.06)"
-                                    e.currentTarget.style.borderColor =
-                                        "rgba(102, 126, 234, 0.3)"
-                                    e.currentTarget.style.boxShadow =
-                                        "0 8px 24px rgba(102, 126, 234, 0.2)"
-                                }}
-                                onMouseLeave={(e) => {
-                                    e.currentTarget.style.transform =
-                                        "translateY(0)"
-                                    e.currentTarget.style.background =
-                                        "rgba(255, 255, 255, 0.03)"
-                                    e.currentTarget.style.borderColor =
-                                        "rgba(255, 255, 255, 0.08)"
-                                    e.currentTarget.style.boxShadow = "none"
                                 }}
                             >
                                 <div
                                     style={{
-                                        fontSize: "32px",
-                                        marginBottom: "12px",
-                                        background:
-                                            "linear-gradient(135deg, #667eea 0%, #764ba2 100%)",
-                                        WebkitBackgroundClip: "text",
-                                        WebkitTextFillColor: "transparent",
-                                        backgroundClip: "text",
-                                        display: "inline-block",
+                                        width: 56,
+                                        height: 56,
+                                        borderRadius: 16,
+                                        background: item.bg,
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        marginBottom: 16,
                                     }}
                                 >
                                     {item.icon}
                                 </div>
-                                <div
+                                <Text
+                                    strong
                                     style={{
-                                        fontSize: "16px",
-                                        fontWeight: 600,
-                                        color: "#ffffff",
-                                        marginBottom: "4px",
+                                        fontSize: 16,
+                                        marginBottom: 8,
+                                        color: "#334155",
                                     }}
                                 >
                                     {item.title}
-                                </div>
-                                <div
-                                    style={{
-                                        fontSize: "13px",
-                                        color: "rgba(255, 255, 255, 0.5)",
-                                    }}
+                                </Text>
+                                <Text
+                                    type="secondary"
+                                    style={{ fontSize: 13, lineHeight: 1.5 }}
                                 >
                                     {item.desc}
-                                </div>
+                                </Text>
                             </Card>
-                        ))}
-                    </div>
-                </Space>
-            </Card>
+                        </Col>
+                    ))}
+                </Row>
+            </div>
 
             <style>{`
-                @keyframes float {
-                    0%, 100% {
-                        transform: translate(0, 0);
-                    }
-                    25% {
-                        transform: translate(10px, -10px);
-                    }
-                    50% {
-                        transform: translate(-5px, 10px);
-                    }
-                    75% {
-                        transform: translate(-10px, -5px);
-                    }
-                }
-
-                @keyframes pulse-glow {
-                    0%, 100% {
-                        box-shadow:
-                            0 8px 32px rgba(102, 126, 234, 0.4),
-                            0 0 0 1px rgba(255, 255, 255, 0.1),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.2);
-                    }
-                    50% {
-                        box-shadow:
-                            0 8px 48px rgba(102, 126, 234, 0.6),
-                            0 0 0 1px rgba(255, 255, 255, 0.15),
-                            inset 0 1px 0 rgba(255, 255, 255, 0.3);
-                    }
+                @keyframes fadeIn {
+                    from { opacity: 0; transform: translateY(20px); }
+                    to { opacity: 1; transform: translateY(0); }
                 }
             `}</style>
 
-            {/* 创建空间对话框 */}
             <CreateSpaceDialog
                 open={createSpaceDialogVisible}
                 onOpenChange={setCreateSpaceDialogVisible}
@@ -424,7 +249,6 @@ const Home: React.FC = () => {
                 }}
             />
 
-            {/* 创建图表对话框 */}
             <CreateDiagramDialog
                 open={createDiagramDialogVisible}
                 onOpenChange={setCreateDiagramDialogVisible}

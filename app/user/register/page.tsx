@@ -20,10 +20,14 @@ const UserRegister: React.FC = () => {
 
     const submit = async (value: API.UserRegisterRequest) => {
         try {
-            const res = await userRegister(value)
-            if (res.code) {
+            const res = (await userRegister(
+                value,
+            )) as unknown as API.BaseResponseLong
+            if (res.code === 0) {
                 message.success("注册成功")
                 router.replace("/user/login")
+            } else {
+                message.error(res.message)
             }
         } catch (_e) {
             message.error("注册失败")
@@ -33,6 +37,11 @@ const UserRegister: React.FC = () => {
         <ProConfigProvider hashed={false}>
             <div>
                 <LoginForm
+                    submitter={{
+                        searchConfig: {
+                            submitText: "注册",
+                        },
+                    }}
                     form={form}
                     onFinish={submit}
                     logo="https://github.githubassets.com/favicons/favicon.png"
@@ -132,11 +141,9 @@ const UserRegister: React.FC = () => {
                     <div
                         style={{
                             marginBlockEnd: 24,
+                            textAlign: "end",
                         }}
                     >
-                        <ProFormCheckbox noStyle name="autoLogin">
-                            自动登录
-                        </ProFormCheckbox>
                         <Link href={"/user/login"}>去登录</Link>
                     </div>
                 </LoginForm>
