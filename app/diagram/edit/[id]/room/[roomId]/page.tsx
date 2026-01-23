@@ -41,6 +41,7 @@ export default function DrawioHome() {
         collaborationEnabled,
         handleExportWithoutHistory,
         resolverRef,
+        registerExportCallback,
     } = useDiagram()
     const { saveDiagram, downloadDiagram, handleExportCallback } =
         useDiagramSave(drawioRef)
@@ -72,6 +73,14 @@ export default function DrawioHome() {
         )
         resetDrawioReady()
     }, [diagramId])
+
+    // 注册导出回调（这样 handleDiagramExport 才能调用 handleExportCallback，从而 resolve exportDiagram 的 Promise）
+    useEffect(() => {
+        registerExportCallback(handleExportCallback)
+        return () => {
+            registerExportCallback(null) // 清理回调
+        }
+    }, [registerExportCallback, handleExportCallback])
 
     // 组件卸载时，关闭协作连接
     useEffect(() => {
@@ -336,7 +345,7 @@ export default function DrawioHome() {
         })
     }
 
-    // 保存按钮的保存逻辑（带加载状态）
+    // 保存按钮的保存逻辑（完全复制 SimpleChatPanel 的逻辑）
     const handleSaveButtonClick = async () => {
         if (isSaving) return
 
@@ -349,13 +358,22 @@ export default function DrawioHome() {
         setIsSaving(true)
 
         try {
+            // 🔧 关键：先导出最新的 XML，而不是使用缓存的 chartXML
+            // 这样才能获取 Draw.io 中的最新修改
             toast.loading("正在获取最新图表数据...", { id: "save-diagram" })
+
+            console.log("[协作页面保存] 📤 开始导出最新 XML...")
 
             const latestXML = await Promise.race([
                 new Promise<string>((resolve) => {
+                    // 设置 resolver 来接收导出结果
                     if (resolverRef && "current" in resolverRef) {
+                        console.log("[协作页面保存] ✅ 设置 resolver")
                         resolverRef.current = resolve
+                    } else {
+                        console.error("[协作页面保存] ❌ resolverRef 不可用")
                     }
+                    // 触发导出（不保存到历史记录）
                     handleExportWithoutHistory()
                 }),
                 new Promise<string>((_, reject) =>
@@ -366,30 +384,45 @@ export default function DrawioHome() {
                 ),
             ])
 
+            console.log(
+                "[协作页面保存] ✅ 获取到最新 XML，长度:",
+                latestXML?.length,
+            )
+            console.log(
+                "[协作页面保存] 📄 XML 预览（前100字符）:",
+                latestXML?.substring(0, 100),
+            )
+
+            // 构造超时 Promise (15秒)
             const timeoutPromise = new Promise((_, reject) => {
                 setTimeout(() => {
                     reject(new Error("保存请求超时，请检查网络"))
                 }, 15000)
             })
 
+            console.log("[协作页面保存] 📤 调用 saveDiagram...")
+
+            // 竞速：保存逻辑 vs 超时
             await Promise.race([
                 saveDiagram({
                     diagramId: diagramId,
                     userId: userId,
                     title: diagramTitle,
-                    xml: latestXML,
+                    xml: latestXML, // ✅ 使用最新导出的 XML
                 }),
                 timeoutPromise,
             ])
 
-            setTimeout(() => {
-                setIsSaving(false)
-            }, 1000)
+            console.log("[协作页面保存] ✅ saveDiagram 完成")
+            // 成功提示已经在 saveDiagram 内部处理了
         } catch (error) {
-            console.error("保存图表异常:", error)
+            console.error("[协作页面保存] ❌ 保存异常:", error)
             toast.error(
                 error instanceof Error ? error.message : "保存失败，请稍后重试",
+                { id: "save-diagram" },
             )
+        } finally {
+            // 无论成功失败，1秒后恢复按钮
             setTimeout(() => {
                 setIsSaving(false)
             }, 1000)
@@ -400,9 +433,15 @@ export default function DrawioHome() {
     // 使用 useCallback 避免闭包陷阱
     const handleExport = useCallback(
         (data: any) => {
+            console.log("[协作页面导出] handleExport 被调用，data:", {
+                hasData: !!data,
+                hasDataData: !!data?.data,
+                dataType: typeof data?.data,
+            })
             handleDiagramExport(data) // 原始处理（更新 chartXML）
             // 检查是否是导出操作，如果是则调用 handleExportCallback
             if (data?.data) {
+                console.log("[协作页面导出] 调用 handleExportCallback")
                 handleExportCallback(data.data)
             }
         },

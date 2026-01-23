@@ -195,6 +195,16 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
                 }
 
                 // 3. 更新图表信息 (XML)
+                console.log(
+                    "[useDiagramSave] 📤 准备调用 editDiagram API，参数:",
+                    {
+                        id: diagramId,
+                        title: title,
+                        xmlLength: xml.length,
+                        pictureUrl: pngUrl || svgUrl || undefined,
+                    },
+                )
+
                 const response = await editDiagram({
                     id: diagramId,
                     title: title,
@@ -202,8 +212,14 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
                     pictureUrl: pngUrl || svgUrl || undefined,
                 })
 
+                console.log(
+                    "[useDiagramSave] 📥 editDiagram API 响应:",
+                    response,
+                )
+
                 if (response?.code === 0) {
                     toast.success("图表保存成功！", { id: "save-diagram" })
+                    console.log("[useDiagramSave] ✅ 图表保存成功")
                     return true
                 } else {
                     throw new Error(response?.message || "保存接口返回错误")
