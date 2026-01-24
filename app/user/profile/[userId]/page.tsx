@@ -8,20 +8,46 @@ import {
     SafetyOutlined,
     UserOutlined,
 } from "@ant-design/icons"
-import { App, Card, Descriptions, Spin, Tag, Typography } from "antd"
+import {
+    App,
+    Avatar,
+    Button,
+    Card,
+    Descriptions,
+    Divider,
+    Form,
+    Input,
+    Modal,
+    Spin,
+    Tag,
+    Typography,
+} from "antd"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
-import { getUserVoById } from "@/api/userController"
+import { useSelector } from "react-redux"
+import { getUserVoById, updateMyUser } from "@/api/userController"
+import type { RootState } from "@/stores"
 
-const { Title } = Typography
+const { Title, Paragraph } = Typography
+const { TextArea } = Input
 
 export default function UserProfilePage() {
     const { message } = App.useApp()
     const params = useParams()
     const userId = params.userId as string
+    const loginUser = useSelector((state: RootState) => state.loginUser)
 
     const [user, setUser] = useState<API.UserVO | null>(null)
     const [loading, setLoading] = useState(false)
+
+    // 编辑相关状态
+    const [editModalVisible, setEditModalVisible] = useState(false)
+    const [confirmLoading, setConfirmLoading] = useState(false)
+    const [form] = Form.useForm()
+
+    // 判断是否是当前登录用户的个人主页
+    const isOwner =
+        loginUser?.id && user?.id && String(loginUser.id) === String(user.id)
 
     // 加载用户信息
     const loadUserInfo = async () => {
@@ -33,10 +59,12 @@ export default function UserProfilePage() {
                 id: userId,
             })
 
-            if (response?.code === 0 && response?.data) {
-                setUser(response.data)
+            // lib/request.ts 拦截器返回的是 data 本身
+            const res = response as any
+            if (res?.code === 0 && res?.data) {
+                setUser(res.data)
             } else {
-                message.error(response?.message || "获取用户信息失败")
+                message.error(res?.message || "获取用户信息失败")
             }
         } catch (error) {
             console.error("获取用户信息失败:", error)
@@ -50,8 +78,45 @@ export default function UserProfilePage() {
         loadUserInfo()
     }, [userId])
 
+    // 打开编辑模态框
+    const handleEdit = () => {
+        if (!user) return
+        form.setFieldsValue({
+            userName: user.userName,
+            userAvatar: user.userAvatar,
+            userProfile: user.userProfile,
+        })
+        setEditModalVisible(true)
+    }
+
+    // 提交编辑
+    const handleEditSubmit = async () => {
+        try {
+            const values = await form.validateFields()
+            setConfirmLoading(true)
+
+            const response = await updateMyUser({
+                ...values,
+            })
+
+            const res = response as any
+            if (res?.code === 0) {
+                message.success("修改成功")
+                setEditModalVisible(false)
+                loadUserInfo() // 刷新用户信息
+            } else {
+                message.error(res?.message || "修改失败")
+            }
+        } catch (error) {
+            console.error("修改用户信息失败:", error)
+            message.error("修改失败，请稍后重试")
+        } finally {
+            setConfirmLoading(false)
+        }
+    }
+
     // 获取角色标签颜色
-    const getRoleColor = (role: string) => {
+    const getRoleColor = (role: string | undefined) => {
         switch (role) {
             case "admin":
                 return "red"
@@ -63,7 +128,7 @@ export default function UserProfilePage() {
     }
 
     // 获取角色文本
-    const getRoleText = (role: string) => {
+    const getRoleText = (role: string | undefined) => {
         switch (role) {
             case "admin":
                 return "管理员"
@@ -72,185 +137,295 @@ export default function UserProfilePage() {
             case "notLogin":
                 return "未登录"
             default:
-                return role
+                return role || "未知"
         }
     }
 
     return (
-        <div style={{ minHeight: "100vh", padding: "24px" }}>
-            <Card
-                bordered={false}
+        <div
+            style={{
+                minHeight: "100vh",
+                background: "#f0f2f5",
+                paddingBottom: "24px",
+            }}
+        >
+            {/* 顶部背景图区域 */}
+            <div
                 style={{
-                    borderRadius: "8px",
-                    maxWidth: "900px",
-                    margin: "0 auto",
+                    height: "240px",
+                    background:
+                        "linear-gradient(135deg, #1890ff 0%, #36cfc9 100%)",
+                    marginBottom: "-80px", // 让卡片上移覆盖一部分背景
                 }}
-                title={
-                    <div
-                        style={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "12px",
-                        }}
-                    >
-                        <IdcardOutlined
-                            style={{ fontSize: "20px", color: "#1890ff" }}
-                        />
-                        <Title level={3} style={{ margin: 0 }}>
-                            用户个人信息
-                        </Title>
-                    </div>
-                }
+            />
+
+            <div
+                style={{
+                    maxWidth: "1000px",
+                    margin: "0 auto",
+                    padding: "0 24px",
+                }}
             >
-                <Spin spinning={loading} size="large">
-                    {user ? (
+                <Card
+                    bordered={false}
+                    loading={loading}
+                    style={{
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+                    }}
+                    bodyStyle={{ padding: "32px" }}
+                >
+                    {!loading && user ? (
                         <div>
-                            {/* 用户基本信息 */}
-                            <Card
-                                type="inner"
-                                title="基本信息"
-                                style={{ marginBottom: "16px" }}
-                                headStyle={{
-                                    borderBottom: "2px solid #f0f0f0",
+                            {/* 头部：头像与基本信息 */}
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "space-between",
+                                    alignItems: "flex-start",
+                                    marginBottom: "32px",
                                 }}
                             >
-                                <Descriptions column={2} bordered size="middle">
-                                    <Descriptions.Item
-                                        label={<UserOutlined />}
-                                        span={2}
-                                        labelStyle={{ width: "120px" }}
-                                    >
-                                        <span style={{ fontWeight: 600 }}>
-                                            {user.userName || "未设置"}
-                                        </span>
-                                    </Descriptions.Item>
-
-                                    <Descriptions.Item
-                                        label={<MailOutlined />}
-                                        span={2}
-                                        labelStyle={{ width: "120px" }}
-                                    >
-                                        {user.userAccount || "未设置"}
-                                    </Descriptions.Item>
-
-                                    <Descriptions.Item
-                                        label={<SafetyOutlined />}
-                                        labelStyle={{ width: "120px" }}
-                                    >
-                                        <Tag
-                                            color={getRoleColor(user.userRole)}
-                                        >
-                                            {getRoleText(user.userRole)}
-                                        </Tag>
-                                    </Descriptions.Item>
-
-                                    <Descriptions.Item
-                                        label={<IdcardOutlined />}
-                                        labelStyle={{ width: "120px" }}
-                                    >
-                                        {user.id || "-"}
-                                    </Descriptions.Item>
-
-                                    <Descriptions.Item
-                                        label={<ClockCircleOutlined />}
-                                        labelStyle={{ width: "120px" }}
-                                    >
-                                        {user.createTime
-                                            ? new Date(
-                                                  user.createTime,
-                                              ).toLocaleString()
-                                            : "-"}
-                                    </Descriptions.Item>
-
-                                    <Descriptions.Item
-                                        label={<EditOutlined />}
-                                        labelStyle={{ width: "120px" }}
-                                    >
-                                        {user.updateTime
-                                            ? new Date(
-                                                  user.updateTime,
-                                              ).toLocaleString()
-                                            : "-"}
-                                    </Descriptions.Item>
-                                </Descriptions>
-                            </Card>
-
-                            {/* 用户头像 */}
-                            <Card
-                                type="inner"
-                                title="用户头像"
-                                style={{ marginBottom: "16px" }}
-                                headStyle={{
-                                    borderBottom: "2px solid #f0f0f0",
-                                }}
-                            >
-                                <div
-                                    style={{
-                                        display: "flex",
-                                        justifyContent: "center",
-                                        padding: "24px",
-                                    }}
-                                >
-                                    <img
+                                <div style={{ display: "flex", gap: "24px" }}>
+                                    <Avatar
+                                        size={100}
                                         src={
                                             user.userAvatar ||
                                             "https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png"
                                         }
-                                        alt="用户头像"
                                         style={{
-                                            width: "120px",
-                                            height: "120px",
-                                            borderRadius: "8px",
-                                            objectFit: "cover",
+                                            border: "4px solid #fff",
                                             boxShadow:
-                                                "0 2px 8px rgba(0,0,0,0.1)",
+                                                "0 2px 8px rgba(0,0,0,0.15)",
+                                            backgroundColor: "#f56a00", // fallback color
                                         }}
+                                        icon={<UserOutlined />}
                                     />
+                                    <div style={{ paddingTop: "12px" }}>
+                                        <div
+                                            style={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: "12px",
+                                                marginBottom: "8px",
+                                            }}
+                                        >
+                                            <Title
+                                                level={3}
+                                                style={{ marginBottom: 0 }}
+                                            >
+                                                {user.userName || "未命名用户"}
+                                            </Title>
+                                            <Tag
+                                                color={getRoleColor(
+                                                    user.userRole,
+                                                )}
+                                                style={{ margin: 0 }}
+                                            >
+                                                {getRoleText(user.userRole)}
+                                            </Tag>
+                                        </div>
+                                        <div
+                                            style={{
+                                                color: "#666",
+                                                fontSize: "14px",
+                                                marginBottom: "8px",
+                                            }}
+                                        >
+                                            <SafetyOutlined
+                                                style={{ marginRight: "6px" }}
+                                            />
+                                            {user.id}
+                                        </div>
+                                        {user.userProfile && (
+                                            <Paragraph
+                                                type="secondary"
+                                                style={{
+                                                    maxWidth: "500px",
+                                                    marginBottom: 0,
+                                                }}
+                                                ellipsis={{ rows: 2 }}
+                                            >
+                                                {user.userProfile}
+                                            </Paragraph>
+                                        )}
+                                    </div>
                                 </div>
-                            </Card>
+                                {isOwner && (
+                                    <Button
+                                        type="primary"
+                                        size="large"
+                                        icon={<EditOutlined />}
+                                        onClick={handleEdit}
+                                        style={{
+                                            borderRadius: "6px",
+                                            padding: "0 24px",
+                                        }}
+                                    >
+                                        编辑资料
+                                    </Button>
+                                )}
+                            </div>
 
-                            {/* 统计信息 */}
-                            <Card
-                                type="inner"
-                                title="统计信息"
-                                headStyle={{
-                                    borderBottom: "2px solid #f0f0f0",
+                            <Divider />
+
+                            {/* 详细信息列表 */}
+                            <Descriptions
+                                title="详细资料"
+                                column={2}
+                                size="middle"
+                                labelStyle={{
+                                    color: "#8c8c8c",
+                                    width: "100px",
+                                }}
+                                contentStyle={{
+                                    color: "#262626",
+                                    fontWeight: 500,
                                 }}
                             >
-                                <Descriptions column={1} bordered size="middle">
-                                    <Descriptions.Item label="用户状态">
-                                        <Tag
-                                            color={
-                                                user.isDelete ? "red" : "green"
-                                            }
-                                        >
-                                            {user.isDelete ? "已删除" : "正常"}
-                                        </Tag>
-                                    </Descriptions.Item>
-                                </Descriptions>
-                            </Card>
+                                <Descriptions.Item
+                                    label="用户名"
+                                    labelStyle={{ alignItems: "center" }}
+                                >
+                                    <UserOutlined
+                                        style={{
+                                            marginRight: 8,
+                                            color: "#1890ff",
+                                        }}
+                                    />
+                                    {user.userName || "-"}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="账号">
+                                    <IdcardOutlined
+                                        style={{
+                                            marginRight: 8,
+                                            color: "#1890ff",
+                                        }}
+                                    />
+                                    {user.userAccount || "-"}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="注册时间">
+                                    <ClockCircleOutlined
+                                        style={{
+                                            marginRight: 8,
+                                            color: "#1890ff",
+                                        }}
+                                    />
+                                    {user.createTime
+                                        ? new Date(
+                                              user.createTime,
+                                          ).toLocaleString()
+                                        : "-"}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="最后更新">
+                                    <EditOutlined
+                                        style={{
+                                            marginRight: 8,
+                                            color: "#1890ff",
+                                        }}
+                                    />
+                                    {user.updateTime
+                                        ? new Date(
+                                              user.updateTime,
+                                          ).toLocaleString()
+                                        : "-"}
+                                </Descriptions.Item>
+                                <Descriptions.Item label="个人简介" span={2}>
+                                    <div
+                                        style={{
+                                            whiteSpace: "pre-wrap",
+                                            background: "#fafafa",
+                                            padding: "12px",
+                                            borderRadius: "6px",
+                                            color: user.userProfile
+                                                ? "#262626"
+                                                : "#ccc",
+                                        }}
+                                    >
+                                        {user.userProfile ||
+                                            "这个人很懒，什么都没有写~"}
+                                    </div>
+                                </Descriptions.Item>
+                            </Descriptions>
                         </div>
                     ) : (
                         !loading && (
                             <div
                                 style={{
                                     textAlign: "center",
-                                    padding: "60px 0",
-                                    color: "#999",
+                                    padding: "80px 0",
                                 }}
                             >
                                 <UserOutlined
                                     style={{
                                         fontSize: "64px",
+                                        color: "#d9d9d9",
                                         marginBottom: "16px",
                                     }}
                                 />
-                                <p>未找到用户信息</p>
+                                <p style={{ color: "#999", fontSize: "16px" }}>
+                                    未找到用户信息
+                                </p>
                             </div>
                         )
                     )}
-                </Spin>
-            </Card>
+                </Card>
+            </div>
+
+            {/* 编辑用户信息模态框 */}
+            <Modal
+                title="编辑个人信息"
+                open={editModalVisible}
+                onOk={handleEditSubmit}
+                onCancel={() => setEditModalVisible(false)}
+                confirmLoading={confirmLoading}
+                destroyOnClose
+                centered
+                maskClosable={false}
+                width={560}
+            >
+                <div style={{ padding: "12px 0" }}>
+                    <Form
+                        form={form}
+                        layout="vertical"
+                        preserve={false}
+                        initialValues={{
+                            userName: user?.userName,
+                            userAvatar: user?.userAvatar,
+                            userProfile: user?.userProfile,
+                        }}
+                    >
+                        <Form.Item
+                            label="用户昵称"
+                            name="userName"
+                            rules={[
+                                { required: true, message: "请输入用户昵称" },
+                            ]}
+                        >
+                            <Input
+                                placeholder="给取个好听的名字吧"
+                                maxLength={20}
+                                size="large"
+                            />
+                        </Form.Item>
+                        <Form.Item label="头像链接" name="userAvatar">
+                            <Input.TextArea
+                                placeholder="输入图片 URL 地址"
+                                autoSize={{ minRows: 2, maxRows: 4 }}
+                            />
+                        </Form.Item>
+                        <Form.Item label="个人简介" name="userProfile">
+                            <TextArea
+                                placeholder="介绍一下你自己..."
+                                maxLength={500}
+                                rows={4}
+                                showCount
+                                size="large"
+                            />
+                        </Form.Item>
+                    </Form>
+                </div>
+            </Modal>
         </div>
     )
 }

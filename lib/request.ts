@@ -5,6 +5,26 @@ const myAxios = axios.create({
     baseURL: "http://localhost:8081/api",
     timeout: 10000,
     withCredentials: true,
+    transformResponse: [
+        (data) => {
+            if (typeof data === "string") {
+                try {
+                    // 把超长数字（比如雪花算法ID，通常19位）转成字符串，避免前端精度丢失
+                    // 匹配模式：冒号后跟19位以上数字，且后面紧跟逗号、反花括号或反方括号
+                    // 例如: "id": 1234567890123456789, -> "id": "1234567890123456789",
+                    const stringified = data.replace(
+                        /:\s*([0-9]{16,})\s*([,}\]])/g,
+                        ':"$1"$2',
+                    )
+                    return JSON.parse(stringified)
+                } catch (e) {
+                    console.error("JSON parse error", e)
+                    return data
+                }
+            }
+            return data
+        },
+    ],
 })
 
 // 创建请求拦截器

@@ -3,12 +3,10 @@ import {
     GithubFilled,
     LoginOutlined,
     LogoutOutlined,
-    PlusCircleFilled,
-    SearchOutlined,
     UserOutlined,
 } from "@ant-design/icons"
 import { ProLayout } from "@ant-design/pro-components"
-import { App, Dropdown, Input, theme } from "antd"
+import { App, Dropdown } from "antd"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import type React from "react"
@@ -21,37 +19,6 @@ import menus from "@/config/menu"
 import { DefauleUser } from "@/constants/UserState"
 import type { AppDispatch, RootState } from "@/stores"
 import { setLoginUser } from "@/stores/loginUser"
-
-const SearchInput = () => {
-    const { token } = theme.useToken()
-    return (
-        <div
-            style={{
-                display: "flex",
-                alignItems: "center",
-                marginInlineEnd: 24,
-            }}
-        >
-            <Input
-                style={{
-                    borderRadius: 4,
-                    marginInlineEnd: 12,
-                    backgroundColor: token.colorBgTextHover,
-                }}
-                prefix={<SearchOutlined />}
-                placeholder="搜索方案"
-                variant="borderless"
-            />
-            <PlusCircleFilled
-                style={{
-                    color: token.colorPrimary,
-                    fontSize: 24,
-                    cursor: "pointer",
-                }}
-            />
-        </div>
-    )
-}
 
 interface Props {
     children: React.ReactNode
@@ -202,7 +169,6 @@ export default function BasicLayout({ children }: Props) {
                 actionsRender={(props) => {
                     if (props.isMobile) return []
                     return [
-                        <SearchInput key="search" />,
                         <a
                             key="github"
                             href="https://github.com/wangfenghuan"

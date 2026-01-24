@@ -1,6 +1,14 @@
 "use client"
-import { Download, Maximize2, Minimize2, Save, Users } from "lucide-react"
-import { useParams } from "next/navigation"
+import {
+    Clock,
+    Download,
+    Maximize2,
+    Minimize2,
+    Save,
+    User,
+    Users,
+} from "lucide-react"
+import { useParams, useRouter } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { DrawIoEmbed } from "react-drawio"
 import { useSelector } from "react-redux"
@@ -58,8 +66,10 @@ export default function DrawioHome() {
     const [currentSpaceId, setCurrentSpaceId] = useState<number | undefined>(
         undefined,
     ) // 当前图表所属的空间ID
+    const [diagramInfo, setDiagramInfo] = useState<API.DiagramVO | null>(null)
     const [memberModalVisible, setMemberModalVisible] = useState(false)
     const [downloadDialogOpen, setDownloadDialogOpen] = useState(false)
+    const router = useRouter()
     const [isSaving, setIsSaving] = useState(false)
 
     const containerRef = useRef<HTMLDivElement>(null)
@@ -115,6 +125,9 @@ export default function DrawioHome() {
                         )
                         setCurrentSpaceId(diagramData.spaceId)
                     }
+
+                    // 保存图表详情
+                    setDiagramInfo(diagramData)
 
                     // 更新图表标题
                     if (diagramData.name) {
@@ -467,78 +480,123 @@ export default function DrawioHome() {
         <div className="flex-1 w-full h-full p-3 relative overflow-hidden">
             <div
                 ref={containerRef}
-                className={`w-full h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden shadow-2xl border border-white/10 transition-all duration-300 ${
+                className={`w-full h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden shadow-2xl border border-white/10 transition-all duration-300 flex flex-col ${
                     isFullscreen
                         ? "rounded-none fixed inset-0 z-50"
                         : "rounded-2xl"
                 }`}
             >
-                {/* 工具栏 - 分散布局避免堆叠 */}
-                <div className="absolute top-5 right-5 z-20 flex items-center justify-between gap-8">
-                    {/* 协作面板 - 独立放在左侧 */}
-                    <div className="flex-shrink-0">
-                        <CollaborationPanel spaceId={currentSpaceId} />
+                {/* 顶部信息栏 */}
+                <div className="w-full h-11 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 shrink-0 transition-colors duration-300">
+                    {/* 左侧：图表信息 */}
+                    <div className="flex items-center gap-4">
+                        <div
+                            className="text-base font-semibold text-gray-800 dark:text-gray-100 truncate select-text cursor-pointer hover:text-blue-600 dark:hover:text-blue-400 transition-colors max-w-[300px]"
+                            title={diagramTitle}
+                            onClick={() => {
+                                // 如果有空间ID，跳转到空间详情；否则跳转到我的图表
+                                if (currentSpaceId) {
+                                    router.push(`/my-spaces/${currentSpaceId}`)
+                                } else {
+                                    router.push("/my-diagrams")
+                                }
+                            }}
+                        >
+                            {diagramTitle}
+                        </div>
+                        <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
+                        <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">
+                            <div className="flex items-center gap-1.5">
+                                <User className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                                <span className="truncate max-w-[100px]">
+                                    {diagramInfo?.userVO?.userName ||
+                                        diagramInfo?.userId ||
+                                        "未知用户"}
+                                </span>
+                            </div>
+                            <div
+                                className="flex items-center gap-1.5"
+                                title="最后修改时间"
+                            >
+                                <Clock className="w-3.5 h-3.5 text-gray-400 dark:text-gray-500" />
+                                <span>
+                                    {diagramInfo?.updateTime
+                                        ? new Date(
+                                              diagramInfo.updateTime,
+                                          ).toLocaleString()
+                                        : "刚刚"}
+                                </span>
+                            </div>
+                        </div>
                     </div>
 
-                    {/* 右侧按钮组 */}
-                    <div className="flex items-center gap-4">
+                    {/* 右侧：操作按钮 */}
+                    <div className="flex items-center gap-3">
+                        {/* 协作面板 - 移动到右侧 */}
+                        <div className="flex-shrink-0">
+                            <CollaborationPanel spaceId={currentSpaceId} />
+                        </div>
+
+                        <div className="h-4 w-px bg-gray-300 dark:bg-gray-700 mx-1"></div>
+
                         {/* 成员管理按钮 */}
                         <button
                             onClick={() => setMemberModalVisible(true)}
-                            className="p-3 rounded-xl bg-white/95 hover:bg-white text-gray-800 border border-gray-300 hover:border-gray-400 shadow-md transition-all duration-200 hover:scale-105"
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
                             title="成员管理"
                         >
-                            <Users className="h-6 w-6" />
+                            <Users className="h-5 w-5" />
                         </button>
 
                         {/* 保存按钮 */}
                         <button
                             onClick={handleSaveButtonClick}
                             disabled={isSaving || !chartXML}
-                            className={`p-3 rounded-xl transition-all duration-200 hover:scale-105 border shadow-md ${
+                            className={`p-2 rounded-lg transition-all duration-200 flex items-center gap-1.5 px-3 text-sm font-medium ${
                                 isSaving || !chartXML
-                                    ? "bg-gray-400/50 text-gray-500 border-gray-300 cursor-not-allowed opacity-50"
-                                    : "bg-blue-500/95 hover:bg-blue-500 text-white border-blue-600"
+                                    ? "bg-gray-100 dark:bg-gray-800 text-gray-400 dark:text-gray-500 cursor-not-allowed"
+                                    : "bg-blue-600 hover:bg-blue-700 text-white shadow-sm"
                             }`}
                             title={isSaving ? "正在保存..." : "保存图表"}
                         >
                             {isSaving ? (
-                                <span className="animate-spin h-5 w-5 block border-2 border-current border-t-transparent rounded-full" />
+                                <span className="animate-spin h-4 w-4 block border-2 border-current border-t-transparent rounded-full" />
                             ) : (
-                                <Save className="h-6 w-6" />
+                                <Save className="h-4 w-4" />
                             )}
+                            <span className="hidden sm:inline">保存</span>
                         </button>
 
                         {/* 下载按钮 */}
                         <button
                             onClick={() => setDownloadDialogOpen(true)}
-                            className="p-3 rounded-xl bg-white/95 hover:bg-white text-gray-800 border border-gray-300 hover:border-gray-400 shadow-md transition-all duration-200 hover:scale-105"
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors border border-transparent hover:border-gray-200 dark:hover:border-gray-700"
                             title="下载图表"
                         >
-                            <Download className="h-6 w-6" />
+                            <Download className="h-5 w-5" />
                         </button>
 
-                        {/* 分隔线 */}
-                        <div className="h-8 w-px bg-white/40"></div>
+                        <div className="h-4 w-px bg-gray-300 dark:bg-gray-700 mx-1"></div>
 
                         {/* 全屏按钮 */}
                         <button
                             onClick={toggleFullscreen}
-                            className="p-3 rounded-xl bg-white/95 hover:bg-white text-gray-800 border border-gray-300 hover:border-gray-400 shadow-md transition-all duration-200 hover:scale-105"
+                            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-600 dark:text-gray-300 transition-colors"
                             title={isFullscreen ? "退出全屏 (ESC)" : "全屏模式"}
                         >
                             {isFullscreen ? (
-                                <Minimize2 className="h-6 w-6" />
+                                <Minimize2 className="h-5 w-5" />
                             ) : (
-                                <Maximize2 className="h-6 w-6" />
+                                <Maximize2 className="h-5 w-5" />
                             )}
                         </button>
                     </div>
                 </div>
+
                 <ResizablePanelGroup
                     id="main-panel-group"
                     direction={isMobile ? "vertical" : "horizontal"}
-                    className="w-full h-full overflow-hidden"
+                    className="w-full flex-1 overflow-hidden"
                 >
                     {/* Draw.io Canvas */}
                     <ResizablePanel
@@ -547,6 +605,8 @@ export default function DrawioHome() {
                         minSize={20}
                     >
                         <div className="w-full h-full relative bg-white rounded-2xl overflow-hidden">
+                            {/* 旧的 overlay 移除 */}
+
                             {isLoaded ? (
                                 <DrawIoEmbed
                                     key={`${drawioUi}-${darkMode}`}

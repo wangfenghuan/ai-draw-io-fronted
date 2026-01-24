@@ -160,12 +160,9 @@ export default function MySpacesPage() {
 
         try {
             // 根据空间来源筛选调用不同的API
-            // 注意：后端接口功能是反的
-            // - listMySpaceVoByPage (/space/my/list/page/vo) 实际查询的是"我加入的"
-            // - listJoinedSpaceVoByPage (/space/joined/list/page/vo) 实际查询的是"我创建的"
             const response =
                 spaceSourceFilter === "created"
-                    ? await listJoinedSpaceVoByPage({
+                    ? await listMySpaceVoByPage({
                           current: current,
                           pageSize: pageSize,
                           ...(searchText && { spaceName: searchText }),
@@ -175,7 +172,7 @@ export default function MySpacesPage() {
                           sortField: "createTime",
                           sortOrder: "desc",
                       })
-                    : await listMySpaceVoByPage({
+                    : await listJoinedSpaceVoByPage({
                           current: current,
                           pageSize: pageSize,
                           ...(searchText && { spaceName: searchText }),

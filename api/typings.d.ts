@@ -382,11 +382,11 @@ declare namespace API {
     }
 
     type getUserByIdParams = {
-        id: number
+        id: string
     }
 
     type getUserVOByIdParams = {
-        id: number
+        id: string
     }
 
     type GrantedAuthority = {
@@ -401,7 +401,7 @@ declare namespace API {
 
     type LoginUserVO = {
         /** 用户ID */
-        id?: number
+        id?: string
         /** 用户昵称 */
         userName?: string
         /** 用户头像 */
@@ -887,7 +887,7 @@ declare namespace API {
 
     type User = {
         /** 用户ID */
-        id?: number
+        id?: string
         /** 用户账号 */
         userAccount?: string
         /** 用户密码 */
@@ -997,9 +997,11 @@ declare namespace API {
 
     type UserVO = {
         /** 用户ID */
-        id?: number
+        id?: string
         /** 用户昵称 */
         userName?: string
+        /** 用户账号 */
+        userAccount?: string
         /** 用户头像 */
         userAvatar?: string
         /** 用户简介 */
@@ -1009,5 +1011,9 @@ declare namespace API {
         authorities?: SysAuthority[]
         /** 创建时间 */
         createTime?: string
+        /** 更新时间 */
+        updateTime?: string
+        /** 是否删除 */
+        isDelete?: number
     }
 }

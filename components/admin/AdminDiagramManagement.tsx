@@ -142,7 +142,7 @@ export function AdminDiagramManagement() {
         try {
             const response = await downloadRemoteFile({
                 diagramId: diagramId, // 直接使用字符串，避免精度丢失
-                type: type,
+                type: type.toUpperCase(),
             })
 
             if (response) {
