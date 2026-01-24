@@ -118,9 +118,12 @@ export function TeamSpaceMemberManager({
         }
     }
 
-    const handleRemoveMember = async (id: string) => {
+    const handleRemoveMember = async (userId: string) => {
         try {
-            const response = await deleteSpaceUser({ id })
+            const response = await deleteSpaceUser({
+                spaceId,
+                userId,
+            })
             if (response?.code === 0) {
                 message.success("移除成员成功")
                 loadMembers()
@@ -194,7 +197,7 @@ export function TeamSpaceMemberManager({
                     danger
                     size="small"
                     type="link"
-                    onClick={() => handleRemoveMember(record.id!)}
+                    onClick={() => handleRemoveMember(record.userId!)}
                 >
                     移除
                 </Button>

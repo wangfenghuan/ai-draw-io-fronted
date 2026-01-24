@@ -207,7 +207,7 @@ export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
 
                 const response = await editDiagram({
                     id: diagramId,
-                    title: title,
+                    name: title,
                     diagramCode: xml,
                     pictureUrl: pngUrl || svgUrl || undefined,
                 })

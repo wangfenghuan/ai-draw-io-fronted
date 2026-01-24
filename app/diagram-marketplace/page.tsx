@@ -6,7 +6,16 @@ import {
     SearchOutlined,
     UserOutlined,
 } from "@ant-design/icons"
-import { App, Button, Card, Empty, Input, Pagination, Tooltip } from "antd"
+import {
+    App,
+    Button,
+    Card,
+    Empty,
+    Input,
+    Modal,
+    Pagination,
+    Tooltip,
+} from "antd"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { getByPage } from "@/api/diagramController"
@@ -24,6 +33,10 @@ export default function DiagramMarketplacePage() {
         pageSize: 12,
         total: 0,
     })
+    const [previewVisible, setPreviewVisible] = useState(false)
+    const [previewDiagram, setPreviewDiagram] = useState<API.DiagramVO | null>(
+        null,
+    )
 
     const [searchText, setSearchText] = useState("")
     const isLoadingRef = useRef(false)
@@ -104,11 +117,15 @@ export default function DiagramMarketplacePage() {
         loadDiagrams(page, pageSize)
     }
 
-    // 跳转到查看页面（只读模式）
-    const handleViewDiagram = (id: string | undefined) => {
-        if (id) {
-            router.push(`/diagram/view/${id}`)
-        }
+    // 预览图表 (直接使用列表中的数据，不再请求详情接口)
+    const handlePreview = (diagram: API.DiagramVO) => {
+        setPreviewDiagram(diagram)
+        setPreviewVisible(true)
+    }
+
+    const handleClosePreview = () => {
+        setPreviewVisible(false)
+        setPreviewDiagram(null)
     }
 
     return (
@@ -235,9 +252,7 @@ export default function DiagramMarketplacePage() {
                                     overflow: "hidden",
                                 }}
                                 bodyStyle={{ padding: "16px" }}
-                                onClick={() =>
-                                    handleViewDiagram(diagram.id?.toString())
-                                }
+                                onClick={() => handlePreview(diagram)}
                             >
                                 <div style={{ marginBottom: "12px" }}>
                                     <h3
@@ -397,9 +412,7 @@ export default function DiagramMarketplacePage() {
                                             size="small"
                                             onClick={(e) => {
                                                 e.stopPropagation()
-                                                handleViewDiagram(
-                                                    diagram.id?.toString(),
-                                                )
+                                                handlePreview(diagram)
                                             }}
                                         >
                                             查看
@@ -434,6 +447,50 @@ export default function DiagramMarketplacePage() {
                     </div>
                 )}
             </Card>
+
+            {/* 预览模态框 */}
+            <Modal
+                title={previewDiagram?.name || "图表预览"}
+                open={previewVisible}
+                onCancel={handleClosePreview}
+                footer={[
+                    <Button key="close" onClick={handleClosePreview}>
+                        关闭
+                    </Button>,
+                ]}
+                width={800}
+                centered
+            >
+                <div
+                    style={{
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center",
+                        minHeight: "400px",
+                        background: "#f5f5f5",
+                        borderRadius: "8px",
+                        overflow: "hidden",
+                    }}
+                >
+                    {previewDiagram ? (
+                        <img
+                            src={
+                                previewDiagram.pictureUrl ||
+                                previewDiagram.svgUrl ||
+                                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24' fill='none' stroke='%23d9d9d9' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E"
+                            }
+                            alt={previewDiagram.name}
+                            style={{
+                                maxWidth: "100%",
+                                maxHeight: "600px",
+                                objectFit: "contain",
+                            }}
+                        />
+                    ) : (
+                        <Empty description="暂无预览图" />
+                    )}
+                </div>
+            </Modal>
         </div>
     )
 }

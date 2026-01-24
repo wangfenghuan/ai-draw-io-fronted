@@ -41,6 +41,8 @@ import {
     listMySpaceVoByPage,
     listSpaceLevel,
 } from "@/api/spaceController"
+import { deleteSpaceUser } from "@/api/spaceUserController"
+import { getLoginUser } from "@/api/userController"
 import { TeamSpaceMemberManager } from "@/components/team-space-member-manager"
 import { calculatePercentage, formatFileSize, toNumber } from "@/lib/utils"
 
@@ -80,6 +82,7 @@ export default function MySpacesPage() {
     const [_editingSpace, setEditingSpace] = useState<API.SpaceVO | null>(null)
     const [viewingSpace, setViewingSpace] = useState<API.SpaceVO | null>(null)
     const [spaceLevels, setSpaceLevels] = useState<API.SpaceLevel[]>([])
+    const [currentUser, setCurrentUser] = useState<API.LoginUserVO | null>(null)
 
     const [createForm] = Form.useForm()
     const [editForm] = Form.useForm()
@@ -121,6 +124,18 @@ export default function MySpacesPage() {
             console.error("加载空间级别失败:", error)
         } finally {
             isLevelsLoadingRef.current = false
+        }
+    }
+
+    // 加载当前用户
+    const loadCurrentUser = async () => {
+        try {
+            const res = await getLoginUser()
+            if (res.code === 0 && res.data) {
+                setCurrentUser(res.data)
+            }
+        } catch (e) {
+            console.error("加载用户信息失败", e)
         }
     }
 
@@ -222,6 +237,7 @@ export default function MySpacesPage() {
 
     // 初始加载
     useEffect(() => {
+        loadCurrentUser()
         loadSpaces()
         loadSpaceLevels()
     }, [])
@@ -321,21 +337,38 @@ export default function MySpacesPage() {
         }
     }
 
-    // 删除空间
-    const handleDeleteSpace = async (id: string | undefined) => {
-        if (!id) return
+    // 删除/退出空间
+    const handleDeleteSpace = async (spaceId: string | undefined) => {
+        if (!spaceId) return
 
         try {
-            const response = await deleteSpace({ id })
+            let response
+            if (spaceSourceFilter === "created") {
+                // 删除自己创建的空间
+                response = await deleteSpace({ id: spaceId })
+            } else {
+                // 退出加入的空间
+                if (!currentUser?.id) {
+                    antMessage.error("未获取到用户信息")
+                    return
+                }
+                response = await deleteSpaceUser({
+                    spaceId: spaceId,
+                    userId: currentUser.id,
+                })
+            }
+
             if (response?.code === 0) {
-                antMessage.success("删除成功")
+                antMessage.success(
+                    spaceSourceFilter === "created" ? "删除成功" : "退出成功",
+                )
                 loadSpaces()
             } else {
-                antMessage.error(response?.message || "删除失败")
+                antMessage.error(response?.message || "操作失败")
             }
         } catch (error) {
-            console.error("删除空间失败:", error)
-            antMessage.error("删除操作异常")
+            console.error("操作失败:", error)
+            antMessage.error("操作异常")
         }
     }
 
@@ -653,8 +686,18 @@ export default function MySpacesPage() {
                                                 />
                                             </Tooltip>
                                             <Popconfirm
-                                                title="删除空间"
-                                                description="确定要删除这个空间吗？空间内的所有图表也会被删除。"
+                                                title={
+                                                    spaceSourceFilter ===
+                                                    "created"
+                                                        ? "删除空间"
+                                                        : "退出空间"
+                                                }
+                                                description={
+                                                    spaceSourceFilter ===
+                                                    "created"
+                                                        ? "确定要删除这个空间吗？空间内的所有图表也会被删除。"
+                                                        : "确定要退出这个空间吗？"
+                                                }
                                                 onConfirm={() =>
                                                     handleDeleteSpace(space.id)
                                                 }

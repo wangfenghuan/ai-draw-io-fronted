@@ -36,7 +36,7 @@ export async function addSpaceUser(
 - 管理员可以移除任何成员
  POST /spaceUser/delete */
 export async function deleteSpaceUser(
-    body: API.DeleteRequest,
+    body: API.SpaceUserDeleteRequest,
     options?: { [key: string]: any },
 ) {
     return request<API.BaseResponseBoolean>("/spaceUser/delete", {
