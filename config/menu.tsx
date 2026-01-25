@@ -14,22 +14,26 @@ export const menus: MenuDataItem[] = [
         name: "首页",
         path: "/",
         icon: <HomeOutlined />,
+        access: "notLogin",
+    },
+    {
+        name: "素材市场",
+        path: "/material-marketplace",
+        icon: <ShopOutlined />,
+        access: "notLogin",
+    },
+    {
+        name: "图表市场",
+        path: "/diagram-marketplace",
+        icon: <CrownOutlined />,
+        access: "notLogin",
     },
     {
         name: "我的图表",
         path: "/my-diagrams",
         icon: <TableOutlined />,
     },
-    {
-        name: "素材市场",
-        path: "/material-marketplace",
-        icon: <ShopOutlined />,
-    },
-    {
-        name: "图表市场",
-        path: "/diagram-marketplace",
-        icon: <CrownOutlined />,
-    },
+
     {
         name: "我的空间",
         path: "/my-spaces",

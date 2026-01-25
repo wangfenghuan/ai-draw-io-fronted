@@ -5,7 +5,15 @@ export default function robots(): MetadataRoute.Robots {
         rules: {
             userAgent: "*",
             allow: "/",
-            disallow: "/api/",
+            disallow: [
+                "/api/",
+                "/admin/",
+                "/my-diagrams/",
+                "/my-spaces/",
+                "/my-rooms/",
+                "/team-spaces/",
+                "/user/",
+            ],
         },
         sitemap: "https://next-ai-drawio.jiang.jp/sitemap.xml",
     }

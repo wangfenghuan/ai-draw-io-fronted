@@ -1,84 +1,72 @@
-"use client"
-
-import { AntdRegistry } from "@ant-design/nextjs-registry"
-import { App as AntdApp, ConfigProvider } from "antd"
-import zhCN from "antd/locale/zh_CN"
-import React, { useCallback, useEffect } from "react"
-import { Provider, useDispatch } from "react-redux"
-import AccessLayout from "@/access/AccessLayout"
-import { getLoginUser } from "@/api/userController"
-import { GlobalAnnouncementPopup } from "@/components/GlobalAnnouncementPopup"
-import { DiagramProvider } from "@/contexts/diagram-context"
-import BasicLayout from "@/layouts/basiclayout"
-import store, { type AppDispatch } from "@/stores"
-import { setLoginUser } from "@/stores/loginUser"
-
+import type { Metadata, Viewport } from "next"
+import { Providers } from "./providers"
 import "./globals.css"
 import "../styles/markdown.css"
 
-/**
- * 全局初始化组件：负责获取登录用户信息
- */
-const InitLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-    const dispatch = useDispatch<AppDispatch>()
-    const [isInitialized, setIsInitialized] = React.useState(false)
+export const viewport: Viewport = {
+    themeColor: "#1677ff",
+    width: "device-width",
+    initialScale: 1,
+}
 
-    const doInitLoginUser = useCallback(async () => {
-        try {
-            const res = await getLoginUser()
-            // @ts-expect-error
-            if (res.code === 0 && res.data) {
-                // 登录成功，保存用户信息
-                dispatch(setLoginUser(res.data))
-            } else {
-                // 未登录或登录失效
-                console.log("用户未登录，跳转到登录页面")
-                dispatch(
-                    setLoginUser({ userName: "未登录", userRole: "notLogin" }),
-                )
-                // 跳转到登录页，带上当前页面地址作为 redirect 参数
-                const currentPath =
-                    window.location.pathname + window.location.search
-                if (!currentPath.includes("/user/login")) {
-                    window.location.href = `/user/login?redirect=${encodeURIComponent(currentPath)}`
-                }
-            }
-        } catch (error) {
-            console.error("初始化用户信息失败", error)
-            // 请求失败，可能未登录
-            dispatch(setLoginUser({ userName: "未登录", userRole: "notLogin" }))
-            const currentPath =
-                window.location.pathname + window.location.search
-            if (!currentPath.includes("/user/login")) {
-                window.location.href = `/user/login?redirect=${encodeURIComponent(currentPath)}`
-            }
-        } finally {
-            setIsInitialized(true)
-        }
-    }, [dispatch])
-
-    useEffect(() => {
-        doInitLoginUser()
-    }, [doInitLoginUser])
-
-    // 等待初始化完成再渲染子组件
-    if (!isInitialized) {
-        return (
-            <div
-                style={{
-                    minHeight: "100vh",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    background: "#f5f5f5",
-                }}
-            >
-                <div className="animate-spin h-6 w-6 border-2 border-gray-300 border-t-gray-600 rounded-full" />
-            </div>
-        )
-    }
-
-    return <>{children}</>
+export const metadata: Metadata = {
+    title: {
+        template: "%s | CloudGraph 智能绘图",
+        default: "CloudGraph - AI 驱动的智能绘图平台",
+    },
+    description:
+        "新一代在线绘图工具，支持流程图、思维导图、UML 等多种图形。AI 辅助生成，实时团队协作，让创意即刻落地。",
+    keywords: [
+        "draw.io",
+        "diagram",
+        "flowchart",
+        "mind map",
+        "UML",
+        "AI drawing",
+        "online whiteboard",
+        "online diagram",
+        "流程图",
+        "思维导图",
+        "在线绘图",
+        "AI绘图",
+    ],
+    authors: [{ name: "CloudGraph Team" }],
+    creator: "CloudGraph",
+    publisher: "CloudGraph",
+    robots: {
+        index: true,
+        follow: true,
+    },
+    openGraph: {
+        type: "website",
+        locale: "zh_CN",
+        url: "https://next-ai-drawio.jiang.jp",
+        siteName: "CloudGraph 智能绘图",
+        title: "CloudGraph - AI 驱动的智能绘图平台",
+        description:
+            "新一代在线绘图工具，支持流程图、思维导图、UML 等多种图形。AI 辅助生成，实时团队协作。",
+        images: [
+            {
+                url: "/og-image.png", // Make sure this exists or replace
+                width: 1200,
+                height: 630,
+                alt: "CloudGraph Preview",
+            },
+        ],
+    },
+    twitter: {
+        card: "summary_large_image",
+        title: "CloudGraph - AI 驱动的智能绘图平台",
+        description:
+            "新一代在线绘图工具，支持流程图、思维导图、UML 等多种图形。AI 辅助生成，实时团队协作。",
+        images: ["/og-image.png"],
+    },
+    icons: {
+        icon: "/favicon.ico",
+        shortcut: "/favicon.ico",
+        apple: "/apple-touch-icon.png",
+    },
+    manifest: "/site.webmanifest",
 }
 
 export default function RootLayout({
@@ -89,27 +77,7 @@ export default function RootLayout({
     return (
         <html lang="zh">
             <body>
-                {/* AntdRegistry 应该包裹在最外层以确保样式收集 */}
-                <AntdRegistry>
-                    {/* ConfigProvider 负责 Ant Design 的全局样式配置和语言 */}
-                    <ConfigProvider locale={zhCN}>
-                        {/* AntdApp 提供 message、modal、notification 等组件的上下文 */}
-                        <AntdApp>
-                            <Provider store={store}>
-                                <InitLayout>
-                                    <BasicLayout>
-                                        <AccessLayout>
-                                            <DiagramProvider>
-                                                {children}
-                                            </DiagramProvider>
-                                        </AccessLayout>
-                                        <GlobalAnnouncementPopup />
-                                    </BasicLayout>
-                                </InitLayout>
-                            </Provider>
-                        </AntdApp>
-                    </ConfigProvider>
-                </AntdRegistry>
+                <Providers>{children}</Providers>
             </body>
         </html>
     )

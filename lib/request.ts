@@ -53,7 +53,21 @@ myAxios.interceptors.response.use(
                 !response.request.responseURL.includes("user/get/login") &&
                 !window.location.pathname.includes("/user/login")
             ) {
-                window.location.href = `/user/login?redirect=${window.location.href}`
+                const currentPath = window.location.pathname
+                const isPublic =
+                    currentPath === "/" ||
+                    currentPath.startsWith("/material-marketplace") ||
+                    currentPath.startsWith("/diagram-marketplace") ||
+                    currentPath.startsWith("/user/") ||
+                    currentPath.includes("sitemap.xml") ||
+                    currentPath.includes("robots.txt") ||
+                    currentPath.includes("manifest") ||
+                    currentPath.includes("favicon")
+
+                // 只有非公开页面才跳转
+                if (!isPublic) {
+                    window.location.href = `/user/login?redirect=${window.location.href}`
+                }
             }
         }
 

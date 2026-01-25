@@ -205,3 +205,18 @@ export async function updateUserRoles(
         ...(options || {}),
     })
 }
+
+/** 上传头像图片 POST /user/upload/image */
+export async function uploadAvataImage(
+    body: {},
+    options?: { [key: string]: any },
+) {
+    return request<API.BaseResponseString>("/user/upload/image", {
+        method: "POST",
+        headers: {
+            "Content-Type": "multipart/form-data",
+        },
+        data: body,
+        ...(options || {}),
+    })
+}

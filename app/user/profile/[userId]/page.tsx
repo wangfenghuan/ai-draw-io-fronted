@@ -4,7 +4,9 @@ import {
     ClockCircleOutlined,
     EditOutlined,
     IdcardOutlined,
+    LoadingOutlined,
     MailOutlined,
+    PlusOutlined,
     SafetyOutlined,
     UserOutlined,
 } from "@ant-design/icons"
@@ -18,14 +20,22 @@ import {
     Form,
     Input,
     Modal,
+    message,
     Spin,
     Tag,
     Typography,
+    Upload,
 } from "antd"
+import type { UploadChangeParam } from "antd/es/upload"
+import type { RcFile, UploadFile, UploadProps } from "antd/es/upload/interface"
 import { useParams } from "next/navigation"
 import { useEffect, useState } from "react"
 import { useSelector } from "react-redux"
-import { getUserVoById, updateMyUser } from "@/api/userController"
+import {
+    getUserVoById,
+    updateMyUser,
+    uploadAvataImage,
+} from "@/api/userController"
 import type { RootState } from "@/stores"
 
 const { Title, Paragraph } = Typography
@@ -43,6 +53,7 @@ export default function UserProfilePage() {
     // 编辑相关状态
     const [editModalVisible, setEditModalVisible] = useState(false)
     const [confirmLoading, setConfirmLoading] = useState(false)
+    const [avatarLoading, setAvatarLoading] = useState(false)
     const [form] = Form.useForm()
 
     // 判断是否是当前登录用户的个人主页
@@ -114,6 +125,63 @@ export default function UserProfilePage() {
             setConfirmLoading(false)
         }
     }
+
+    // Upload Props
+    const beforeUpload = (file: RcFile) => {
+        const isJpgOrPng =
+            file.type === "image/jpeg" || file.type === "image/png"
+        if (!isJpgOrPng) {
+            message.error("You can only upload JPG/PNG file!")
+        }
+        const isLt5M = file.size / 1024 / 1024 < 5
+        if (!isLt5M) {
+            message.error("Image must smaller than 5MB!")
+        }
+        return isJpgOrPng && isLt5M
+    }
+
+    const handleChange: UploadProps["onChange"] = async (
+        info: UploadChangeParam<UploadFile>,
+    ) => {
+        if (info.file.status === "uploading") {
+            setAvatarLoading(true)
+            return
+        }
+
+        // Handle custom upload separately if needed, but here we use customRequest
+        // actually for this API we might want to use customRequest to upload directly
+    }
+
+    const customRequest = async (options: any) => {
+        const { file, onSuccess, onError } = options
+        setAvatarLoading(true)
+        try {
+            const formData = new FormData()
+            formData.append("file", file)
+            // @ts-expect-error
+            const res = await uploadAvataImage(formData)
+            if (res.code === 0 && res.data) {
+                form.setFieldValue("userAvatar", res.data)
+                onSuccess(res.data)
+                message.success("Upload successful")
+            } else {
+                onError(new Error(res.message))
+                message.error("Upload failed: " + res.message)
+            }
+        } catch (err) {
+            onError(err)
+            message.error("Upload failed")
+        } finally {
+            setAvatarLoading(false)
+        }
+    }
+
+    const uploadButton = (
+        <div>
+            {avatarLoading ? <LoadingOutlined /> : <PlusOutlined />}
+            <div style={{ marginTop: 8 }}>Upload</div>
+        </div>
+    )
 
     // 获取角色标签颜色
     const getRoleColor = (role: string | undefined) => {
@@ -412,11 +480,34 @@ export default function UserProfilePage() {
                                 size="large"
                             />
                         </Form.Item>
-                        <Form.Item label="头像链接" name="userAvatar">
-                            <Input.TextArea
-                                placeholder="输入图片 URL 地址"
-                                autoSize={{ minRows: 2, maxRows: 4 }}
-                            />
+                        <Form.Item label="头像">
+                            <Form.Item name="userAvatar" noStyle hidden>
+                                <Input />
+                            </Form.Item>
+                            <Upload
+                                name="avatar"
+                                listType="picture-card"
+                                className="avatar-uploader"
+                                showUploadList={false}
+                                beforeUpload={beforeUpload}
+                                onChange={handleChange}
+                                customRequest={customRequest}
+                            >
+                                {form.getFieldValue("userAvatar") ? (
+                                    <img
+                                        src={form.getFieldValue("userAvatar")}
+                                        alt="avatar"
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                            objectFit: "cover",
+                                            borderRadius: "8px",
+                                        }}
+                                    />
+                                ) : (
+                                    uploadButton
+                                )}
+                            </Upload>
                         </Form.Item>
                         <Form.Item label="个人简介" name="userProfile">
                             <TextArea

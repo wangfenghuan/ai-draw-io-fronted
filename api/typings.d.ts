@@ -549,7 +549,7 @@ declare namespace API {
         /** 更新时间 */
         updateTime?: string
         /** 是否处理（0 未处理，1处理） */
-        isHandle?: string
+        isHandle?: number
     }
 
     type getAnnouncementByIdParams = {
@@ -602,7 +602,7 @@ declare namespace API {
     }
 
     type getUserVOByIdParams = {
-        id: number | string
+        id: number
     }
 
     type GrantedAuthority = {
@@ -1190,10 +1190,10 @@ declare namespace API {
         updateTime?: string
         isDelete?: number
         enabled?: boolean
-        accountNonExpired?: boolean
-        accountNonLocked?: boolean
         username?: string
         password?: string
+        accountNonExpired?: boolean
+        accountNonLocked?: boolean
         credentialsNonExpired?: boolean
     }
 
@@ -1303,11 +1303,11 @@ declare namespace API {
         /** 是否删除（0未删除，1已删除） */
         isDelete?: number
         enabled?: boolean
+        username?: string
+        password?: string
         authoritieList?: SysAuthority[]
         accountNonExpired?: boolean
         accountNonLocked?: boolean
-        username?: string
-        password?: string
         credentialsNonExpired?: boolean
     }
 
@@ -1402,9 +1402,5 @@ declare namespace API {
         authorities?: SysAuthority[]
         /** 创建时间 */
         createTime?: string
-        /** 更新时间 */
-        updateTime?: string
-        /** 用户账号 */
-        userAccount?: string
     }
 }

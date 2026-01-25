@@ -14,5 +14,11 @@ export default function sitemap(): MetadataRoute.Sitemap {
             changeFrequency: "monthly",
             priority: 0.8,
         },
+        {
+            url: "https://next-ai-drawio.jiang.jp/material-marketplace",
+            lastModified: new Date(),
+            changeFrequency: "daily",
+            priority: 0.9,
+        },
     ]
 }
