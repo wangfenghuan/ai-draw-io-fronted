@@ -2,7 +2,10 @@ import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios"
 
 // 创建 Axios 实例
 const myAxios = axios.create({
-    baseURL: "http://localhost:8081/api",
+    baseURL:
+        process.env.NODE_ENV === "development"
+            ? "http://localhost:8081/api"
+            : "http://47.95.35.178:8081/api",
     timeout: 10000,
     withCredentials: true,
     transformResponse: [

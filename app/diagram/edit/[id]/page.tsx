@@ -41,6 +41,8 @@ export default function DrawioHome() {
         chartXML,
         loadDiagram,
         isDrawioReady,
+        hasUnsavedChanges,
+        setHasUnsavedChanges,
     } = useDiagram()
     const { saveDiagram, downloadDiagram, handleExportCallback } =
         useDiagramSave(drawioRef)
@@ -298,12 +300,18 @@ export default function DrawioHome() {
             return false
         }
 
-        return await saveDiagram({
+        const success = await saveDiagram({
             diagramId: diagramId,
             userId: userId,
             title: diagramTitle,
             xml: chartXML,
         })
+
+        if (success) {
+            setHasUnsavedChanges(false)
+        }
+
+        return success
     }
 
     // 覆盖 handleDiagramExport，同时调用原始的和我们新的回调
@@ -357,6 +365,11 @@ export default function DrawioHome() {
                             }}
                         >
                             {diagramTitle}
+                            {hasUnsavedChanges && (
+                                <span className="text-xs text-amber-500 font-medium ml-2 animate-pulse">
+                                    (未保存)
+                                </span>
+                            )}
                         </div>
                         <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
                         <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">

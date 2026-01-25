@@ -50,6 +50,8 @@ export default function DrawioHome() {
         handleExportWithoutHistory,
         resolverRef,
         registerExportCallback,
+        hasUnsavedChanges,
+        setHasUnsavedChanges,
     } = useDiagram()
     const { saveDiagram, downloadDiagram, handleExportCallback } =
         useDiagramSave(drawioRef)
@@ -350,12 +352,18 @@ export default function DrawioHome() {
             return false
         }
 
-        return await saveDiagram({
+        const success = await saveDiagram({
             diagramId: diagramId,
             userId: userId,
             title: diagramTitle,
             xml: chartXML,
         })
+
+        if (success) {
+            setHasUnsavedChanges(false)
+        }
+
+        return success
     }
 
     // 保存按钮的保存逻辑（完全复制 SimpleChatPanel 的逻辑）
@@ -428,6 +436,7 @@ export default function DrawioHome() {
 
             console.log("[协作页面保存] ✅ saveDiagram 完成")
             // 成功提示已经在 saveDiagram 内部处理了
+            setHasUnsavedChanges(false)
         } catch (error) {
             console.error("[协作页面保存] ❌ 保存异常:", error)
             toast.error(
@@ -503,6 +512,11 @@ export default function DrawioHome() {
                             }}
                         >
                             {diagramTitle}
+                            {hasUnsavedChanges && (
+                                <span className="text-xs text-amber-500 font-medium ml-2 animate-pulse">
+                                    (未保存)
+                                </span>
+                            )}
                         </div>
                         <div className="h-4 w-px bg-gray-300 dark:bg-gray-700"></div>
                         <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400">

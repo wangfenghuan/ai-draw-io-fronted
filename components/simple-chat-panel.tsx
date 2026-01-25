@@ -65,6 +65,7 @@ export default function SimpleChatPanel({
         registerExportCallback,
         handleExportWithoutHistory,
         resolverRef,
+        setHasUnsavedChanges,
     } = useDiagram()
     const {
         saveDiagram: saveDiagramToServer,
@@ -265,6 +266,9 @@ export default function SimpleChatPanel({
             ])
 
             toast.success("保存成功")
+
+            // 保存成功，重置未保存状态
+            setHasUnsavedChanges(false)
         } catch (error) {
             console.error("保存图表异常:", error)
             toast.error(

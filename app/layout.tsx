@@ -40,7 +40,7 @@ export const metadata: Metadata = {
     openGraph: {
         type: "website",
         locale: "zh_CN",
-        url: "https://next-ai-drawio.jiang.jp",
+        url: "http://47.95.35.178",
         siteName: "CloudGraph 智能绘图",
         title: "CloudGraph - AI 驱动的智能绘图平台",
         description:
@@ -62,9 +62,8 @@ export const metadata: Metadata = {
         images: ["/og-image.png"],
     },
     icons: {
-        icon: "/favicon.ico",
-        shortcut: "/favicon.ico",
-        apple: "/apple-touch-icon.png",
+        icon: "/favicon.ico?v=2",
+        shortcut: "/favicon.ico?v=2",
     },
     manifest: "/site.webmanifest",
 }

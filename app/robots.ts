@@ -15,6 +15,6 @@ export default function robots(): MetadataRoute.Robots {
                 "/user/",
             ],
         },
-        sitemap: "https://next-ai-drawio.jiang.jp/sitemap.xml",
+        sitemap: "http://47.95.35.178/sitemap.xml",
     }
 }

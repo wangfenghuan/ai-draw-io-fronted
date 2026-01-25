@@ -48,7 +48,10 @@ export class WebSocketCollaboration {
     // 从环境变量获取 WebSocket URL
     private static getWSUrl(): string {
         const wsUrl =
-            process.env.NEXT_PUBLIC_WS_URL || "ws://localhost:8081/yjs"
+            process.env.NEXT_PUBLIC_WS_URL ||
+            (process.env.NODE_ENV === "development"
+                ? "ws://localhost:8081/yjs"
+                : "ws://47.95.35.178:8081/yjs")
         // 移除尾部斜杠
         return wsUrl.replace(/\/$/, "")
     }

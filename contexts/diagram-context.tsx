@@ -55,6 +55,9 @@ interface DiagramContextType {
         roomName?: string,
         isReadOnly?: boolean,
     ) => void
+    // 未保存更改指示器
+    hasUnsavedChanges: boolean
+    setHasUnsavedChanges: (hasChanges: boolean) => void
 }
 
 const DiagramContext = createContext<DiagramContextType | undefined>(undefined)
@@ -75,8 +78,9 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
     // 获取当前用户信息
     const loginUser = useSelector((state: RootState) => state.loginUser)
     const currentUserId = loginUser?.id?.toString()
-    const currentUserName =
-        loginUser?.username || loginUser?.nickname || "Anonymous"
+    const currentUserName = loginUser?.userName || "Anonymous"
+
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false)
 
     // WebSocket 协作状态
     const [collaborationEnabled, setCollaborationEnabled] = useState(false)
@@ -361,7 +365,6 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
     // 处理 Draw.io autosave 事件（用于实时协作）
     const handleAutoSave = useCallback(
         (data: any) => {
-            // 只在协作模式下处理 autosave
             const currentEnabled = collaborationStateRef.current.enabled
             const currentConnected = collaborationStateRef.current.connected
 
@@ -372,15 +375,6 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
                 hasXml: !!data.xml,
             })
 
-            if (
-                !currentEnabled ||
-                !currentConnected ||
-                isUpdatingFromRemoteRef.current
-            ) {
-                console.log("[DiagramContext] ⏭️ Skipping autosave")
-                return
-            }
-
             // 提取 XML
             const xml = data.xml || ""
             if (!xml) {
@@ -388,10 +382,20 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
                 return
             }
 
-            console.log("[DiagramContext] 📤 Autosave XML length:", xml.length)
-
-            // 更新本地状态
+            // 更新本地状态 (无论是否协作，都要更新)
             setChartXML(xml)
+            if (!isUpdatingFromRemoteRef.current) {
+                setHasUnsavedChanges(true)
+            }
+
+            // 仅在协作模式且已连接时处理推送
+            if (
+                !currentEnabled ||
+                !currentConnected ||
+                isUpdatingFromRemoteRef.current
+            ) {
+                return
+            }
 
             // 推送到 Yjs（协作服务器）
             console.log("[DiagramContext] 🚀 Calling pushUpdate...")
@@ -643,6 +647,8 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
                 collaborationConnected,
                 collaborationUserCount,
                 toggleCollaboration,
+                hasUnsavedChanges,
+                setHasUnsavedChanges,
             }}
         >
             {children}
