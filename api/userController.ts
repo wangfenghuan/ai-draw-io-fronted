@@ -1,3 +1,4 @@
+// @ts-expect-error
 /* eslint-disable */
 import request from "@/lib/request"
 
@@ -12,6 +13,14 @@ export async function addUser(
             "Content-Type": "application/json",
         },
         data: body,
+        ...(options || {}),
+    })
+}
+
+/** 生成图片验证码(返回Map<uuid, 生成的base64验证码，后续uuid需要携带到注册接口>) GET /user/createCaptcha */
+export async function createCaptcha(options?: { [key: string]: any }) {
+    return request<API.BaseResponseMapStringString>("/user/createCaptcha", {
+        method: "GET",
         ...(options || {}),
     })
 }
@@ -213,7 +222,7 @@ export async function uploadAvataImage(
     return request<API.BaseResponseString>("/user/upload/image", {
         method: "POST",
         headers: {
-            "Content-Type": "multipart/form-data",
+            "Content-Type": "application/json",
         },
         data: body,
         ...(options || {}),

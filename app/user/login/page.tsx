@@ -1,5 +1,5 @@
 "use client"
-import { LockOutlined, UserOutlined } from "@ant-design/icons"
+import { LockOutlined, MailOutlined, UserOutlined } from "@ant-design/icons"
 import {
     LoginForm,
     ProConfigProvider,
@@ -57,16 +57,20 @@ const UserLogin: React.FC = () => {
                                 fieldProps={{
                                     size: "large",
                                     prefix: (
-                                        <UserOutlined
+                                        <MailOutlined
                                             className={"prefixIcon"}
                                         />
                                     ),
                                 }}
-                                placeholder={"请输入用户名!"}
+                                placeholder={"请输入邮箱!"}
                                 rules={[
                                     {
                                         required: true,
-                                        message: "请输入用户名!",
+                                        message: "请输入邮箱!",
+                                    },
+                                    {
+                                        type: "email",
+                                        message: "请输入正确的邮箱格式!",
                                     },
                                 ]}
                             />

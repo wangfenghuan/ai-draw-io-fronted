@@ -136,6 +136,12 @@ declare namespace API {
         message?: string
     }
 
+    type BaseResponseMapStringString = {
+        code?: number
+        data?: Record<string, any>
+        message?: string
+    }
+
     type BaseResponseMaterial = {
         code?: number
         data?: Material
@@ -553,56 +559,56 @@ declare namespace API {
     }
 
     type getAnnouncementByIdParams = {
-        id: number | string
+        id: number
     }
 
     type getAnnouncementVOByIdParams = {
-        id: number | string
+        id: number
     }
 
     type getDiagramRoomVOByIdParams = {
-        id: number | string
+        id: number
     }
 
     type getDiagramVOByIdParams = {
-        id: number | string
+        id: number
     }
 
     type getFeedbackByIdParams = {
-        id: number | string
+        id: number
     }
 
     type getFeedbackVOByIdParams = {
-        id: number | string
+        id: number
     }
 
     type getMaterialByIdParams = {
-        id: number | string
+        id: number
     }
 
     type getMaterialVOByIdParams = {
-        id: number | string
+        id: number
     }
 
     type getRoomDiagramVOParams = {
-        diagramId: number | string
-        roomId: number | string
+        diagramId: number
+        roomId: number
     }
 
     type getSpaceByIdParams = {
-        id: number | string
+        id: number
     }
 
     type getSpaceVOByIdParams = {
-        id: number | string
+        id: number
     }
 
     type getUserByIdParams = {
-        id: number | string
+        id: number
     }
 
     type getUserVOByIdParams = {
-        id: number | string
+        id: number
     }
 
     type GrantedAuthority = {
@@ -611,7 +617,7 @@ declare namespace API {
 
     type listDiagramChatHistoryParams = {
         diagramId: string
-        pageSize?: number | string
+        pageSize?: number
         lasteCreateTime?: string
     }
 
@@ -1190,10 +1196,10 @@ declare namespace API {
         updateTime?: string
         isDelete?: number
         enabled?: boolean
-        username?: string
-        password?: string
         accountNonExpired?: boolean
         accountNonLocked?: boolean
+        username?: string
+        password?: string
         credentialsNonExpired?: boolean
     }
 
@@ -1303,11 +1309,11 @@ declare namespace API {
         /** 是否删除（0未删除，1已删除） */
         isDelete?: number
         enabled?: boolean
-        username?: string
-        password?: string
-        authoritieList?: SysAuthority[]
         accountNonExpired?: boolean
         accountNonLocked?: boolean
+        authoritieList?: SysAuthority[]
+        username?: string
+        password?: string
         credentialsNonExpired?: boolean
     }
 
@@ -1357,6 +1363,10 @@ declare namespace API {
         checkPassword?: string
         /** 用户昵称 */
         userName?: string
+        /** 图形验证码 */
+        captchaCode?: string
+        /** 验证码uuid */
+        uuid?: string
     }
 
     type UserRoleUpdateRequest = {
