@@ -1309,9 +1309,9 @@ declare namespace API {
         /** 是否删除（0未删除，1已删除） */
         isDelete?: number
         enabled?: boolean
+        authoritieList?: SysAuthority[]
         accountNonExpired?: boolean
         accountNonLocked?: boolean
-        authoritieList?: SysAuthority[]
         username?: string
         password?: string
         credentialsNonExpired?: boolean

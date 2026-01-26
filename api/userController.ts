@@ -17,6 +17,14 @@ export async function addUser(
     })
 }
 
+/** 获取GitHub登录授权链接 GET /user/auth/github */
+export async function getGithubAuthUrl(options?: { [key: string]: any }) {
+    return request<API.BaseResponseString>("/user/auth/github", {
+        method: "GET",
+        ...(options || {}),
+    })
+}
+
 /** 生成图片验证码(返回Map<uuid, 生成的base64验证码，后续uuid需要携带到注册接口>) GET /user/createCaptcha */
 export async function createCaptcha(options?: { [key: string]: any }) {
     return request<API.BaseResponseMapStringString>("/user/createCaptcha", {

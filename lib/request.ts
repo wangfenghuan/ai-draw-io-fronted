@@ -1,11 +1,9 @@
 import axios, { type AxiosInstance, type AxiosRequestConfig } from "axios"
+import { BACKEND_API_URL } from "@/config/api"
 
 // 创建 Axios 实例
 const myAxios = axios.create({
-    baseURL:
-        process.env.NODE_ENV === "development"
-            ? "http://localhost:8081/api"
-            : "http://47.95.35.178:8081/api",
+    baseURL: BACKEND_API_URL,
     timeout: 10000,
     withCredentials: true,
     transformResponse: [

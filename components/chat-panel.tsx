@@ -22,6 +22,7 @@ import { ButtonWithTooltip } from "@/components/button-with-tooltip"
 import { ChatInput } from "@/components/chat-input"
 import { ResetWarningModal } from "@/components/reset-warning-modal"
 import { SettingsDialog } from "@/components/settings-dialog"
+import { BACKEND_API_URL } from "@/config/api"
 import { useDiagram } from "@/contexts/diagram-context"
 import { getAIConfig } from "@/lib/ai-config"
 import { findCachedResponse } from "@/lib/cached-responses"
@@ -250,6 +251,19 @@ export default function ChatPanel({
     )
     const LOCAL_STORAGE_DEBOUNCE_MS = 1000 // Save at most once per second
 
+    // Determine API URL based on environment and browser location
+    const getApiUrl = useCallback(() => {
+        // Force localhost if running continuously locally
+        if (
+            typeof window !== "undefined" &&
+            window.location.hostname === "localhost"
+        ) {
+            return "http://localhost:8081/api/chat/stream"
+        }
+        // Fallback to env var or remote
+        return `${BACKEND_API_URL}/chat/stream`
+    }, [])
+
     const {
         messages,
         sendMessage,
@@ -260,7 +274,7 @@ export default function ChatPanel({
         setMessages,
     } = useChat({
         transport: new DefaultChatTransport({
-            api: "/api/chat",
+            api: getApiUrl(),
         }),
         async onToolCall({ toolCall }) {
             if (DEBUG) {
@@ -729,7 +743,7 @@ Continue from EXACTLY where you stopped.`,
             )
             const response = await listDiagramChatHistory({
                 diagramId: id,
-                pageSize: "100", // Load more history
+                pageSize: 100, // Load more history
             })
 
             if (response?.code === 0 && response?.data?.records) {

@@ -1,5 +1,10 @@
 "use client"
-import { LockOutlined, MailOutlined, UserOutlined } from "@ant-design/icons"
+import {
+    GithubOutlined,
+    LockOutlined,
+    MailOutlined,
+    UserOutlined,
+} from "@ant-design/icons"
 import {
     LoginForm,
     ProConfigProvider,
@@ -71,6 +76,15 @@ const UserRegister: React.FC = () => {
             fetchCaptcha()
         }
     }
+
+    const handleGithubLogin = () => {
+        const isDev = process.env.NODE_ENV === "development"
+        const baseURL = isDev
+            ? "http://localhost:8081/api"
+            : "http://47.95.35.178:8081/api"
+        window.location.href = `${baseURL}/oauth2/authorization/github`
+    }
+
     return (
         <ProConfigProvider hashed={false}>
             <div>
@@ -85,6 +99,38 @@ const UserRegister: React.FC = () => {
                     logo="https://github.githubassets.com/favicons/favicon.png"
                     title="智能协同云画图"
                     subTitle="用户注册"
+                    actions={
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "center",
+                                alignItems: "center",
+                                flexDirection: "column",
+                            }}
+                        >
+                            <div
+                                style={{
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
+                                    flexDirection: "column",
+                                    height: 40,
+                                    width: 40,
+                                    border: "1px solid #D4D8DD",
+                                    borderRadius: "50%",
+                                    cursor: "pointer",
+                                }}
+                                onClick={handleGithubLogin}
+                            >
+                                <GithubOutlined
+                                    style={{
+                                        fontSize: 24,
+                                        color: "#1677ff",
+                                    }}
+                                />
+                            </div>
+                        </div>
+                    }
                 >
                     <ProFormText
                         name="userAccount"
