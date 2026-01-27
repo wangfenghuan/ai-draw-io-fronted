@@ -637,6 +637,8 @@ declare namespace API {
         /** 更新时间 */
         updateTime?: string
         authorities?: SysAuthority[]
+        /** 会话Token (Session ID) */
+        token?: string
     }
 
     type Material = {

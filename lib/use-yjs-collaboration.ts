@@ -20,6 +20,7 @@ export interface UseYjsCollaborationOptions {
     userRole: UserRole // 用户角色
     userId: string // 用户ID
     userName?: string // 用户名
+    token?: string // 认证 Token
     enabled?: boolean
     onRemoteChange?: (xml: string) => void
     onPointerMove?: (pointer: any) => void
@@ -31,6 +32,7 @@ export function useYjsCollaboration({
     userRole,
     userId,
     userName,
+    token, // 新增
     enabled = true,
     onRemoteChange,
     onPointerMove,
@@ -74,6 +76,7 @@ export function useYjsCollaboration({
             userRole,
             userId,
             userName,
+            token, // 传递 token
             onRemoteChange: (xml) => {
                 console.log(
                     "[useYjsCollaboration] onRemoteChange callback, XML length:",
@@ -117,7 +120,7 @@ export function useYjsCollaboration({
             collab.dispose()
             collabRef.current = null
         }
-    }, [roomName, serverUrl, enabled, userRole])
+    }, [roomName, serverUrl, enabled, userRole, token])
 
     /**
      * 推送本地更新到协作服务器

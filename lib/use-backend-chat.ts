@@ -1,8 +1,7 @@
 import { useCallback, useRef, useState } from "react"
 
-// 后端 API 地址
-const API_BASE_URL =
-    process.env.NEXT_PUBLIC_API_BASE_URL || "http://47.95.35.178:8081/api"
+// 强制指向本地 localhost:8081
+const API_BASE_URL = "http://localhost:8081/api"
 
 export interface Message {
     id: string

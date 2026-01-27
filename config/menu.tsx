@@ -33,7 +33,11 @@ export const menus: MenuDataItem[] = [
         path: "/my-diagrams",
         icon: <TableOutlined />,
     },
-
+    {
+        name: "协作房间",
+        path: "/my-rooms",
+        icon: <UserOutlined />,
+    },
     {
         name: "我的空间",
         path: "/my-spaces",

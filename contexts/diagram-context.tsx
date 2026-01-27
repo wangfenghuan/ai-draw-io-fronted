@@ -21,7 +21,7 @@ import {
     getSecretKeyFromHash,
 } from "../lib/cryptoUtils"
 import { usePersistence } from "../lib/use-persistence"
-import { useYjsCollaborationWrapper } from "../lib/use-yjs-collaboration-wrapper"
+import { useYjsCollaboration } from "../lib/use-yjs-collaboration"
 import { extractDiagramXML, validateAndFixXml } from "../lib/utils"
 
 interface DiagramContextType {
@@ -200,21 +200,31 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
         }
     }, []) // 空依赖数组，确保引用稳定
 
-    // 初始化 Yjs + 自定义协议混合协作 Hook
+    // 获取 WebSocket URL
+    const getWSUrl = () => {
+        const wsUrl =
+            process.env.NEXT_PUBLIC_WS_URL ||
+            (process.env.NODE_ENV === "development"
+                ? "ws://localhost:1234"
+                : "ws://47.95.35.178:1234")
+        return wsUrl.replace(/\/$/, "")
+    }
+
+    // 初始化 Yjs 协作 Hook
     const {
         isConnected: collaborationConnected,
         userCount: collaborationUserCount,
         pushUpdate,
         sendPointer,
-        requestFullSync,
         getDocument,
-    } = useYjsCollaborationWrapper({
+    } = useYjsCollaboration({
         roomName: collaborationRoomName,
-        secretKey: secretKey, // 传入密钥用于加密/解密
+        serverUrl: getWSUrl(), // Hocuspocus 需要完整的 WebSocket URL
         userRole: isReadOnly ? UserRole.VIEW : UserRole.EDIT, // 根据只读状态设置角色
         userId: currentUserId || "anonymous", // 用户ID
         userName: currentUserName || "Anonymous", // 用户名
-        enabled: collaborationEnabled && !!collaborationRoomName && !!secretKey, // 确保同时满足三个条件
+        token: loginUser?.token, // 传递 Token
+        enabled: collaborationEnabled && !!collaborationRoomName, // 移除 secretKey 依赖
         onRemoteChange: handleRemoteChange,
     })
 

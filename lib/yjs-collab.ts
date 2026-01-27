@@ -1,15 +1,7 @@
 /**
- * Yjs 协作实现
- *
- * 核心设计:
- * 1. 使用 Y.Text 存储 Draw.io XML 文档
- * 2. 通过 y-websocket 连接到后端 WebSocket 服务器
- * 3. 后端 Spring Boot 作为透明代理，透传 Yjs 二进制协议
- * 4. 支持权限控制（view/edit）
- * 5. 保留加密功能（在 WebSocket 层实现）
+ * Yjs 协作实现 (Hocuspocus 版本)
  */
-
-import { WebsocketProvider } from "y-websocket"
+import { HocuspocusProvider } from "@hocuspocus/provider"
 import * as Y from "yjs"
 import type { UserRole } from "./collab-protocol"
 
@@ -19,7 +11,9 @@ export interface YjsCollaborationOptions {
     userRole: UserRole // 用户角色
     userId: string // 用户ID
     userName?: string // 用户名（可选）
+    token?: string // 认证 Token (Session ID)
     onRemoteChange?: (xml: string) => void
+    onPointerMove?: (pointer: any) => void
     onConnectionStatusChange?: (
         status: "connecting" | "connected" | "disconnected",
     ) => void
@@ -29,12 +23,13 @@ export interface YjsCollaborationOptions {
 export class YjsCollaboration {
     private ydoc: Y.Doc
     private yXmlText: Y.Text
-    private wsProvider: WebsocketProvider | null = null
+    private provider: HocuspocusProvider | null = null
     private roomName: string
     private serverUrl: string
     private userRole: UserRole
     private userId: string
     private userName: string
+    private token?: string
     private options: YjsCollaborationOptions
     private isDisposed = false
     private isReady = false // 标记是否已准备好推送
@@ -48,54 +43,30 @@ export class YjsCollaboration {
         this.userRole = options.userRole
         this.userId = options.userId
         this.userName = options.userName || "Anonymous"
+        this.token = options.token
         this.options = options
 
         console.log("[YjsCollab] Initializing Yjs collaboration...", {
             roomName: this.roomName,
             serverUrl: this.serverUrl,
-            userRole: this.userRole,
-            userId: this.userId,
         })
 
         // 创建 Yjs 文档
-        this.ydoc = new Y.Doc({
-            guid: this.roomName, // 使用房间名作为文档 ID
-        })
-
-        // 获取或创建共享的 Y.Text 实例，用于存储 Draw.io XML
-        this.yXmlText = this.ydoc.getText("drawio-xml")
+        this.ydoc = new Y.Doc()
+        // 获取或创建共享的 Y.Text 实例 (统一名称为 'xml')
+        this.yXmlText = this.ydoc.getText("xml")
 
         // 监听文档变化
         this.ydoc.on("update", (update: Uint8Array, origin: any) => {
-            console.log("[YjsCollab] 📦 Yjs document update received", {
-                updateSize: update.length,
-                origin,
-                isUpdatingFromRemote: this.isUpdatingFromRemote,
-            })
-
             // 如果不是远程更新，则忽略（本地更新已经在 pushUpdate 中处理）
-            if (origin === this) {
-                console.log("[YjsCollab] ⏭️ Skipping local update")
-                return
-            }
-
+            if (origin === this) return
             // 远程更新：通知外部
             this.handleRemoteUpdate()
         })
 
         // 监听 Y.Text 变化
         this.yXmlText.observe((event) => {
-            console.log("[YjsCollab] 📝 Y.Text changed", {
-                changes: event.changes.delta,
-                isUpdatingFromRemote: this.isUpdatingFromRemote,
-            })
-
-            // 如果不是远程更新，则忽略
-            if (this.isUpdatingFromRemote) {
-                return
-            }
-
-            // 远程更新：通知外部
+            if (this.isUpdatingFromRemote) return
             this.handleRemoteUpdate()
         })
 
@@ -109,86 +80,73 @@ export class YjsCollaboration {
     private connect() {
         if (this.isDisposed) return
 
-        console.log("[YjsCollab] 🔄 Connecting to WebSocket server...", {
-            url: `${this.serverUrl}/${this.roomName}`,
+        console.log("[YjsCollab] 🔄 Connecting to Hocuspocus server...", {
+            url: this.serverUrl,
+            name: this.roomName,
         })
-
         this.options.onConnectionStatusChange?.("connecting")
 
+        // 如果有 token，拼接到 URL 查询参数中
+        const finalUrl = this.token
+            ? `${this.serverUrl}?token=${encodeURIComponent(this.token)}`
+            : this.serverUrl
+
         try {
-            // 创建 WebSocket Provider
-            this.wsProvider = new WebsocketProvider(
-                this.serverUrl,
-                this.roomName,
-                this.ydoc,
-                {
-                    connect: true,
-                    // WebSocket 参数配置
-                    params: {
-                        userId: this.userId,
-                        userName: this.userName,
-                        role: this.userRole,
-                    },
+            // 创建 Hocuspocus Provider
+            this.provider = new HocuspocusProvider({
+                url: finalUrl,
+                name: this.roomName,
+                document: this.ydoc,
+                // WebSocket 会自动携带浏览器 Cookie 进行鉴权
+                onAuthenticationFailed: ({ reason }) => {
+                    console.error(
+                        "[YjsCollab] ❌ Authentication failed:",
+                        reason,
+                    )
+                    this.options.onConnectionStatusChange?.("disconnected")
+                    this.isReady = false
                 },
-            )
+                onStatus: ({ status }) => {
+                    console.log("[YjsCollab] 📡 Connection status:", status)
+                    switch (status) {
+                        case "connecting":
+                            this.options.onConnectionStatusChange?.(
+                                "connecting",
+                            )
+                            this.isReady = false
+                            break
+                        case "connected":
+                            console.log("[YjsCollab] ✅ Connected to server")
+                            this.options.onConnectionStatusChange?.("connected")
+                            this.isReady = true
+                            // 连接成功后，检查是否有初始数据
+                            this.checkInitialData()
+                            break
+                        case "disconnected":
+                            this.options.onConnectionStatusChange?.(
+                                "disconnected",
+                            )
+                            this.isReady = false
+                            break
+                    }
+                },
+                onAwarenessUpdate: ({ states }) => {
+                    const count = states.length
+                    console.log("[YjsCollab] 👥 User count:", count)
+                    this.options.onUserCountChange?.(count)
 
-            // 监听连接状态
-            this.wsProvider.on("status", (event: { status: string }) => {
-                console.log("[YjsCollab] 📡 WebSocket status:", event.status)
-
-                switch (event.status) {
-                    case "connecting":
-                        this.options.onConnectionStatusChange?.("connecting")
-                        this.isReady = false
-                        break
-                    case "connected":
-                        console.log(
-                            "[YjsCollab] ✅ Connected to WebSocket server",
-                        )
-                        this.options.onConnectionStatusChange?.("connected")
-                        this.isReady = true
-
-                        // 连接成功后，检查是否有初始数据
-                        this.checkInitialData()
-                        break
-                    case "disconnected":
-                        console.log(
-                            "[YjsCollab] ❌ Disconnected from WebSocket server",
-                        )
-                        this.options.onConnectionStatusChange?.("disconnected")
-                        this.isReady = false
-                        break
-                }
-            })
-
-            // 监听同步状态
-            this.wsProvider.on("sync", (event: { syncStep: number }) => {
-                console.log("[YjsCollab] 🔄 Sync step:", event.syncStep)
-
-                // syncStep 1 表示同步完成
-                if (event.syncStep === 1) {
-                    console.log("[YjsCollab] ✅ Initial sync completed")
-
-                    // 同步完成后，检查是否有数据
-                    this.checkInitialData()
-                }
-            })
-
-            // 监听连接错误
-            this.wsProvider.on("connection-error", (error: any) => {
-                console.error("[YjsCollab] ❌ Connection error:", error)
-                this.options.onConnectionStatusChange?.("disconnected")
-                this.isReady = false
-            })
-
-            // 监听用户数量变化（如果后端支持）
-            this.wsProvider.on("users", (event: any) => {
-                console.log("[YjsCollab] 👥 Users event:", event)
-                if (event?.users && Array.isArray(event.users)) {
-                    const userCount = event.users.length
-                    console.log("[YjsCollab] 👥 User count:", userCount)
-                    this.options.onUserCountChange?.(userCount)
-                }
+                    // 处理光标移动 (Awareness)
+                    states.forEach((state: any, clientID: number) => {
+                        if (clientID === this.provider?.awareness?.clientID)
+                            return
+                        if (state.cursor) {
+                            this.options.onPointerMove?.({
+                                ...state.cursor,
+                                clientID,
+                            })
+                        }
+                    })
+                },
             })
         } catch (error) {
             console.error("[YjsCollab] ❌ Failed to connect:", error)
@@ -201,13 +159,9 @@ export class YjsCollaboration {
      */
     private checkInitialData() {
         const currentXml = this.yXmlText.toString()
-        console.log("[YjsCollab] 📄 Current XML length:", currentXml.length)
-
         if (currentXml.length > 0) {
-            console.log("[YjsCollab] 📥 Initial data found, notifying callback")
+            console.log("[YjsCollab] 📥 Initial data found")
             this.options.onRemoteChange?.(currentXml)
-        } else {
-            console.log("[YjsCollab] 📭 No initial data, waiting for updates")
         }
     }
 
@@ -216,11 +170,6 @@ export class YjsCollaboration {
      */
     private handleRemoteUpdate() {
         const xml = this.yXmlText.toString()
-        console.log(
-            "[YjsCollab] 📨 Remote update received, XML length:",
-            xml.length,
-        )
-
         if (xml.length > 0) {
             this.options.onRemoteChange?.(xml)
         }
@@ -231,45 +180,24 @@ export class YjsCollaboration {
      * @param xml 完整的 Draw.io XML 字符串
      */
     async pushUpdate(xml: string) {
-        // 权限检查：只读用户不能推送更新
-        if (this.userRole !== "edit") {
-            console.warn("[YjsCollab] ❌ Read-only user cannot push updates")
-            return
-        }
-
-        if (!this.isReady) {
-            console.warn("[YjsCollab] ⚠️ Not ready to push, skipping")
-            return
-        }
-
-        console.log(
-            "[YjsCollab] 📤 Pushing local update, XML length:",
-            xml.length,
-        )
+        if (this.userRole !== "edit") return
+        if (!this.isReady) return
 
         // 设置远程更新标志，防止触发回调
         this.isUpdatingFromRemote = true
 
         try {
-            // 获取当前内容长度
-            const currentLength = this.yXmlText.length
-
-            // 替换整个文档（删除旧内容 + 插入新内容）
             this.ydoc.transact(() => {
-                // 删除旧内容
+                const currentLength = this.yXmlText.length
                 if (currentLength > 0) {
                     this.yXmlText.delete(0, currentLength)
                 }
-                // 插入新内容
                 this.yXmlText.insert(0, xml)
-            }, this) // origin 设置为 this，标记为本地更新
+            }, this) // origin = this
 
-            console.log("[YjsCollab] ✅ Update pushed to Yjs document")
-
-            // 延迟重置标志，确保 Yjs 完成同步
             setTimeout(() => {
                 this.isUpdatingFromRemote = false
-            }, 100)
+            }, 50)
         } catch (error) {
             console.error("[YjsCollab] ❌ Failed to push update:", error)
             this.isUpdatingFromRemote = false
@@ -280,7 +208,7 @@ export class YjsCollaboration {
      * 检查是否已连接
      */
     isConnected(): boolean {
-        return this.wsProvider?.wsconnected ?? false
+        return this.isReady
     }
 
     /**
@@ -301,25 +229,16 @@ export class YjsCollaboration {
      * 获取在线用户数
      */
     getUserCount(): number {
-        // 从 WebSocket Provider 获取当前连接的用户数
-        if (this.wsProvider?.awareness) {
-            return this.wsProvider.awareness.getStates().size
-        }
-        return 0
+        return this.provider?.awareness?.getStates().size || 0
     }
 
     /**
-     * 发送光标位置（使用 Yjs Awareness）
-     * @param x X坐标
-     * @param y Y坐标
+     * 发送光标位置
      */
     sendPointer(x: number, y: number) {
-        if (!this.wsProvider?.awareness) {
-            return
-        }
+        if (!this.provider?.awareness) return
 
-        // 更新当前用户的 awareness 状态
-        this.wsProvider.awareness.setLocalStateField("cursor", {
+        this.provider.awareness.setLocalStateField("cursor", {
             x,
             y,
             userId: this.userId,
@@ -332,26 +251,14 @@ export class YjsCollaboration {
      * 监听其他用户的光标位置
      */
     onPointerMove(callback: (pointer: any) => void) {
-        if (!this.wsProvider?.awareness) {
-            return
-        }
+        if (!this.provider?.awareness) return
 
-        // 监听 awareness 变化
-        this.wsProvider.awareness.on("change", () => {
-            const states = this.wsProvider?.awareness?.getStates()
-
-            states.forEach((state: any, clientID: number) => {
-                // 跳过本地用户
-                if (clientID === this.wsProvider?.awareness?.clientID) {
-                    return
-                }
-
-                // 检查是否有光标信息
+        this.provider.awareness.on("change", () => {
+            const states = this.provider?.awareness?.getStates()
+            states?.forEach((state: any, clientID: number) => {
+                if (clientID === this.provider?.awareness?.clientID) return
                 if (state?.cursor) {
-                    callback({
-                        ...state.cursor,
-                        clientID,
-                    })
+                    callback({ ...state.cursor, clientID })
                 }
             })
         })
@@ -361,21 +268,15 @@ export class YjsCollaboration {
      * 销毁协作实例
      */
     dispose() {
-        console.log("[YjsCollab] 🧹 Disposing Yjs collaboration...")
         this.isDisposed = true
-
-        if (this.wsProvider) {
-            this.wsProvider.destroy()
-            this.wsProvider = null
+        if (this.provider) {
+            this.provider.destroy()
+            this.provider = null
         }
-
         this.ydoc.destroy()
     }
 }
 
-/**
- * 创建 Yjs 协作实例的工厂函数
- */
 export function createYjsCollaboration(
     options: YjsCollaborationOptions,
 ): YjsCollaboration {
