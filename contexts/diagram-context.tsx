@@ -212,7 +212,7 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
         isConnected: collaborationConnected,
         userCount: collaborationUserCount,
         pushUpdate,
-        sendPointer,
+        // sendPointer,
         getDocument,
     } = useYjsCollaboration({
         roomName: collaborationRoomName,

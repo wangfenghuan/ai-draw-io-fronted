@@ -29,22 +29,6 @@ interface BaseResponseMaterialVO {
   }
 }
 
-// Fetch font from Google Fonts (or compatible CDN)
-async function loadGoogleFont(font: string, text: string) {
-  const url = `https://fonts.googleapis.com/css2?family=${font}&text=${encodeURIComponent(text)}`
-  const css = await (await fetch(url)).text()
-  const resource = css.match(/src: url\((.+)\) format\('(opentype|truetype)'\)/)
-
-  if (resource) {
-    const response = await fetch(resource[1])
-    if (response.status == 200) {
-      return await response.arrayBuffer()
-    }
-  }
-
-  throw new Error('failed to load font data')
-}
-
 export default async function Image({ params }: { params: { id: string } }) {
   const { id } = await params
   
@@ -66,10 +50,6 @@ export default async function Image({ params }: { params: { id: string } }) {
   const userName = material.userVO?.userName || 'IntelliDraw'
 
   // 2. Fetch Font (Critical for Chinese)
-  // We fetch a specific subset of characters or the full font if possible. 
-  // For simplicity and speed in this demo, we use a standard font URL directly if ArrayBuffer logic is complex, 
-  // but Vercel OG needs ArrayBuffer.
-  // We'll use a pre-hosted widely available font resource.
   const fontData = await fetch(
     new URL('https://github.com/googlefonts/noto-cjk/raw/main/Sans/OTF/SimplifiedChinese/NotoSansCJKsc-Regular.otf', import.meta.url)
   ).then((res) => res.arrayBuffer()).catch(() => null)
@@ -124,6 +104,7 @@ export default async function Image({ params }: { params: { id: string } }) {
                         marginBottom: 40
                     }}>
                         <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" style={{ marginRight: 10 }}>
+                           <title>IntelliDraw Logo</title>
                            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" />
                         </svg>
                         IntelliDraw
@@ -201,6 +182,7 @@ export default async function Image({ params }: { params: { id: string } }) {
                         opacity: 0.1,
                     }}/>
 
+                    {/* biome-ignore lint/performance/noImgElement: rendering in OG image */}
                     <img
                         src={imageUrl}
                         alt={title}

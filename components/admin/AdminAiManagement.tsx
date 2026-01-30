@@ -12,7 +12,6 @@ import {
     Button,
     Card,
     Col,
-    Input,
     InputNumber,
     Layout,
     Row,
@@ -22,7 +21,7 @@ import {
     Typography,
     message,
 } from "antd"
-import React, { useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import {
     getAiUsage,
     getGlobalAiStatus,
@@ -54,7 +53,7 @@ export function AdminAiManagement() {
             if (res.data !== undefined) {
                 setGlobalAiEnabled(res.data)
             }
-        } catch (error) {
+        } catch (_error) {
             message.error("获取全局AI状态失败")
         }
     }
@@ -65,7 +64,7 @@ export function AdminAiManagement() {
             if (res.data) {
                 setAiUsage(res.data)
             }
-        } catch (error) {
+        } catch (_error) {
             // message.error("获取AI使用量失败")
             // error silently for usage as it might not be critical
         }
@@ -82,7 +81,7 @@ export function AdminAiManagement() {
                 message.success("AI服务已全局禁用")
             }
             setGlobalAiEnabled(checked)
-        } catch (error) {
+        } catch (_error) {
             message.error("操作失败")
             // revert switch if failed
             fetchGlobalStatus()
@@ -103,7 +102,7 @@ export function AdminAiManagement() {
                 setUserAiStatus(res.data)
                 message.success(`用户 ${userId} 状态已获取`)
             }
-        } catch (error) {
+        } catch (_error) {
             message.error("获取用户AI状态失败")
         } finally {
             setUserLoading(false)
@@ -121,7 +120,7 @@ export function AdminAiManagement() {
                 `用户 ${userId} 的AI服务已${checked ? "启用" : "禁用"}`,
             )
             setUserAiStatus(checked)
-        } catch (error) {
+        } catch (_error) {
             message.error("操作失败")
         } finally {
             setUserLoading(false)

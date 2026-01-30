@@ -7,7 +7,7 @@ import {
     ProFormText,
 } from "@ant-design/pro-components"
 import { ProForm } from "@ant-design/pro-form/lib"
-import { App } from "antd"
+import { App, Tooltip } from "antd"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import type React from "react"
@@ -54,8 +54,8 @@ const UserLogin: React.FC = () => {
                 <LoginForm
                     form={form}
                     logo="https://github.githubassets.com/favicons/favicon.png"
-                    title="智能协同云画图"
-                    subTitle="用户登录"
+                    title="IntelliDraw 智能绘图"
+                    subTitle="AI 驱动的无限创意绘图平台"
                     onFinish={submit}
                     actions={
                         <div
@@ -80,12 +80,14 @@ const UserLogin: React.FC = () => {
                                 }}
                                 onClick={handleGithubLogin}
                             >
-                                <GithubOutlined
-                                    style={{
-                                        fontSize: 24,
-                                        color: "#1677ff",
-                                    }}
-                                />
+                                <Tooltip title="GitHub 一键登录">
+                                    <GithubOutlined
+                                        style={{
+                                            fontSize: 24,
+                                            color: "#1677ff",
+                                        }}
+                                    />
+                                </Tooltip>
                             </div>
                         </div>
                     }

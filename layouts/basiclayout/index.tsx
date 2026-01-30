@@ -128,7 +128,7 @@ export default function BasicLayout({ children }: Props) {
             }}
         >
             <ProLayout
-                title="智能协同云画图"
+                title="IntelliDraw 智能绘图"
                 logo="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg"
                 layout="top"
                 location={{

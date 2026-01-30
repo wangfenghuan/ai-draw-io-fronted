@@ -18,7 +18,7 @@ const { Title, Paragraph, Text } = Typography
 const Home: React.FC = () => {
     const { message } = App.useApp()
     const router = useRouter()
-    const [loading, _setLoading] = React.useState(false)
+    const [_loading, _setLoading] = React.useState(false)
     const [createSpaceDialogVisible, setCreateSpaceDialogVisible] =
         useState(false)
     const [createDiagramDialogVisible, setCreateDiagramDialogVisible] =

@@ -1,9 +1,11 @@
+import { ActionType, PageContainer } from "@ant-design/pro-components"
 import { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ArrowLeft, Rocket, User, Tag as TagIcon, Clock } from "lucide-react"
+import { ArrowLeft, Rocket, User, Clock } from "lucide-react"
 import MaterialViewer from "@/components/MaterialViewer"
 import { ShareButton } from "@/components/ShareButton"
+import { Tag } from "antd"
 
 // Define the API Response Type
 interface BaseResponseMaterialVO {
@@ -84,7 +86,7 @@ export default async function TemplatePage({ params }: Props) {
             tags = JSON.parse(material.tags)
             if (!Array.isArray(tags)) tags = [material.tags]
         }
-    } catch (e) {
+    } catch (_e) {
         if (material.tags) tags = [material.tags]
     }
 
@@ -103,6 +105,7 @@ export default async function TemplatePage({ params }: Props) {
                         {/* Left: Preview Image */}
                         <div className="md:col-span-2 bg-slate-100 p-8 flex items-center justify-center border-b md:border-b-0 md:border-r border-gray-100 h-[500px]">
                              {material.pictureUrl || material.svgUrl ? (
+                                // biome-ignore lint/performance/noImgElement: External image URL
                                 <img
                                     src={material.pictureUrl || material.svgUrl}
                                     alt={material.name}

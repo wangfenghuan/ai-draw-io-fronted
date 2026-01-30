@@ -32,6 +32,11 @@ const myAxios = axios.create({
 myAxios.interceptors.request.use(
     (config) => {
         // 请求执行前执行
+        // 尝试从 localStorage 获取 token
+        const token = localStorage.getItem("token")
+        if (token) {
+            config.headers.Authorization = `Bearer ${token}`
+        }
         return config
     },
     (error) => {

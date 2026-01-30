@@ -24,7 +24,7 @@ const GlobalFooter: React.FC = () => {
                 }}
             >
                 <div>
-                    © {new Date().getFullYear()} 智能协同云画图 |
+                    © {new Date().getFullYear()} IntelliDraw 智能绘图 |
                     让架构设计更简单
                 </div>
                 <div>

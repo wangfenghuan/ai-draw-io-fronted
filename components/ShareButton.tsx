@@ -13,7 +13,7 @@ export function ShareButton({ title }: { title: string }) {
             setCopied(true)
             message.success("链接已复制到剪贴板")
             setTimeout(() => setCopied(false), 2000)
-        } catch (err) {
+        } catch (_err) {
             message.error("复制失败，请手动复制浏览器地址")
         }
     }
@@ -21,6 +21,7 @@ export function ShareButton({ title }: { title: string }) {
     return (
         <button
             onClick={handleShare}
+            aria-label={`Share ${title}`}
             className="w-full flex items-center justify-center gap-2 bg-white hover:bg-slate-50 text-slate-700 font-semibold py-4 px-6 rounded-xl border-2 border-slate-200 transition-all hover:border-slate-300"
         >
             {copied ? (

@@ -97,7 +97,7 @@ const UserRegister: React.FC = () => {
                     form={form}
                     onFinish={submit}
                     logo="https://github.githubassets.com/favicons/favicon.png"
-                    title="智能协同云画图"
+                    title="IntelliDraw 智能绘图"
                     subTitle="用户注册"
                     actions={
                         <div

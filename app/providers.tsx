@@ -21,6 +21,16 @@ const InitLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const [isInitialized, setIsInitialized] = React.useState(false)
 
     const doInitLoginUser = useCallback(async () => {
+        // 1. 检查 URL 中是否有 token (GitHub 登录回调)
+        const params = new URLSearchParams(window.location.search)
+        const token = params.get("token")
+        if (token) {
+            localStorage.setItem("token", token)
+            // 清除 URL 中的 token 参数，保持美观
+            const newUrl = window.location.pathname + window.location.hash
+            window.history.replaceState({}, document.title, newUrl)
+        }
+
         const currentPath = window.location.pathname
         // 先判断是否是公开页面，如果是，打印日志并注意不要误拦截
         const isPublic =
@@ -59,7 +69,7 @@ const InitLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
                     )
                 }
             }
-        } catch (error) {
+        } catch (_error) {
             // console.error("初始化用户信息失败", error)
             dispatch(setLoginUser({ userName: "未登录", userRole: "notLogin" }))
 
