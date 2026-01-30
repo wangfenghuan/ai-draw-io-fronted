@@ -4,76 +4,79 @@ import {
     LockOutlined,
     MailOutlined,
     UserOutlined,
+    SafetyCertificateOutlined,
 } from "@ant-design/icons"
 import {
     LoginForm,
     ProConfigProvider,
-    ProFormCheckbox,
     ProFormText,
 } from "@ant-design/pro-components"
 import { ProForm } from "@ant-design/pro-form/lib"
-import { App } from "antd"
+import { App, Button } from "antd"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import React from "react"
-import { createCaptcha, userRegister } from "@/api/userController"
+import React, { useState, useEffect } from "react"
+import { sendRegisterCode, userRegister } from "@/api/userController"
 
 const UserRegister: React.FC = () => {
     const { message } = App.useApp()
     const [form] = ProForm.useForm()
     const router = useRouter()
-    const [captcha, setCaptcha] = React.useState<string>("")
-    const [uuid, setUuid] = React.useState<string>("")
+    
+    // Countdown state
+    const [countdown, setCountdown] = useState(0)
+    const [sending, setSending] = useState(false)
 
-    const fetchCaptcha = async () => {
+    // Handle countdown timer
+    useEffect(() => {
+        let timer: NodeJS.Timeout
+        if (countdown > 0) {
+            timer = setTimeout(() => {
+                setCountdown((prev) => prev - 1)
+            }, 1000)
+        }
+        return () => clearTimeout(timer)
+    }, [countdown])
+
+    const handleSendCode = async () => {
         try {
-            const res = await createCaptcha()
-            if (res.data) {
-                // assume the map has uuid as key and base64 as value based on comment
-                // "返回Map<uuid, 生成的base64验证码...>"
-                // However, usually such APIs return { uuid: "...", img: "..." } or similar in data object
-                // Let's re-read the type BaseResponseMapStringString.
-                // Assuming keys are dynamic or it's a simple object map.
-                // If it returns a map like { "some-uuid": "base64..." }, we need to parse it.
-                // Or maybe it returns { uuid: "...", code: "..." } ?
-                // Let's check the earlier retrieval of `createCaptcha`...
-                // It returns BaseResponseMapStringString which is data?: Record<string, any>;
-                // Let's try to handle the likely case where key is uuid and value is base64
-                // OR standard { uuid: '...', img: '...' } structure if implicit.
-                // Given the comment "Map<uuid, 生成的base64验证码>", likely: { [uuid]: base64 }
-                const keys = Object.keys(res.data)
-                if (keys.length > 0) {
-                    const id = keys[0]
-                    const img = res.data[id]
-                    setUuid(id)
-                    setCaptcha(img)
-                }
+            const email = form.getFieldValue("userAccount")
+            if (!email) {
+                message.error("请先输入邮箱地址")
+                return
             }
-        } catch (_e) {
-            message.error("获取验证码失败")
+            // Basic email validation
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                message.error("请输入有效的邮箱地址")
+                return
+            }
+
+            setSending(true)
+            const res = await sendRegisterCode({ userAccount: email })
+            if (res.code === 0) {
+                message.success("验证码已发送，请查收")
+                setCountdown(60)
+            } else {
+                message.error(res.message || "发送失败，请重试")
+            }
+        } catch (error) {
+            message.error("发送失败，请稍后重试")
+        } finally {
+            setSending(false)
         }
     }
 
-    React.useEffect(() => {
-        fetchCaptcha()
-    }, [])
-
-    const submit = async (value: API.UserRegisterRequest) => {
+    const submit = async (values: API.UserRegisterRequest) => {
         try {
-            const res = (await userRegister({
-                ...value,
-                uuid,
-            })) as unknown as API.BaseResponseLong
+            const res = await userRegister(values)
             if (res.code === 0) {
                 message.success("注册成功")
                 router.replace("/user/login")
             } else {
-                message.error(res.message)
-                fetchCaptcha() // refresh captcha on failure
+                message.error(res.message || "注册失败")
             }
         } catch (_e) {
-            message.error("注册失败")
-            fetchCaptcha()
+            message.error("注册失败，请稍后重试")
         }
     }
 
@@ -171,20 +174,6 @@ const UserRegister: React.FC = () => {
                             prefix: <LockOutlined className={"prefixIcon"} />,
                             strengthText:
                                 "Password should contain numbers, letters and special characters, at least 8 characters long.",
-                            statusRender: (value) => {
-                                const getStatus = () => {
-                                    if (value && value.length > 12) {
-                                        return "ok"
-                                    }
-                                    if (value && value.length > 6) {
-                                        return "pass"
-                                    }
-                                    return "poor"
-                                }
-                                const _status = getStatus()
-
-                                return <div>强度：弱</div>
-                            },
                         }}
                         placeholder={"请输入密码！"}
                         rules={[
@@ -192,6 +181,10 @@ const UserRegister: React.FC = () => {
                                 required: true,
                                 message: "请输入密码！",
                             },
+                            {
+                                min: 8,
+                                message: "密码至少8位",
+                            }
                         ]}
                     />
                     <ProFormText.Password
@@ -199,22 +192,6 @@ const UserRegister: React.FC = () => {
                         fieldProps={{
                             size: "large",
                             prefix: <LockOutlined className={"prefixIcon"} />,
-                            strengthText:
-                                "Password should contain numbers, letters and special characters, at least 8 characters long.",
-                            statusRender: (value) => {
-                                const getStatus = () => {
-                                    if (value && value.length > 12) {
-                                        return "ok"
-                                    }
-                                    if (value && value.length > 6) {
-                                        return "pass"
-                                    }
-                                    return "poor"
-                                }
-                                const _status = getStatus()
-
-                                return <div>强度：弱</div>
-                            },
                         }}
                         placeholder={"请确认密码！"}
                         rules={[
@@ -222,42 +199,48 @@ const UserRegister: React.FC = () => {
                                 required: true,
                                 message: "请确认密码！",
                             },
+                            ({ getFieldValue }) => ({
+                                validator(_, value) {
+                                  if (!value || getFieldValue('userPassword') === value) {
+                                    return Promise.resolve();
+                                  }
+                                  return Promise.reject(new Error('两次输入的密码不一致!'));
+                                },
+                            }),
                         ]}
                     />
-                    <div style={{ display: "flex", gap: "10px" }}>
-                        <ProFormText
-                            name="captchaCode"
-                            fieldProps={{
-                                size: "large",
-                                prefix: (
-                                    <LockOutlined className={"prefixIcon"} />
-                                ),
-                            }}
-                            placeholder={"请输入验证码！"}
-                            rules={[
-                                {
-                                    required: true,
-                                    message: "请输入验证码！",
-                                },
-                            ]}
-                        />
-                        <div style={{ height: "40px" }}>
+                   
+                    <ProFormText
+                        name="emailCode"
+                        fieldProps={{
+                            size: "large",
+                            prefix: (
+                                <SafetyCertificateOutlined className={"prefixIcon"} />
+                            ),
+                            addonAfter: (
+                                <Button 
+                                    type="link" 
+                                    disabled={countdown > 0 || sending} 
+                                    onClick={handleSendCode}
+                                    style={{ padding: '0 8px' }}
+                                >
+                                    {countdown > 0 ? `${countdown}秒后重新发送` : (sending ? "发送中..." : "发送验证码")}
+                                </Button>
+                            )
+                        }}
+                        placeholder={"请输入邮箱验证码"}
+                        rules={[
                             {
-                                // eslint-disable-next-line @next/next/no-img-element
-                                <img
-                                    src={`data:image/png;base64,${captcha}`}
-                                    alt="验证码"
-                                    onClick={fetchCaptcha}
-                                    style={{
-                                        cursor: "pointer",
-                                        height: "100%",
-                                        width: "160px",
-                                        objectFit: "cover",
-                                    }}
-                                />
+                                required: true,
+                                message: "请输入验证码！",
+                            },
+                            {
+                                len: 6,
+                                message: "验证码长度为6位",
                             }
-                        </div>
-                    </div>
+                        ]}
+                    />
+                    
                     <div
                         style={{
                             marginBlockEnd: 24,

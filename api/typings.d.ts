@@ -624,6 +624,8 @@ declare namespace API {
     type LoginUserVO = {
         /** 用户ID */
         id?: string
+        /** 用户账号 */
+        userAccount?: string
         /** 用户昵称 */
         userName?: string
         /** 用户头像 */
@@ -1365,10 +1367,8 @@ declare namespace API {
         checkPassword?: string
         /** 用户昵称 */
         userName?: string
-        /** 图形验证码 */
-        captchaCode?: string
-        /** 验证码uuid */
-        uuid?: string
+        /** 邮箱验证码 */
+        emailCode?: string
     }
 
     type UserRoleUpdateRequest = {
@@ -1414,5 +1414,20 @@ declare namespace API {
         authorities?: SysAuthority[]
         /** 创建时间 */
         createTime?: string
+    }
+    type UserSendRegisterCodeRequest = {
+        /** 用户账号(邮箱) */
+        userAccount?: string
+    }
+
+    type UserAccountUpdateRequest = {
+        /** 用户账号(邮箱) */
+        userAccount?: string
+        /** 邮箱验证码 */
+        emailCode?: string
+        /** 新密码 */
+        newPassword?: string
+        /** 确认新密码 */
+        checkPassword?: string
     }
 }

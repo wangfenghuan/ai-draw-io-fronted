@@ -1,5 +1,4 @@
-// @ts-expect-error
-/* eslint-disable */
+
 import request from "@/lib/request"
 
 /** 创建用户 POST /user/add */
@@ -228,6 +227,36 @@ export async function uploadAvataImage(
     options?: { [key: string]: any },
 ) {
     return request<API.BaseResponseString>("/user/upload/image", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        data: body,
+        ...(options || {}),
+    })
+}
+
+/** 发送验证码 POST /user/send-register-code */
+export async function sendRegisterCode(
+    body: API.UserSendRegisterCodeRequest,
+    options?: { [key: string]: any },
+) {
+    return request<API.BaseResponseBoolean>("/user/send-register-code", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+        },
+        data: body,
+        ...(options || {}),
+    })
+}
+
+/** 修改账户信息 POST /user/update/account */
+export async function updateUserAccount(
+    body: API.UserAccountUpdateRequest,
+    options?: { [key: string]: any },
+) {
+    return request<API.BaseResponseBoolean>("/user/update/account", {
         method: "POST",
         headers: {
             "Content-Type": "application/json",

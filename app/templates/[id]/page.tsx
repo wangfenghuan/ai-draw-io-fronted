@@ -2,9 +2,10 @@ import { ActionType, PageContainer } from "@ant-design/pro-components"
 import { Metadata } from "next"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { ArrowLeft, Rocket, User, Clock } from "lucide-react"
+import { ArrowLeft, User, Clock } from "lucide-react"
 import MaterialViewer from "@/components/MaterialViewer"
 import { ShareButton } from "@/components/ShareButton"
+import { TemplateDetailActions } from "@/components/TemplateDetailActions"
 import { Tag } from "antd"
 
 // Define the API Response Type
@@ -157,12 +158,7 @@ export default async function TemplatePage({ params }: Props) {
                             </div>
 
                             <div className="mt-10 space-y-4">
-                                <Link href={`/diagram/new?template=${material.id}`} className="block">
-                                    <button className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl transition-all shadow-md hover:shadow-lg hover:-translate-y-0.5">
-                                        <Rocket className="w-5 h-5" />
-                                        立即使用此模板
-                                    </button>
-                                </Link>
+                                <TemplateDetailActions material={material} />
                                 <ShareButton title={material.name || "IntelliDraw 模板"} />
                             </div>
                         </div>

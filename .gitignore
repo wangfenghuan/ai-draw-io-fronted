@@ -47,3 +47,4 @@ push-via-ec2.sh
 .open-next/
 .wrangler/
 .env*.local
+node_modules.zip
