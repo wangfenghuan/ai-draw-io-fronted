@@ -22,30 +22,30 @@ const nextConfig: NextConfig = {
     },
     webpack: (config, { isServer, webpack }) => {
         if (!isServer) {
-            config.resolve.fallback = {
-                ...config.resolve.fallback,
-                fs: false,
-                path: false,
-                "fs/promises": false,
-                module: false,
-            }
+            
         }
         
         // Enable async WebAssembly
         config.experiments = {
             ...config.experiments,
             asyncWebAssembly: true,
+            layers: true, // Enable layers for experiments
         }
 
         // Force ignore these modules to prevent dynamic import errors in web-tree-sitter
-        config.plugins.push(
-            new webpack.IgnorePlugin({
-                resourceRegExp: /^fs\/promises$/,
-            }),
-            new webpack.IgnorePlugin({
-                resourceRegExp: /^module$/,
-            })
-        )
+        // Use IgnorePlugin to completely ignore Node.js specific imports in web-tree-sitter
+        // config.plugins.push(
+        //    new webpack.IgnorePlugin({
+        //        resourceRegExp: /^(fs|fs\/promises|module)$/,
+        //        contextRegExp: /web-tree-sitter/,
+        //    })
+        // )
+        
+        // Add rule to handle .wasm files if not already present
+        // config.module.rules.push({
+        //   test: /\.wasm$/,
+        //   type: "asset/resource",
+        // })
 
         return config
     },

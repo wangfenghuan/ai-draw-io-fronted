@@ -35,7 +35,7 @@ import {
     isMxCellXmlComplete,
     wrapWithMxFile,
 } from "@/lib/utils"
-import { isZipFile } from "@/lib/zip-processor"
+
 import type { RootState } from "@/stores"
 import { ChatMessageDisplay } from "./chat-message-display"
 
@@ -1211,11 +1211,7 @@ Continue from EXACTLY where you stopped.`,
                 if (extracted?.text) {
                     userText += `\n\n[File: ${file.name}]\n${extracted.text}`
                 }
-            } else if (isZipFile(file)) {
-                const extracted = pdfData.get(file)
-                if (extracted?.text) {
-                    userText += `\n\n${extracted.text}`
-                }
+
             } else if (imageParts) {
                 // Handle as image (only if imageParts array provided)
                 const reader = new FileReader()
