@@ -674,6 +674,7 @@ const SecuritySettingsModal = ({ open, onCancel, currentUser }: { open: boolean;
                                     <div style={{ display: 'flex', gap: 8 }}>
                                         <Input placeholder="输入验证码" />
                                         <Button 
+                                            htmlType="button"
                                             disabled={pwdCountdown > 0}
                                             onClick={() => sendCode(currentUser?.userAccount || '', 'password')}
                                         >
@@ -736,6 +737,7 @@ const SecuritySettingsModal = ({ open, onCancel, currentUser }: { open: boolean;
                                     <div style={{ display: 'flex', gap: 8 }}>
                                         <Input placeholder="输入新邮箱收到的验证码" />
                                         <Button 
+                                            htmlType="button"
                                             disabled={emailCountdown > 0}
                                             onClick={async () => {
                                                 try {

@@ -608,6 +608,9 @@ Continue from EXACTLY where you stopped.`,
                 return [...currentMessages, errorMessage]
             })
 
+            // Show toast for immediate visibility
+            toast.error(friendlyMessage)
+
             if (error.message.includes("Invalid or missing access code")) {
                 // Show settings button and open dialog to help user fix it
                 setAccessCodeRequired(true)
