@@ -63,7 +63,7 @@ export default function MyRoomsPage() {
     // 空间相关状态
     const [spaces, setSpaces] = useState<API.SpaceVO[]>([])
     const [_filteredSpaces, setFilteredSpaces] = useState<API.SpaceVO[]>([])
-    const [selectedSpaceId, setSelectedSpaceId] = useState<number | undefined>(
+    const [selectedSpaceId, setSelectedSpaceId] = useState<string | undefined>(
         undefined,
     )
 
@@ -164,7 +164,7 @@ export default function MyRoomsPage() {
     }
 
     // 空间筛选变化
-    const handleSpaceFilterChange = (spaceId: number | undefined) => {
+    const handleSpaceFilterChange = (spaceId: string | undefined) => {
         setSelectedSpaceId(spaceId)
         setPagination((prev) => ({ ...prev, current: 1 }))
         loadRooms(1, pagination.pageSize)
@@ -259,7 +259,8 @@ export default function MyRoomsPage() {
             }
         } catch (error) {
             console.error("保存失败:", error)
-            if (!error.errorFields) {
+            // error 是 unknown 类型，需要做断言或类型检查
+            if (!(error as any).errorFields) {
                 message.error("保存失败")
             }
         }

@@ -32,8 +32,8 @@ interface DiagramContextType {
     loadDiagram: (chart: string, skipValidation?: boolean) => string | null
     handleExport: () => void
     handleExportWithoutHistory: () => void
-    resolverRef: React.Ref<((value: string) => void) | null>
-    drawioRef: React.Ref<DrawIoEmbedRef | null>
+    resolverRef: React.MutableRefObject<((value: string) => void) | null>
+    drawioRef: React.RefObject<DrawIoEmbedRef | null>
     handleDiagramExport: (data: any) => void
     handleAutoSave: (data: any) => void
     clearDiagram: () => void

@@ -267,7 +267,7 @@ export function AdminSpaceManagement() {
             } else {
                 message.error(response?.message || "保存失败")
             }
-        } catch (error) {
+        } catch (error: any) {
             console.error("保存失败:", error)
             if (!error.errorFields) {
                 message.error("保存失败")
@@ -441,7 +441,7 @@ export function AdminSpaceManagement() {
                                                     display: "block",
                                                 }}
                                             >
-                                                {space.user?.userName ||
+                                                {space.userVO?.userName ||
                                                     `用户ID: ${space.userId}`}
                                             </span>
                                         </Descriptions.Item>

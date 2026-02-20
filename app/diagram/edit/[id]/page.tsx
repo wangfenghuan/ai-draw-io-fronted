@@ -81,6 +81,7 @@ export default function DrawioHome() {
 
             try {
                 console.log("[1/3] 正在从后端获取图表数据，ID:", diagramId)
+                // Keeping id as string to avoid precision loss for large numbers (Snowflake ID)
                 const response = await getDiagramVoById({ id: diagramId })
 
                 if (response?.code === 0 && response?.data) {
@@ -117,7 +118,7 @@ export default function DrawioHome() {
                     )
                     console.log("当前状态:", {
                         isDrawioReady,
-                        // @ts-expect-error
+
                         hasRef: !!drawioRef?.current,
                     })
 
@@ -130,7 +131,7 @@ export default function DrawioHome() {
                         // 如果 ref 不存在，等待一小段时间
                         await new Promise((resolve) => setTimeout(resolve, 500))
 
-                        // @ts-expect-error
+
                         if (!drawioRef?.current) {
                             console.error("❌ DrawIo ref 仍然不存在，跳过加载")
                             toast.error("DrawIo 未就绪，请刷新页面重试")
@@ -143,7 +144,7 @@ export default function DrawioHome() {
                     console.log("[3/3] 正在渲染图表到画布...")
                     console.log(
                         "调用 loadDiagram 前，ref 状态:",
-                        // @ts-expect-error
+
                         !!drawioRef?.current,
                     )
 

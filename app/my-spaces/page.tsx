@@ -290,7 +290,7 @@ export default function MySpacesPage() {
             }
         } catch (error) {
             console.error("创建空间失败:", error)
-            if (!error.errorFields) {
+            if (!(error as any).errorFields) {
                 antMessage.error("创建失败")
             }
         }
@@ -331,7 +331,7 @@ export default function MySpacesPage() {
             }
         } catch (error) {
             console.error("保存失败:", error)
-            if (!error.errorFields) {
+            if (!(error as any).errorFields) {
                 antMessage.error("保存失败")
             }
         }
@@ -374,6 +374,7 @@ export default function MySpacesPage() {
 
     // 查看空间详情
     const handleViewDetail = async (space: API.SpaceVO) => {
+        if (!space.id) return
         try {
             const response = await getSpaceVoById({ id: space.id })
             if (response?.code === 0 && response?.data) {

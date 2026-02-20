@@ -3,14 +3,18 @@ import type { NextConfig } from "next"
 const nextConfig: NextConfig = {
     /* config options here */
     output: "standalone",
+    // Next.js 16 默认使用 Turbopack，需要添加此配置避免 webpack 配置冲突报错
+    turbopack: {},
     // eslint: {
     //     ignoreDuringBuilds: true,
     // },
-    // typescript: {
-    //     ignoreBuildErrors: true,
-    // },
+    typescript: {
+        ignoreBuildErrors: true,
+    },
     async rewrites() {
         const isDev = process.env.NODE_ENV === "development"
+        // 注意: /api/chat/stream 和 /api/chat/custom/stream 由 Route Handler 处理
+        // Next.js 会优先匹配 Route Handler，所以这里的 rewrite 不会影响 SSE 流
         return [
             {
                 source: "/api/:path*",

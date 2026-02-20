@@ -105,6 +105,7 @@ export default function SimpleChatPanel({
         },
         onError: (err) => {
             console.error("Chat error:", err)
+            // toast 提示已在 use-backend-chat.ts 中处理
         },
     })
 
@@ -473,12 +474,79 @@ export default function SimpleChatPanel({
                 <div className="absolute inset-0 overflow-y-auto overflow-x-hidden bg-gradient-to-b from-transparent to-black/20 scrollbar-thin scrollbar-thumb-white/20 scrollbar-track-transparent">
                     <div className="p-4 space-y-4">
                         {messages.length === 0 ? (
-                            <div className="flex items-center justify-center h-full pt-20">
-                                <div className="text-center">
-                                    <MessageSquare className="h-12 w-12 text-white/20 mx-auto mb-3" />
+                            <div className="flex flex-col items-center justify-center h-full pt-10 px-4">
+                                <div className="text-center mb-8">
+                                    <h3 className="text-lg font-semibold text-white mb-2">
+                                        AI 图表助手
+                                    </h3>
                                     <p className="text-white/60 text-sm">
-                                        开始与 AI 对话来生成图表
+                                        选择下方示例或直接输入需求
                                     </p>
+                                </div>
+
+                                <div className="grid grid-cols-1 gap-3 w-full max-w-sm">
+                                    <button
+                                        onClick={() =>
+                                            sendMessage(
+                                                "请帮我生成一个标准的 Ruoyi 框架架构图，包含表现层、业务层、数据层和基础层。请直接输出 Draw.io 支持的 XML 代码。",
+                                            )
+                                        }
+                                        className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-blue-500/30 transition-all duration-200 text-left group"
+                                    >
+                                        <div className="w-10 h-10 rounded-lg bg-blue-500/20 flex items-center justify-center text-blue-400 group-hover:text-blue-300 group-hover:bg-blue-500/30 transition-colors">
+                                            <Database className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <div className="text-sm font-medium text-white group-hover:text-blue-300 transition-colors">
+                                                Ruoyi 架构图
+                                            </div>
+                                            <div className="text-xs text-white/50 mt-0.5">
+                                                生成标准的分层架构视图
+                                            </div>
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        onClick={() =>
+                                            sendMessage(
+                                                "请生成一个标准的用户登录流程图，包含输入账号密码、验证码校验、Token生成和返回用户信息等步骤。",
+                                            )
+                                        }
+                                        className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-purple-500/30 transition-all duration-200 text-left group"
+                                    >
+                                        <div className="w-10 h-10 rounded-lg bg-purple-500/20 flex items-center justify-center text-purple-400 group-hover:text-purple-300 group-hover:bg-purple-500/30 transition-colors">
+                                            <FileCode className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <div className="text-sm font-medium text-white group-hover:text-purple-300 transition-colors">
+                                                用户登录流程
+                                            </div>
+                                            <div className="text-xs text-white/50 mt-0.5">
+                                                包含验证和Token生成的流程
+                                            </div>
+                                        </div>
+                                    </button>
+
+                                    <button
+                                        onClick={() =>
+                                            sendMessage(
+                                                "请生成一个电商支付业务的时序图，包含用户、API网关、订单服务、支付服务和银行接口的交互。",
+                                            )
+                                        }
+                                        className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/10 hover:bg-white/10 hover:border-green-500/30 transition-all duration-200 text-left group"
+                                    >
+                                        <div className="w-10 h-10 rounded-lg bg-green-500/20 flex items-center justify-center text-green-400 group-hover:text-green-300 group-hover:bg-green-500/30 transition-colors">
+                                            <Send className="w-5 h-5" />
+                                        </div>
+                                        <div>
+                                            <div className="text-sm font-medium text-white group-hover:text-green-300 transition-colors">
+                                                支付业务时序图
+                                            </div>
+                                            <div className="text-xs text-white/50 mt-0.5">
+                                                多服务交互的时序逻辑
+                                            </div>
+                                        </div>
+                                    </button>
                                 </div>
                             </div>
                         ) : (

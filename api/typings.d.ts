@@ -559,56 +559,56 @@ declare namespace API {
     }
 
     type getAnnouncementByIdParams = {
-        id: number
+        id: string | number
     }
 
     type getAnnouncementVOByIdParams = {
-        id: number
+        id: string | number
     }
 
     type getDiagramRoomVOByIdParams = {
-        id: number
+        id: string | number
     }
 
     type getDiagramVOByIdParams = {
-        id: number
+        id: string | number
     }
 
     type getFeedbackByIdParams = {
-        id: number
+        id: string | number
     }
 
     type getFeedbackVOByIdParams = {
-        id: number
+        id: string | number
     }
 
     type getMaterialByIdParams = {
-        id: number
+        id: string | number
     }
 
     type getMaterialVOByIdParams = {
-        id: number
+        id: string | number
     }
 
     type getRoomDiagramVOParams = {
-        diagramId: number
-        roomId: number
+        diagramId: string | number
+        roomId: string | number
     }
 
     type getSpaceByIdParams = {
-        id: number
+        id: string | number
     }
 
     type getSpaceVOByIdParams = {
-        id: number
+        id: string | number
     }
 
     type getUserByIdParams = {
-        id: number
+        id: string | number
     }
 
     type getUserVOByIdParams = {
-        id: number
+        id: string | number
     }
 
     type GrantedAuthority = {
@@ -1119,6 +1119,8 @@ declare namespace API {
         updateTime?: string
         /** 是否关闭（0开启，1关闭） */
         isOpen?: number
+        /** 访问密码 */
+        accessKey?: string
         /** 创建用户信息 */
         userVO?: UserVO
         /** 空间id */

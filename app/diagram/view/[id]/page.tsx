@@ -17,7 +17,8 @@ export default function DiagramViewPage() {
 
     useEffect(() => {
         const loadDiagram = async () => {
-            const response = await getDiagramVoById({ id: diagramId })
+            // Keeping id as string to avoid precision loss for large numbers; bypass TS number check
+            const response = await getDiagramVoById({ id: diagramId as any })
             if (response?.data) {
                 setDiagramTitle(response.data.name || "未命名图表")
                 // 优先使用 pictureUrl，其次使用 svgUrl

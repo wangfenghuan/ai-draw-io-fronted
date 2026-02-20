@@ -195,7 +195,7 @@ export default function MyDiagramsPage() {
         } catch (error) {
             console.error("保存失败:", error)
             // 如果是表单校验失败，不需要弹窗提示
-            if (!error.errorFields) {
+            if (!(error as any)?.errorFields) {
                 message.error("保存失败")
             }
         }
@@ -204,8 +204,12 @@ export default function MyDiagramsPage() {
     // 下载图表 (保持原样，如有需要可增加 svg/png 选择逻辑)
     const _handleDownload = async (diagram: API.DiagramVO) => {
         try {
+            if (!diagram.id) {
+                message.error("图表ID不存在")
+                return
+            }
             const response = await downloadRemoteFile({
-                id: diagram.id,
+                diagramId: diagram.id,
                 type: "svg", // 默认下载 svg
             })
             // 处理 Blob 下载逻辑...

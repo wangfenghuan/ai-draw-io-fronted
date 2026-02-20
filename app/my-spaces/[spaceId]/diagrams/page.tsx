@@ -287,7 +287,7 @@ export default function SpaceDiagramsPage() {
             }
         } catch (error) {
             console.error("保存失败:", error)
-            if (!error.errorFields) {
+            if (!(error as any).errorFields) {
                 message.error("保存失败")
             }
         }
@@ -295,9 +295,11 @@ export default function SpaceDiagramsPage() {
 
     // 下载图表
     const _handleDownload = async (diagram: API.DiagramVO) => {
+        if (!diagram.id) return
+
         try {
             const response = await downloadRemoteFile({
-                id: diagram.id,
+                diagramId: diagram.id,
                 type: "svg",
             })
             if (response) {

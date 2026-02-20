@@ -1,7 +1,11 @@
 import { useCallback, useRef, useState } from "react"
+import { toast } from "sonner"
 
-// 移除硬编码，使用相对路径，由 Next.js 代理处理
+// 移除硬编码，使用相对路径，由 Next.js Route Handler 处理 SSE 流
 const API_BASE_URL = "/api"
+
+// SSE 数据接收超时时间（毫秒），超过此时间没有任何新数据则认为连接异常
+const SSE_DATA_TIMEOUT_MS = 120_000 // 120 秒
 
 export interface Message {
     id: string
@@ -127,175 +131,226 @@ export function useBackendChat({
                 fullContent = "" // 初始化为空字符串
                 let buffer = "" // 用于缓存不完整的数据块
 
+                // 定义处理单个 SSE 事件的函数
+                const processSseEvent = (event: string) => {
+                    if (!event.trim()) return
+
+                    // 聚合所有 data 行的数据，并检查 event 类型
+                    let eventData = ""
+                    let eventName = ""
+                    
+                    const lines = event.trim().split(/\n/)
+
+                    for (const line of lines) {
+                        if (line.startsWith("event:")) {
+                            eventName = line.substring(6).trim()
+                        } else if (line.startsWith("data:")) {
+                            const dataContent = line.substring(5).trim()
+                            if (dataContent) {
+                                eventData += dataContent
+                            }
+                        }
+                    }
+
+                    if (!eventData) return
+
+                    // 每次收到有效数据时重置超时计时器
+                    resetTimeoutTimer()
+
+                    // 处理错误事件
+                    if (eventName === "error") {
+                        const errorMsg = eventData
+                        console.error("[SSE] Received error event:", errorMsg)
+                        
+                        // 更新助手消息为错误信息
+                        const err = new Error(errorMsg)
+                        setError(err)
+                        onError?.(err)
+                        toast.error(`AI 生成失败: ${errorMsg}`)
+                        
+                        setMessages((prev) =>
+                            prev.map((msg) =>
+                                msg.id === assistantMessageId
+                                    ? { ...msg, content: `⛔️ ${errorMsg}` }
+                                    : msg,
+                            ),
+                        )
+                        return
+                    }
+
+                    try {
+                        // 解析 JSON
+                        const parsed = JSON.parse(eventData)
+
+                        // 处理不同类型的消息
+                        if (parsed.type === "text" && parsed.content) {
+                            // 文本消息：追加到内容中
+                            fullContent += parsed.content
+
+                            // 实时更新助手消息，实现打字机效果
+                            setMessages((prev) =>
+                                prev.map((msg) =>
+                                    msg.id === assistantMessageId
+                                        ? {
+                                                ...msg,
+                                                content: fullContent,
+                                            }
+                                        : msg,
+                                ),
+                            )
+                        } else if (
+                            (parsed.type === "too_call" ||
+                                parsed.type === "tool_call") &&
+                            parsed.content
+                        ) {
+                            // 工具调用消息：显示工具调用信息
+                            console.log(
+                                "[SSE] Tool call:",
+                                parsed.content,
+                            )
+                            const toolCallMessage = `\n🔧 ${parsed.content}\n`
+                            fullContent += toolCallMessage
+
+                            setMessages((prev) =>
+                                prev.map((msg) =>
+                                    msg.id === assistantMessageId
+                                        ? {
+                                                ...msg,
+                                                content: fullContent,
+                                            }
+                                        : msg,
+                                ),
+                            )
+                        } else if (
+                            parsed.type === "tool_call_result" &&
+                            parsed.content
+                        ) {
+                            // 工具调用结果：包含生成的图表 XML
+                            console.log(
+                                "[SSE] Tool call result received, length:",
+                                parsed.content.length,
+                            )
+
+                            // 尝试从 XML 中提取内容
+                            const xmlContent = parsed.content
+
+                            // 查找 <mxfile> 标签
+                            const mxfileMatch = xmlContent.match(
+                                /<mxfile[\s\S]*?<\/mxfile>/,
+                            )
+                            if (mxfileMatch) {
+                                const fullXml = mxfileMatch[0]
+                                console.log(
+                                    "[SSE] Found mxfile XML, triggering diagram load...",
+                                )
+
+                                // 将 XML 格式化为 markdown 代码块
+                                // 这样 ReactMarkdown 就能正确渲染为代码块
+                                const xmlCodeBlock = `\n\n\`\`\`xml\n${fullXml}\n\`\`\`\n\n`
+
+                                // 将 XML 代码块添加到 fullContent 中
+                                fullContent += xmlCodeBlock
+
+                                // 直接通过回调加载图表（使用 diagram-context 的 loadDiagram）
+                                onMessageComplete?.(fullContent)
+
+                                // 添加完成消息
+                                const completionMessage =
+                                    "✅ 图表已生成"
+                                fullContent += completionMessage
+                            } else {
+                                console.warn(
+                                    "[SSE] Tool call result did not contain valid mxfile XML",
+                                )
+                                const completionMessage =
+                                    "\n\n⚠️ 图表生成失败"
+                                fullContent += completionMessage
+                            }
+
+                            setMessages((prev) =>
+                                prev.map((msg) =>
+                                    msg.id === assistantMessageId
+                                        ? {
+                                                ...msg,
+                                                content: fullContent,
+                                            }
+                                        : msg,
+                                ),
+                            )
+                        }
+                    } catch (parseError) {
+                        console.warn(
+                            "Failed to parse SSE data:",
+                            eventData,
+                            parseError,
+                        )
+                    }
+                }
+
+                // SSE 数据超时处理：如果长时间没有收到任何数据，自动断开
+                let dataTimeoutTimer: ReturnType<typeof setTimeout> | null = null
+                const clearTimeoutTimer = () => {
+                    if (dataTimeoutTimer) {
+                        clearTimeout(dataTimeoutTimer)
+                        dataTimeoutTimer = null
+                    }
+                }
+                const resetTimeoutTimer = () => {
+                    clearTimeoutTimer()
+                    dataTimeoutTimer = setTimeout(() => {
+                        console.warn("[SSE] Data timeout - no data received for", SSE_DATA_TIMEOUT_MS, "ms")
+                        abortController.abort()
+                        const timeoutErr = new Error("AI 响应超时，请稍后重试")
+                        setError(timeoutErr)
+                        onError?.(timeoutErr)
+                        toast.error("AI 响应超时，请稍后重试")
+                        setMessages((prev) =>
+                            prev.map((msg) =>
+                                msg.id === assistantMessageId
+                                    ? { ...msg, content: fullContent || "⏰ AI 响应超时，请稍后重试" }
+                                    : msg,
+                            ),
+                        )
+                        setIsLoading(false)
+                    }, SSE_DATA_TIMEOUT_MS)
+                }
+
+                // 开始超时计时
+                resetTimeoutTimer()
+
                 while (true) {
                     const { done, value } = await reader.read()
 
                     if (done) {
+                        clearTimeoutTimer()
+                        console.log("[SSE] Stream complete. Buffer length:", buffer.length)
+                        // 处理剩余的 buffer
+                        if (buffer.trim()) {
+                            console.log("[SSE] Processing remaining buffer:", buffer)
+                            processSseEvent(buffer)
+                        }
+                        
                         setIsLoading(false)
                         onMessageComplete?.(fullContent)
                         break
                     }
 
+                    // 每次收到数据块时重置超时计时器
+                    resetTimeoutTimer()
+
                     // 解码数据块
                     const chunk = decoder.decode(value, { stream: true })
+                    console.log("[SSE] Received chunk size:", chunk.length)
                     buffer += chunk
 
                     // SSE 格式：每个事件用 \n\n 分隔
-                    // 例如：data:{"type":"text","content":"我"}\n\ndata:{"type":"text","content":"将"}\n\n
                     const events = buffer.split(/\n\n/)
 
                     // 保留最后一个可能不完整的事件
                     buffer = events.pop() || ""
 
                     for (const event of events) {
-                        if (!event.trim()) continue
-
-                        // 聚合所有 data 行的数据，并检查 event 类型
-                        let eventData = ""
-                        let eventName = ""
-                        
-                        const lines = event.trim().split(/\n/)
-
-                        for (const line of lines) {
-                            if (line.startsWith("event:")) {
-                                eventName = line.substring(6).trim()
-                            } else if (line.startsWith("data:")) {
-                                const dataContent = line.substring(5).trim()
-                                if (dataContent) {
-                                    eventData += dataContent
-                                }
-                            }
-                        }
-
-                        if (!eventData) continue
-
-                        // 处理错误事件
-                        if (eventName === "error") {
-                            const errorMsg = eventData
-                            console.error("[SSE] Received error event:", errorMsg)
-                            
-                            // 更新助手消息为错误信息
-                            const err = new Error(errorMsg)
-                            setError(err)
-                            onError?.(err)
-                            
-                            setMessages((prev) =>
-                                prev.map((msg) =>
-                                    msg.id === assistantMessageId
-                                        ? { ...msg, content: `⛔️ ${errorMsg}` }
-                                        : msg,
-                                ),
-                            )
-                            continue
-                        }
-
-                        try {
-                            // 解析 JSON
-                            const parsed = JSON.parse(eventData)
-
-                            // 处理不同类型的消息
-                            if (parsed.type === "text" && parsed.content) {
-                                // 文本消息：追加到内容中
-                                fullContent += parsed.content
-
-                                // 实时更新助手消息，实现打字机效果
-                                setMessages((prev) =>
-                                    prev.map((msg) =>
-                                        msg.id === assistantMessageId
-                                            ? {
-                                                    ...msg,
-                                                    content: fullContent,
-                                                }
-                                            : msg,
-                                    ),
-                                )
-                            } else if (
-                                (parsed.type === "too_call" ||
-                                    parsed.type === "tool_call") &&
-                                parsed.content
-                            ) {
-                                // 工具调用消息：显示工具调用信息
-                                console.log(
-                                    "[SSE] Tool call:",
-                                    parsed.content,
-                                )
-                                const toolCallMessage = `\n🔧 ${parsed.content}\n`
-                                fullContent += toolCallMessage
-
-                                setMessages((prev) =>
-                                    prev.map((msg) =>
-                                        msg.id === assistantMessageId
-                                            ? {
-                                                    ...msg,
-                                                    content: fullContent,
-                                                }
-                                            : msg,
-                                    ),
-                                )
-                            } else if (
-                                parsed.type === "tool_call_result" &&
-                                parsed.content
-                            ) {
-                                // 工具调用结果：包含生成的图表 XML
-                                console.log(
-                                    "[SSE] Tool call result received, length:",
-                                    parsed.content.length,
-                                )
-
-                                // 尝试从 XML 中提取内容
-                                const xmlContent = parsed.content
-
-                                // 查找 <mxfile> 标签
-                                const mxfileMatch = xmlContent.match(
-                                    /<mxfile[\s\S]*?<\/mxfile>/,
-                                )
-                                if (mxfileMatch) {
-                                    const fullXml = mxfileMatch[0]
-                                    console.log(
-                                        "[SSE] Found mxfile XML, triggering diagram load...",
-                                    )
-
-                                    // 将 XML 格式化为 markdown 代码块
-                                    // 这样 ReactMarkdown 就能正确渲染为代码块
-                                    const xmlCodeBlock = `\n\n\`\`\`xml\n${fullXml}\n\`\`\`\n\n`
-
-                                    // 将 XML 代码块添加到 fullContent 中
-                                    fullContent += xmlCodeBlock
-
-                                    // 直接通过回调加载图表（使用 diagram-context 的 loadDiagram）
-                                    onMessageComplete?.(fullContent)
-
-                                    // 添加完成消息
-                                    const completionMessage =
-                                        "✅ 图表已生成"
-                                    fullContent += completionMessage
-                                } else {
-                                    console.warn(
-                                        "[SSE] Tool call result did not contain valid mxfile XML",
-                                    )
-                                    const completionMessage =
-                                        "\n\n⚠️ 图表生成失败"
-                                    fullContent += completionMessage
-                                }
-
-                                setMessages((prev) =>
-                                    prev.map((msg) =>
-                                        msg.id === assistantMessageId
-                                            ? {
-                                                    ...msg,
-                                                    content: fullContent,
-                                                }
-                                            : msg,
-                                    ),
-                                )
-                            }
-                        } catch (parseError) {
-                            console.warn(
-                                "Failed to parse SSE data:",
-                                eventData,
-                                parseError,
-                            )
-                        }
+                        processSseEvent(event)
                     }
                 }
             } catch (err) {
@@ -318,12 +373,13 @@ export function useBackendChat({
                     setIsLoading(false)
                     setError(error)
                     onError?.(error)
+                    toast.error(`AI 对话出错: ${error.message}`)
 
                     // 更新助手消息为错误信息
                     setMessages((prev) =>
                         prev.map((msg) =>
                             msg.id === assistantMessageId
-                                ? { ...msg, content: `错误: ${error.message}` }
+                                ? { ...msg, content: `⛔️ 出错了: ${error.message}` }
                                 : msg,
                         ),
                     )

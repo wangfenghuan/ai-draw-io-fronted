@@ -15,7 +15,7 @@ import { useSelector } from "react-redux"
 import { toast } from "sonner"
 import { editDiagramRoom, getRoomDiagramVo } from "@/api/roomController"
 import { CollaborationPanel } from "@/components/collaboration-panel"
-import { DownloadDialog } from "@/components/download-dialog"
+import { DownloadDialog, type DownloadFormat } from "@/components/download-dialog"
 import { RoomMemberManagement } from "@/components/room/RoomMemberManagement"
 import { STORAGE_CLOSE_PROTECTION_KEY } from "@/components/settings-dialog"
 import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
@@ -65,7 +65,7 @@ export default function DrawioHome() {
     const [diagramTitle, setDiagramTitle] = useState(`图表_${diagramId}`)
     const [collaborationStarted, setCollaborationStarted] = useState(false)
     const [roomUrlUpdated, setRoomUrlUpdated] = useState(false)
-    const [currentSpaceId, setCurrentSpaceId] = useState<number | undefined>(
+    const [currentSpaceId, setCurrentSpaceId] = useState<string | undefined>(
         undefined,
     ) // 当前图表所属的空间ID
     const [diagramInfo, setDiagramInfo] = useState<API.DiagramVO | null>(null)
@@ -660,7 +660,14 @@ export default function DrawioHome() {
             <DownloadDialog
                 open={downloadDialogOpen}
                 onOpenChange={setDownloadDialogOpen}
-                diagramId={diagramId}
+                onDownload={(format: DownloadFormat) => {
+                    downloadDiagram({
+                        diagramId,
+                        filename: diagramTitle,
+                        format: format.toUpperCase() as "XML" | "PNG" | "SVG",
+                    })
+                }}
+                defaultFilename={diagramTitle}
             />
         </div>
     )

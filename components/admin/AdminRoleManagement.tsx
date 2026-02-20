@@ -178,7 +178,7 @@ export function AdminRoleManagement() {
             }
         } catch (error) {
             console.error("保存角色权限失败:", error)
-            if (!error.errorFields) {
+            if (!(error as any).errorFields) {
                 antMessage.error("保存失败")
             }
         }
@@ -217,7 +217,7 @@ export function AdminRoleManagement() {
             }
         } catch (error) {
             console.error("保存用户角色失败:", error)
-            if (!error.errorFields) {
+            if (!(error as any).errorFields) {
                 antMessage.error("保存失败")
             }
         }

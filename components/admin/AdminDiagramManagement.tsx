@@ -202,7 +202,8 @@ export function AdminDiagramManagement() {
 
         try {
             // 根据id查询图表详情，确保数据是最新的
-            const response = await getDiagramVoById({ id: diagram.id })
+            // Keeping id as string to avoid precision loss; bypass TS number check
+            const response = await getDiagramVoById({ id: diagram.id as any })
             console.log("getDiagramVoById response:", response)
             if (response?.code === 0 && response?.data) {
                 const diagramData = response.data
@@ -247,7 +248,7 @@ export function AdminDiagramManagement() {
             }
         } catch (error) {
             console.error("保存失败:", error)
-            if (!error.errorFields) {
+            if (!(error as any).errorFields) {
                 message.error("保存失败")
             }
         }
