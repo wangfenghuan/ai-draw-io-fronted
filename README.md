@@ -15,7 +15,7 @@ English | [中文](./docs/README_CN.md)
 
 一个基于 Next.js 的 AI 驱动图表创建平台，集成 draw.io 编辑器，支持多人实时协作、空间管理、图表广场等功能。
 
-[![Live Demo](./public/live-demo-button.svg)](http://47.95.35.178/)
+[![Live Demo](./public/live-demo-button.svg)](https://www.intellidraw.top/)
 
 </div>
 
@@ -64,8 +64,7 @@ English | [中文](./docs/README_CN.md)
 
 无需安装，直接访问演示站点：
 
-[![Live Demo](./public/live-demo-button.svg)](http://47.95.35.178/)
-
+[![Live Demo](./public/live-demo-button.svg)](https://www.intellidraw.top/)
 > **提示**：演示站点支持自定义 API Key，点击聊天面板的设置图标即可配置。
 
 ### Docker 部署（推荐）
