@@ -1671,3 +1671,11 @@ export function calculatePercentage(
     if (!totalNum || totalNum === 0) return 0
     return Math.round((usedNum / totalNum) * 100)
 }
+
+/**
+ * Clean up <think> tags from AI output
+ */
+export function removeThinkingTags(text: string | null | undefined): string {
+    if (!text) return ""
+    return text.replace(/<think>[\s\S]*?(?:<\/think>|$)/g, "").trim()
+}

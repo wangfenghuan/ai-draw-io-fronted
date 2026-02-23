@@ -6,6 +6,7 @@ import {
     ShopOutlined,
     TableOutlined,
     UserOutlined,
+    RocketOutlined,
 } from "@ant-design/icons"
 import type { MenuDataItem } from "@ant-design/pro-layout"
 
@@ -16,12 +17,19 @@ export const menus: MenuDataItem[] = [
         icon: <HomeOutlined />,
         access: "notLogin",
     },
+     {
+        name: "免费试用",
+        path: "/demo",
+        icon: <RocketOutlined />,
+        access: "notLogin",
+    },
     {
         name: "模板广场",
         path: "/templates",
         icon: <ShopOutlined />,
         access: "notLogin",
     },
+   
     {
         name: "图表市场",
         path: "/diagram-marketplace",

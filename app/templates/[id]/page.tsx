@@ -34,23 +34,36 @@ interface MaterialVO {
 
 async function getMaterial(id: string): Promise<MaterialVO | null> {
     try {
+        // Use BACKEND_API_URL env var so it works in all environments.
+        // Fallback chain: BACKEND_API_URL → localhost (dev) → production IP
         const apiUrl =
-            process.env.NODE_ENV === "development"
+            process.env.BACKEND_API_URL ||
+            (process.env.NODE_ENV === "development"
                 ? "http://localhost:8081/api"
-                : "http://47.95.35.178:8081/api"
-        const res = await fetch(`${apiUrl}/material/get/vo?id=${id}`, {
-            next: { revalidate: 60 }, // Revalidate every 60 seconds
+                : "http://47.95.35.178:8081/api")
+
+        const url = `${apiUrl}/material/get/vo?id=${id}`
+        console.log(`[getMaterial] fetching: ${url}`)
+
+        const res = await fetch(url, {
+            next: { revalidate: 60 },
         })
-        
-        if (!res.ok) return null
-        
+
+        if (!res.ok) {
+            console.error(`[getMaterial] HTTP ${res.status} for id=${id}, url=${url}`)
+            return null
+        }
+
         const json: BaseResponseMaterialVO = await res.json()
+        console.log(`[getMaterial] response code=${json.code} for id=${id}`)
+
         if (json.code === 0 && json.data) {
             return json.data
         }
+        console.warn(`[getMaterial] backend returned code=${json.code}, msg=${json.message} for id=${id}`)
         return null
     } catch (e) {
-        console.error("Fetch material error:", e)
+        console.error(`[getMaterial] fetch error for id=${id}:`, e)
         return null
     }
 }

@@ -48,6 +48,8 @@ interface SimpleChatPanelProps {
     darkMode: boolean
     diagramTitle: string
     spaceId?: number | string
+    /** When provided (e.g. on demo page), all actions call this instead of executing. */
+    onRequireLogin?: (featureName: string) => void
 }
 
 export default function SimpleChatPanel({
@@ -57,13 +59,24 @@ export default function SimpleChatPanel({
     darkMode,
     diagramTitle,
     spaceId,
+    onRequireLogin,
 }: SimpleChatPanelProps) {
     const [input, setInput] = useState("")
     const [historyLoaded, setHistoryLoaded] = useState(false)
     const [configDialogOpen, setConfigDialogOpen] = useState(false)
     const [downloadDialogOpen, setDownloadDialogOpen] = useState(false)
     const [isSaving, setIsSaving] = useState(false)
-    
+
+    // Helper: gate any action behind login on demo page
+    const requireLogin = (featureName: string, action?: () => void): boolean => {
+        if (onRequireLogin) {
+            onRequireLogin(featureName)
+            return true // blocked
+        }
+        action?.()
+        return false // not blocked
+    }
+
     // File upload state and hooks
     const { files, pdfData, handleFileChange, setFiles } = useFileProcessor()
 
@@ -226,32 +239,40 @@ export default function SimpleChatPanel({
                 const linkCount = arch.links?.length ?? 0
                 const externalList = (arch.externalSystems || []).join("、") || "无"
 
-                const prompt = `你是一位专业的软件架构师，请根据下方 Spring Boot 项目的架构分析结果，生成一张清晰的**分层架构图**，输出格式必须是 Draw.io 可直接导入的 mxfile XML。
+                const prompt = `你现在是一位资深的软件架构师。我使用 AST 解析器提取了 Spring Boot 项目的架构元数据（包含组件节点、架构层级、角色定义和真实的调用链路）。
 
-## 项目架构分析数据
-\`\`\`json
-${JSON.stringify(arch, null, 2)}
-\`\`\`
+请根据我提供的 JSON 数据，使用 drawio 语法绘制一张高视角的【系统架构图（类似 C4 模型的容器/组件图）】。
 
-## 架构摘要
+【绘图严格要求】
+1. 图表类型：使用 \`drawio可以识别的xml代码\`（从上到下的有向图布局）。
+2. 架构分层：将节点按照 \`layer\` 字段进行逻辑分组。自上而下的视觉排版顺序应严格为：
+   - API 层（网关/控制器层）
+   - BIZ 层（核心业务逻辑层）
+   - DATA 层（数据持久层）
+   - INFRA 层（基础设施/配置层）
+3. 中间件与外部依赖：将 \`layer\` 为 "MIDDLEWARE" 的节点放在业务系统图表的外部边缘，或者归类到一个单独的 [外部系统/中间件] Subgraph 中，凸显系统与外部组件（如 Redis, Kafka, DB）的边界。
+4. 节点信息展示：
+   - 节点核心文本必须使用节点的 \`name\`。
+   - 如果节点有 \`description\`，请在节点换行追加其简短描述。
+   - 如果节点角色是 "CONTROLLER" 且包含 \`apiRoutes\`，请在节点上显著标注 \`[HTTP API]\`。
+   - 如果节点角色是 "ENTITY" 且包含 \`tableName\`，请以 \`[(表: xxx)]\` 的圆柱体或其他合适的数据库形状展示。
+5. 关系连线绘制：
+   - 严格按照 \`relationships\` 数组中的定义连线，从 \`sourceId\` 指向 \`targetId\`。
+   - 决不能臆造不存在的关系。
+   - 可以在连线上标注 \`type\` 的值（如 DEPENDS_ON, USES）。
+6. 可视化美化：请根据 \`layer\` 或 \`role\` 使用 \`classDef\` 为节点上色（例如 API 层用淡蓝色，DATA 层用淡绿色，MIDDLEWARE 用醒目的橙色或紫色），使架构图更加清晰专业。
+
+【架构摘要】
 - 项目名称：${arch.name}
 - 检测到的层次：${layerList}
 - 组件总数：${componentCount} 个
 - 组件间关系：${linkCount} 条
 - 外部中间件：${externalList}
 
-## 绘图要求（请严格遵守）
-1. **整体布局**：使用 Draw.io 的 **swimlane 泳道容器**，每个架构层单独一个泳道
-2. **颜色规范**：
-   - Controller 层 → 浅蓝色填充 (#dae8fc), 蓝色边框 (#6c8ebf)
-   - Service 层 → 浅黄色填充 (#fff2cc), 橙色边框 (#d6b656)
-   - Repository/Mapper/Data 层 → 浅绿色填充 (#d5e8d4), 绿色边框 (#82b366)
-   - Config/Infrastructure 层 → 浅紫色填充 (#e1d5e7), 紫色边框 (#9673a6)
-   - 外部中间件 → 浅灰色填充 (#f5f5f5), 深灰边框 (#666666)
-3. **组件样式**：每个组件用圆角矩形表示，显示类名和所属层次类型（如 @Controller）
-4. **连接线**：有向箭头表示调用依赖关系，标注类型（CALLS / USES）
-5. **外部系统**：放在最底部或右侧独立区域
-6. **尺寸**：图表整体宽度建议 1200px 左右，层间垂直间距 60px，组件间水平间距 40px`
+【项目架构 JSON 数据如下】
+\`\`\`json
+${JSON.stringify(arch, null, 2)}
+\`\`\``
 
                 await sendMessage(prompt)
                 toast.success(`分析完成！检测到 ${componentCount} 个组件，正在生成架构图...`, { id: toastId })
@@ -278,31 +299,34 @@ ${JSON.stringify(arch, null, 2)}
                 const tableCount = tables.length
                 const tableNames = tables.map((t: any) => t.tableName).join("、")
 
-                const prompt = `你是一位专业的数据库架构师，请根据下方 SQL DDL 解析结果，生成一张标准的**实体关系图（ER 图）**，输出格式必须是 Draw.io 可直接导入的 mxfile XML。
+                const prompt = `你现在是一位资深的数据库架构师。我使用 SQL DDL 解析器提取了数据库的结构元数据（包含表定义、字段信息、主外键约束和索引信息）。
 
-## SQL 解析结果
-\`\`\`json
-${JSON.stringify(tables, null, 2)}
-\`\`\`
+请根据我提供的 JSON 数据，使用 drawio 语法绘制一张专业的【数据库实体关系图（ER 图 / ERD）】。
 
-## 数据库摘要
+【绘图严格要求】
+1. 图表类型：使用 \`drawio可以识别的xml代码\`（自动布局，避免连线交叉）。
+2. 表格样式：每张表使用 Draw.io 内置的 **table/tableRow** 样式（shape=table），严格展示：
+   - 表名（加粗，作为表头）
+   - 每列：列名 | 数据类型 | 约束标注（PK 用 🔑 标注，FK 用 🔗 标注，NOT NULL 用 * 标注，UNIQUE 用 ◇ 标注）
+   - 如有表注释（comment），在表头下方以斜体副标题展示。
+3. 关系连线绘制：
+   - 根据语义推断 JSON 数据中的外键（foreignKey）定义连线，从外键所在表指向被引用表。
+   - 决不能臆造不存在的外键关系。
+   - 使用 Draw.io 的 ERone / ERmany 连接端样式体现一对一、一对多关系。
+   - 在连线上标注外键字段名。
+4. 表分类着色（根据表的角色/被引用程度进行区分）：
+   - 主表（被多张表通过外键引用）→ 表头填充 #d5e8d4（绿色），绿色边框 #82b366
+   - 关联/中间表（同时拥有多个外键）→ 表头填充 #fff2cc（黄色），橙色边框 #d6b656
+   - 普通业务表 → 表头填充 #dae8fc（蓝色），蓝色边框 #6c8ebf
+5. 布局原则：有直接外键关联的表靠近排列；每张表宽度 220px，行高 28px。
+
+【数据库摘要】
 - 共 ${tableCount} 张表：${tableNames}
 
-## 绘图要求（请严格遵守）
-1. **表格样式**：每张表使用 Draw.io 内置的 **table/tableRow** 样式（shape=table），展示：
-   - 表名（加粗，作为表头，浅蓝色背景 #dae8fc）
-   - 每列：列名 | 数据类型 | 约束（PK 用 🔑 标注，FK 用 🔗 标注，NOT NULL 用 * 标注）
-   - 表注释作为表头副标题（若有）
-2. **关系线**：
-   - 外键关系用**有向箭头**连接，箭头指向被引用表，标注外键字段名
-   - 语义推断的关联关系用**虚线箭头**表示
-   - 对多关系使用 Draw.io 的 ERone / ERmany 连接端样式
-3. **布局**：自动合理分布，有直接关联的表靠近放置，避免连线交叉
-4. **颜色**：
-   - 主表（被多表引用）→ 表头 #d5e8d4（绿色）
-   - 普通表 → 表头 #dae8fc（蓝色）
-   - 关联/中间表 → 表头 #fff2cc（黄色）
-5. **尺寸**：每张表宽度 220px，行高 28px`
+【SQL 解析 JSON 数据如下】
+\`\`\`json
+${JSON.stringify(tables, null, 2)}
+\`\`\``
 
                 await sendMessage(prompt)
                 toast.success(`解析完成！共 ${tableCount} 张表，正在生成 ER 图...`, { id: toastId })
@@ -320,6 +344,7 @@ ${JSON.stringify(tables, null, 2)}
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if ((!input.trim() && files.length === 0) || isLoading) return
+        if (requireLogin("AI 对话")) return
         
         let messageContent = input.trim()
         
@@ -354,6 +379,7 @@ ${JSON.stringify(tables, null, 2)}
     }
 
     const handleClearChat = () => {
+        if (requireLogin("清空对话")) return
         clearMessages()
     }
 
@@ -461,7 +487,7 @@ ${JSON.stringify(tables, null, 2)}
                     <CollaborationPanel spaceId={spaceId} />
 
                     <button
-                        onClick={handleSaveDiagram}
+                        onClick={() => { if (!requireLogin("保存图表")) handleSaveDiagram() }}
                         disabled={isSaving || !chartXML}
                         className={`p-1.5 rounded-lg transition-all duration-200 hover:scale-105 border flex-shrink-0
                             ${
@@ -479,7 +505,7 @@ ${JSON.stringify(tables, null, 2)}
                     </button>
 
                     <button
-                        onClick={() => setConfigDialogOpen(true)}
+                        onClick={() => { if (!requireLogin("AI 模型配置")) setConfigDialogOpen(true) }}
                         className={`p-1.5 rounded-lg transition-all duration-200 hover:scale-105 flex-shrink-0 ${
                             aiConfig.mode === "custom"
                                 ? "bg-green-500/20 text-green-400 border border-green-500/30"
@@ -495,7 +521,7 @@ ${JSON.stringify(tables, null, 2)}
                     </button>
 
                     <button
-                        onClick={() => setDownloadDialogOpen(true)}
+                        onClick={() => { if (!requireLogin("下载图表")) setDownloadDialogOpen(true) }}
                         className="p-1.5 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10 transition-all duration-200 hover:scale-105 flex-shrink-0"
                         title="下载图表"
                     >
@@ -799,7 +825,7 @@ ${JSON.stringify(tables, null, 2)}
                         <button
                             type="button"
                             disabled={isLoading}
-                            onClick={() => fileInputCodeRef.current?.click()}
+                            onClick={() => { if (!requireLogin("Spring Boot 架构图分析")) fileInputCodeRef.current?.click() }}
                             className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 group
                                 bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20 hover:border-emerald-400/50
                                 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -818,7 +844,7 @@ ${JSON.stringify(tables, null, 2)}
                         <button
                             type="button"
                             disabled={isLoading}
-                            onClick={() => fileInputSqlRef.current?.click()}
+                            onClick={() => { if (!requireLogin("SQL ER 图分析")) fileInputSqlRef.current?.click() }}
                             className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 group
                                 bg-violet-500/10 border-violet-500/30 hover:bg-violet-500/20 hover:border-violet-400/50
                                 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -852,7 +878,8 @@ ${JSON.stringify(tables, null, 2)}
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            placeholder="输入你的问题..."
+                            onFocus={() => { if (onRequireLogin) onRequireLogin("AI 对话") }}
+                            placeholder={onRequireLogin ? "登录后即可使用 AI 对话..." : "输入你的问题..."}
                             disabled={isLoading}
                             className="flex-1 px-4 py-3 rounded-xl border border-white/20 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all disabled:opacity-50 text-sm"
                         />

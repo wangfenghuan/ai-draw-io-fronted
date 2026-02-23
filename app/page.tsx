@@ -12,6 +12,7 @@ import { useRouter } from "next/navigation"
 import React, { useState } from "react"
 import { CreateDiagramDialog } from "@/components/create-diagram-dialog"
 import { CreateSpaceDialog } from "@/components/create-space-dialog"
+import { DemoVideoDialog } from "@/components/demo-video-dialog"
 
 const { Title, Paragraph, Text } = Typography
 
@@ -23,6 +24,7 @@ const Home: React.FC = () => {
         useState(false)
     const [createDiagramDialogVisible, setCreateDiagramDialogVisible] =
         useState(false)
+    const [demoVideoOpen, setDemoVideoOpen] = useState(false)
 
     const handleCreateDiagram = () => {
         setCreateDiagramDialogVisible(true)
@@ -166,7 +168,7 @@ const Home: React.FC = () => {
                                 background: "#fff",
                                 borderColor: "#d9d9d9",
                             }}
-                            onClick={() => message.info("演示视频即将上线")}
+                            onClick={() => setDemoVideoOpen(true)}
                         >
                             观看演示
                         </Button>
@@ -253,6 +255,11 @@ const Home: React.FC = () => {
                 open={createDiagramDialogVisible}
                 onOpenChange={setCreateDiagramDialogVisible}
                 onSuccess={handleDiagramCreated}
+            />
+
+            <DemoVideoDialog
+                open={demoVideoOpen}
+                onOpenChange={setDemoVideoOpen}
             />
         </div>
     )
