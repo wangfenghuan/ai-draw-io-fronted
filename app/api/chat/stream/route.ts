@@ -23,10 +23,22 @@ export async function POST(request: NextRequest) {
 
         if (!backendResponse.ok) {
             const errorText = await backendResponse.text().catch(() => "Unknown error")
-            return NextResponse.json(
-                { error: errorText },
-                { status: backendResponse.status },
-            )
+            try {
+                const errorJson = JSON.parse(errorText)
+                return NextResponse.json(errorJson, { status: backendResponse.status })
+            } catch {
+                return NextResponse.json(
+                    { error: errorText },
+                    { status: backendResponse.status },
+                )
+            }
+        }
+
+        // 检查后端是否返回了 JSON（例如拦截器/全局异常处理抛出的业务异常，如 50001 AI服务维护中）
+        const contentType = backendResponse.headers.get("content-type") || ""
+        if (contentType.includes("application/json")) {
+            const jsonResponse = await backendResponse.json().catch(() => ({}))
+            return NextResponse.json(jsonResponse, { status: backendResponse.status })
         }
 
         if (!backendResponse.body) {

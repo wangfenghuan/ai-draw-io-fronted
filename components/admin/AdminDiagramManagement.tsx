@@ -31,6 +31,7 @@ import {
     listDiagramVoByPage,
     updateDiagram,
 } from "@/api/diagramController"
+import MaterialViewer from "@/components/MaterialViewer"
 
 const { Search } = Input
 
@@ -331,40 +332,42 @@ export function AdminDiagramManagement() {
                                 }}
                                 bodyStyle={{ padding: "12px" }}
                                 cover={
-                                    diagram.pictureUrl ? (
-                                        <div
-                                            style={{
-                                                height: "160px",
-                                                overflow: "hidden",
-                                                background: "#fafafa",
-                                            }}
-                                        >
-                                            <img
-                                                alt={diagram.name}
-                                                src={diagram.pictureUrl}
+                                    <div
+                                        style={{
+                                            height: "160px",
+                                            overflow: "hidden",
+                                            background: "#fafafa",
+                                            display: "flex",
+                                            alignItems: "center",
+                                            justifyContent: "center",
+                                        }}
+                                    >
+                                        {diagram.diagramCode ? (
+                                            <div
                                                 style={{
                                                     width: "100%",
                                                     height: "100%",
-                                                    objectFit: "cover",
+                                                    overflow: "hidden",
+                                                    pointerEvents: "none",
+                                                }}
+                                            >
+                                                <MaterialViewer
+                                                    xml={diagram.diagramCode}
+                                                    style={{
+                                                        width: "100%",
+                                                        height: "100%",
+                                                    }}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <FileTextOutlined
+                                                style={{
+                                                    fontSize: "48px",
+                                                    color: "#d9d9d9",
                                                 }}
                                             />
-                                        </div>
-                                    ) : (
-                                        <div
-                                            style={{
-                                                height: "160px",
-                                                display: "flex",
-                                                alignItems: "center",
-                                                justifyContent: "center",
-                                                background: "#fafafa",
-                                                color: "#999",
-                                            }}
-                                        >
-                                            <FileTextOutlined
-                                                style={{ fontSize: "48px" }}
-                                            />
-                                        </div>
-                                    )
+                                        )}
+                                    </div>
                                 }
                             >
                                 <div

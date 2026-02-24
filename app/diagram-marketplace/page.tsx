@@ -19,6 +19,7 @@ import {
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { getByPage } from "@/api/diagramController"
+import MaterialViewer from "@/components/MaterialViewer"
 
 const { Search } = Input
 
@@ -308,22 +309,26 @@ export default function DiagramMarketplacePage() {
                                             position: "relative",
                                         }}
                                     >
-                                        <img
-                                            src={
-                                                diagram.pictureUrl ||
-                                                diagram.svgUrl ||
-                                                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24' fill='none' stroke='%23d9d9d9' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E"
-                                            }
-                                            alt={diagram.name}
-                                            style={{
-                                                maxWidth: "90%",
-                                                maxHeight: "90%",
-                                                objectFit: "contain",
-                                                transition:
-                                                    "transform 0.3s ease",
-                                            }}
-                                            className="group-hover:scale-105"
-                                        />
+                                        {diagram.diagramCode ? (
+                                            <div
+                                                style={{
+                                                    width: "100%",
+                                                    height: "100%",
+                                                    overflow: "hidden",
+                                                    pointerEvents: "none",
+                                                }}
+                                            >
+                                                <MaterialViewer
+                                                    xml={diagram.diagramCode}
+                                                    style={{
+                                                        width: "100%",
+                                                        height: "100%",
+                                                    }}
+                                                />
+                                            </div>
+                                        ) : (
+                                            <Empty description={false} />
+                                        )}
                                     </div>
 
                                     <div style={{ marginBottom: "12px" }}>
@@ -473,22 +478,13 @@ export default function DiagramMarketplacePage() {
                         overflow: "hidden",
                     }}
                 >
-                    {previewDiagram ? (
-                        <img
-                            src={
-                                previewDiagram.pictureUrl ||
-                                previewDiagram.svgUrl ||
-                                "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='64' height='64' viewBox='0 0 24 24' fill='none' stroke='%23d9d9d9' stroke-width='1' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='3' width='18' height='18' rx='2' ry='2'/%3E%3Ccircle cx='8.5' cy='8.5' r='1.5'/%3E%3Cpolyline points='21 15 16 10 5 21'/%3E%3C/svg%3E"
-                            }
-                            alt={previewDiagram.name}
-                            style={{
-                                maxWidth: "100%",
-                                maxHeight: "600px",
-                                objectFit: "contain",
-                            }}
+                    {previewDiagram?.diagramCode ? (
+                        <MaterialViewer
+                            xml={previewDiagram.diagramCode}
+                            style={{ width: "100%", height: "100%" }}
                         />
                     ) : (
-                        <Empty description="暂无预览图" />
+                        <Empty description="暂无预览内容" />
                     )}
                 </div>
 

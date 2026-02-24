@@ -116,6 +116,16 @@ export function useBackendChat({
                     credentials: "include", // 携带 cookie
                 })
 
+                // 检查是否返回了 JSON 格式的错误信息
+                const contentType = response.headers.get("content-type")
+                if (contentType && contentType.includes("application/json")) {
+                    const jsonRes = await response.json()
+                    // 如果后端返回了业务错误（如 code !== 0 或特定错误码）
+                    if (jsonRes.code && jsonRes.code !== 0) {
+                        throw new Error(jsonRes.message || `请求失败，错误码：${jsonRes.code}`)
+                    }
+                }
+
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`)
                 }
