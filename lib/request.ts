@@ -62,6 +62,10 @@ myAxios.interceptors.response.use(
                 const currentPath = window.location.pathname
                 const isPublic =
                     currentPath === "/" ||
+                    currentPath.startsWith("/demo") ||
+                    currentPath.startsWith("/templates") ||
+                    currentPath.startsWith("/solutions") ||
+                    currentPath.startsWith("/wiki") ||
                     currentPath.startsWith("/material-marketplace") ||
                     currentPath.startsWith("/diagram-marketplace") ||
                     currentPath.startsWith("/user/") ||

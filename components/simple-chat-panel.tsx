@@ -785,15 +785,12 @@ ${JSON.stringify(tables, null, 2)}
                                                     </ReactMarkdown>
                                                 </>
                                             ) : (
-                                                <span className="text-white/40 italic flex items-center gap-1">
-                                                    <span className="animate-pulse">
-                                                        ●
-                                                    </span>
-                                                    <span className="animate-pulse delay-75">
-                                                        ●
-                                                    </span>
-                                                    <span className="animate-pulse delay-150">
-                                                        ●
+                                                <span className="text-white/40 italic flex items-center gap-2">
+                                                    <span className="text-sm">正在生成中，请稍候</span>
+                                                    <span className="flex gap-1">
+                                                        <span className="animate-pulse">●</span>
+                                                        <span className="animate-pulse delay-75">●</span>
+                                                        <span className="animate-pulse delay-150">●</span>
                                                     </span>
                                                 </span>
                                             )}

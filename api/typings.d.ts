@@ -641,6 +641,8 @@ declare namespace API {
         authorities?: SysAuthority[]
         /** 会话Token (Session ID) */
         token?: string
+        /** GitHub平台账号 */
+        githubAccount?: string
     }
 
     type Material = {
@@ -1321,6 +1323,8 @@ declare namespace API {
         username?: string
         password?: string
         credentialsNonExpired?: boolean
+        /** GitHub平台账号 */
+        githubAccount?: string
     }
 
     type UserAddRequest = {
@@ -1420,6 +1424,8 @@ declare namespace API {
         authorities?: SysAuthority[]
         /** 创建时间 */
         createTime?: string
+        /** GitHub平台账号 */
+        githubAccount?: string
     }
     type UserSendRegisterCodeRequest = {
         /** 用户账号(邮箱) */

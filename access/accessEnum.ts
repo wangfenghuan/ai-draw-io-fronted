@@ -5,6 +5,7 @@ const ACCESS_ENUM = {
     NOT_LOGIN: "notLogin",
     USER: "user",
     ADMIN: "admin",
+    ONLY_NOT_LOGIN: "onlyNotLogin",
 }
 
 export default ACCESS_ENUM

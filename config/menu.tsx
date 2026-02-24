@@ -21,7 +21,7 @@ export const menus: MenuDataItem[] = [
         name: "免费试用",
         path: "/demo",
         icon: <RocketOutlined />,
-        access: "notLogin",
+        access: "onlyNotLogin",
     },
     {
         name: "模板广场",
