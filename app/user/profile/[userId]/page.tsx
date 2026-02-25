@@ -71,7 +71,7 @@ export default function UserProfilePage() {
         setLoading(true)
         try {
             const response = await getUserVoById({
-                id: Number(userId),
+                id: userId as any,
             })
 
             // lib/request.ts 拦截器返回的是 data 本身

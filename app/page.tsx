@@ -47,27 +47,27 @@ const Home: React.FC = () => {
             bg: "#e6f7ff",
         },
         {
-            icon: <BulbOutlined style={{ fontSize: 24, color: "#faad14" }} />,
+            icon: <BulbOutlined style={{ fontSize: 24, color: "#F97316" }} />,
             title: "AI 智能生成",
             desc: "输入描述，让 AI 帮你生成专业图表",
             action: () => message.info("AI 功能即将上线"), // Placeholder logic
-            bg: "#fff7e6",
+            bg: "#FFEDD5",
         },
         {
-            icon: <FolderOutlined style={{ fontSize: 24, color: "#52c41a" }} />,
+            icon: <FolderOutlined style={{ fontSize: 24, color: "#10B981" }} />,
             title: "新建空间",
             desc: "创建团队或个人空间，管理图表",
             action: () => setCreateSpaceDialogVisible(true),
-            bg: "#f6ffed",
+            bg: "#D1FAE5",
         },
         {
             icon: (
-                <AppstoreOutlined style={{ fontSize: 24, color: "#722ed1" }} />
+                <AppstoreOutlined style={{ fontSize: 24, color: "#8B5CF6" }} />
             ),
             title: "浏览模板",
             desc: "从海量模板库中选择",
             action: () => router.push("/templates"),
-            bg: "#f9f0ff",
+            bg: "#EDE9FE",
         },
     ]
 
@@ -75,15 +75,12 @@ const Home: React.FC = () => {
         <div
             style={{
                 minHeight: "100vh",
-                background: "#f8fafc",
-                backgroundImage:
-                    "radial-gradient(#e2e8f0 1px, transparent 1px)",
-                backgroundSize: "24px 24px",
+                background: "linear-gradient(180deg, #F0F9FF 0%, #FFFFFF 100%)",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
                 justifyContent: "center",
-                padding: "40px 20px",
+                padding: "60px 20px",
             }}
         >
             <div style={{ maxWidth: 1000, width: "100%", zIndex: 1 }}>
@@ -109,7 +106,7 @@ const Home: React.FC = () => {
                         }}
                     >
                         <Text strong style={{ color: "#1677ff" }}>
-                            ✨ IntelliDraw 智能绘图
+                            IntelliDraw 智能绘图
                         </Text>
                     </div>
 
@@ -153,6 +150,8 @@ const Home: React.FC = () => {
                                 padding: "0 32px",
                                 fontSize: 16,
                                 borderRadius: 8,
+                                background: "#1677ff",
+                                borderColor: "#1677ff",
                                 boxShadow: "0 4px 12px rgba(22, 119, 255, 0.3)",
                             }}
                         >
@@ -166,7 +165,8 @@ const Home: React.FC = () => {
                                 fontSize: 16,
                                 borderRadius: 8,
                                 background: "#fff",
-                                borderColor: "#d9d9d9",
+                                color: "#1e293b",
+                                borderColor: "#1677ff",
                             }}
                             onClick={() => setDemoVideoOpen(true)}
                         >

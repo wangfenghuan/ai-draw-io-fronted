@@ -109,7 +109,16 @@ const InitLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 export function Providers({ children }: { children: React.ReactNode }) {
     return (
         <AntdRegistry>
-            <ConfigProvider locale={zhCN}>
+            <ConfigProvider
+                locale={zhCN}
+                theme={{
+                    token: {
+                        colorPrimary: "#1677ff",
+                        colorInfo: "#1677ff",
+                        fontFamily: "var(--font-plus-jakarta-sans), sans-serif",
+                    },
+                }}
+            >
                 <AntdApp>
                     <Provider store={store}>
                         <InitLayout>

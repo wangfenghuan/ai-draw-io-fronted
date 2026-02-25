@@ -1,10 +1,16 @@
+import { Plus_Jakarta_Sans } from "next/font/google"
 import type { Metadata, Viewport } from "next"
 import { Providers } from "./providers"
 import "./globals.css"
 import "../styles/markdown.css"
 
+const plusJakartaSans = Plus_Jakarta_Sans({
+    subsets: ["latin"],
+    display: "swap",
+})
+
 export const viewport: Viewport = {
-    themeColor: "#1677ff",
+    themeColor: "#0EA5E9",
     width: "device-width",
     initialScale: 1,
 }
@@ -111,7 +117,7 @@ export default function RootLayout({
 
     return (
         <html lang="zh">
-            <body>
+            <body className={plusJakartaSans.className}>
                 <Providers>{children}</Providers>
                 <script
                     type="application/ld+json"

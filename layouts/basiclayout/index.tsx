@@ -129,7 +129,7 @@ export default function BasicLayout({ children }: Props) {
         >
             <ProLayout
                 title="IntelliDraw 智能绘图"
-                logo="https://gw.alipayobjects.com/zos/rmsportal/KDpgvguMpGfqaHPjicRK.svg"
+                logo="/favicon.ico"
                 layout="top"
                 location={{
                     pathname: pathName,

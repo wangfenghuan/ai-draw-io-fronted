@@ -205,7 +205,7 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
     // 获取 WebSocket URL
     const getWSUrl = () => {
         // 优先使用环境变量，否则强制使用线上地址
-        const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "ws://47.95.35.178:1234"
+        const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "wss://ws.intellidraw.top:1234"
         return wsUrl.replace(/\/$/, "")
     }
 
