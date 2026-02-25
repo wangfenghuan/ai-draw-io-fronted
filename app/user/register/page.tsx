@@ -88,19 +88,40 @@ const UserRegister: React.FC = () => {
 
     return (
         <ProConfigProvider hashed={false}>
-            <div>
-                <LoginForm
-                    submitter={{
-                        searchConfig: {
-                            submitText: "注册",
-                        },
-                    }}
-                    form={form}
-                    onFinish={submit}
-                    logo="https://github.githubassets.com/favicons/favicon.png"
-                    title="IntelliDraw 智能绘图"
-                    subTitle="用户注册"
-                    actions={
+            <div
+                style={{
+                    minHeight: "100vh",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "linear-gradient(135deg, #f0f7ff 0%, #ffffff 50%, #f9f0ff 100%)",
+                    position: "relative",
+                    overflow: "hidden",
+                }}
+            >
+                {/* Decorative background blurs */}
+                <div style={{ position: "absolute", top: "15%", left: "10%", width: 400, height: 400, background: "rgba(22, 119, 255, 0.1)", filter: "blur(80px)", borderRadius: "50%", zIndex: 0 }} />
+                <div style={{ position: "absolute", bottom: "10%", right: "20%", width: 400, height: 400, background: "rgba(114, 46, 209, 0.1)", filter: "blur(80px)", borderRadius: "50%", zIndex: 0 }} />
+                
+                <div style={{
+                    width: "100%", maxWidth: 440, zIndex: 1, padding: "20px", marginTop: "20px", marginBottom: "20px",
+                    background: "rgba(255,255,255,0.7)", backdropFilter: "blur(12px)",
+                    borderRadius: 24, boxShadow: "0 10px 40px -10px rgba(0,0,0,0.08)",
+                    border: "1px solid rgba(255,255,255,0.8)"
+                }}>
+                    <LoginForm
+                        submitter={{
+                            searchConfig: {
+                                submitText: "注册账户",
+                            },
+                        }}
+                        form={form}
+                        onFinish={submit}
+                        logo="https://github.githubassets.com/favicons/favicon.png"
+                        title="IntelliDraw"
+                        subTitle={<span style={{ fontWeight: 500, color: "#1677ff" }}>开启无限可能的智能图表绘制</span>}
+                        contentStyle={{ padding: "0 20px" }}
+                        actions={
                         <div
                             style={{
                                 display: "flex",
@@ -248,6 +269,7 @@ const UserRegister: React.FC = () => {
                         <Link href={"/user/login"}>去登录</Link>
                     </div>
                 </LoginForm>
+                </div>
             </div>
         </ProConfigProvider>
     )

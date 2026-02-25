@@ -93,22 +93,29 @@ export default function DemoPage() {
     }
 
     return (
-        <div className="h-screen bg-background relative overflow-hidden">
-            <ResizablePanelGroup
-                id="main-panel-group"
-                direction={isMobile ? "vertical" : "horizontal"}
-                className="h-full"
-            >
-                {/* Draw.io Canvas */}
-                <ResizablePanel
-                    id="drawio-panel"
-                    defaultSize={isMobile ? 50 : 67}
-                    minSize={20}
+        <div className="flex-1 w-full h-screen relative overflow-hidden">
+            <div className="w-full h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden shadow-2xl transition-all duration-300 flex flex-col">
+                {/* 顶部信息栏结构（仅占位，保持原Demo设计或简化为一个Logo栏） */}
+                <div className="w-full h-11 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 shrink-0 transition-colors duration-300">
+                    <div className="flex items-center gap-4">
+                        <div className="text-base font-semibold text-gray-800 dark:text-gray-100">
+                            IntelliDraw Demo 环境
+                        </div>
+                    </div>
+                </div>
+
+                <ResizablePanelGroup
+                    id="main-panel-group"
+                    direction={isMobile ? "vertical" : "horizontal"}
+                    className="w-full flex-1 overflow-hidden"
                 >
-                    <div
-                        className={`h-full relative ${isMobile ? "p-1" : "p-2"}`}
+                    {/* Draw.io Canvas */}
+                    <ResizablePanel
+                        id="drawio-panel"
+                        defaultSize={isMobile ? 50 : 67}
+                        minSize={20}
                     >
-                        <div className="h-full rounded-xl overflow-hidden shadow-soft-lg border border-border/30">
+                        <div className="w-full h-full relative bg-white rounded-bl-2xl overflow-hidden">
                             {isLoaded ? (
                                 <DrawIoEmbed
                                     key={`${drawioUi}-${darkMode}`}
@@ -128,18 +135,20 @@ export default function DemoPage() {
                                     }}
                                 />
                             ) : (
-                                <div className="h-full w-full flex items-center justify-center bg-background">
-                                    <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full" />
+                                <div className="w-full h-full flex items-center justify-center bg-white">
+                                    <div className="animate-spin h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full" />
                                 </div>
                             )}
                         </div>
-                    </div>
-                </ResizablePanel>
+                    </ResizablePanel>
 
-                <ResizableHandle withHandle />
+                    <ResizableHandle
+                        withHandle
+                        className="bg-white/10 hover:bg-white/20 transition-colors"
+                    />
 
-                {/* Demo Chat/Upload Panel */}
-                <ResizablePanel
+                    {/* Demo Chat/Upload Panel */}
+                    <ResizablePanel
                     id="chat-panel"
                     ref={chatPanelRef}
                     defaultSize={isMobile ? 50 : 33}
@@ -150,7 +159,7 @@ export default function DemoPage() {
                     onCollapse={() => setIsChatVisible(false)}
                     onExpand={() => setIsChatVisible(true)}
                 >
-                    <div className={`h-full ${isMobile ? "p-1" : "py-2 pr-2"}`}>
+                    <div className="h-full w-full overflow-hidden">
                         <DemoChatPanel
                             isVisible={isChatVisible}
                             onToggleVisibility={toggleChatPanel}
@@ -161,6 +170,7 @@ export default function DemoPage() {
                     </div>
                 </ResizablePanel>
             </ResizablePanelGroup>
+            </div>
 
             <LoginGateDialog
                 open={loginGateOpen}

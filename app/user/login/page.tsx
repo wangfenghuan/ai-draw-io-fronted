@@ -47,14 +47,35 @@ const UserLogin: React.FC = () => {
 
     return (
         <ProConfigProvider hashed={false}>
-            <div>
-                <LoginForm
-                    form={form}
-                    logo="https://github.githubassets.com/favicons/favicon.png"
-                    title="IntelliDraw 智能绘图"
-                    subTitle="AI 驱动的无限创意绘图平台"
-                    onFinish={submit}
-                    actions={
+            <div
+                style={{
+                    minHeight: "100vh",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    background: "linear-gradient(135deg, #f0f7ff 0%, #ffffff 50%, #f9f0ff 100%)",
+                    position: "relative",
+                    overflow: "hidden",
+                }}
+            >
+                {/* Decorative background blurs */}
+                <div style={{ position: "absolute", top: "10%", left: "15%", width: 400, height: 400, background: "rgba(22, 119, 255, 0.1)", filter: "blur(80px)", borderRadius: "50%", zIndex: 0 }} />
+                <div style={{ position: "absolute", bottom: "10%", right: "15%", width: 400, height: 400, background: "rgba(114, 46, 209, 0.1)", filter: "blur(80px)", borderRadius: "50%", zIndex: 0 }} />
+                
+                <div style={{
+                    width: "100%", maxWidth: 440, zIndex: 1, padding: "20px",
+                    background: "rgba(255,255,255,0.7)", backdropFilter: "blur(12px)",
+                    borderRadius: 24, boxShadow: "0 10px 40px -10px rgba(0,0,0,0.08)",
+                    border: "1px solid rgba(255,255,255,0.8)"
+                }}>
+                    <LoginForm
+                        form={form}
+                        logo="https://github.githubassets.com/favicons/favicon.png"
+                        title="IntelliDraw"
+                        subTitle={<span style={{ fontWeight: 500, color: "#1677ff" }}>AI 驱动的无限创意绘图平台</span>}
+                        onFinish={submit}
+                        contentStyle={{ padding: "0 20px" }}
+                        actions={
                         <div
                             style={{
                                 display: "flex",
@@ -160,6 +181,7 @@ const UserLogin: React.FC = () => {
                         <Link href={"/user/register"}>还没有账号？去注册</Link>
                     </div>
                 </LoginForm>
+                </div>
             </div>
         </ProConfigProvider>
     )

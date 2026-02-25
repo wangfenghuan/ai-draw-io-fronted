@@ -51,25 +51,32 @@ export function LoginGateDialog({
 
             {/* Dialog */}
             <div
-                className="relative w-full max-w-md mx-4 rounded-2xl overflow-hidden shadow-2xl"
+                className="relative w-full max-w-md mx-4 rounded-2xl overflow-hidden shadow-2xl bg-white"
                 style={{
-                    background: "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)",
-                    border: "1px solid rgba(255,255,255,0.1)",
+                    border: "1px solid rgba(0,0,0,0.05)",
                     animation: "loginGateIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
                 }}
             >
+                {/* Decorative background geometry */}
+                <svg style={{ position: "absolute", top: "-5%", right: "-10%", zIndex: 0, opacity: 0.1 }} width="120" height="120" viewBox="0 0 120 120" fill="none">
+                    <circle cx="60" cy="60" r="58" stroke="#1677ff" strokeWidth="2" strokeDasharray="10 10" />
+                </svg>
+                <div style={{ position: "absolute", bottom: "-20%", left: "-20%", width: 200, height: 200, background: "rgba(22, 119, 255, 0.08)", filter: "blur(40px)", borderRadius: "50%", zIndex: 0 }} />
+                
+                {/* Content Container (z-index above backgrounds) */}
+                <div className="relative z-10 flex flex-col h-full">
                 {/* Top accent bar */}
                 <div
                     style={{
-                        height: 3,
-                        background: "linear-gradient(90deg, #475569, #94a3b8, #475569)",
+                        height: 4,
+                        background: "linear-gradient(90deg, #1677ff, #69b1ff, #1677ff)",
                     }}
                 />
 
                 {/* Close button */}
                 <button
                     onClick={() => onOpenChange(false)}
-                    className="absolute top-4 right-4 p-1.5 rounded-lg text-white/40 hover:text-white/80 hover:bg-white/10 transition-all"
+                    className="absolute top-4 right-4 p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-all"
                 >
                     <X className="w-4 h-4" />
                 </button>
@@ -80,17 +87,18 @@ export function LoginGateDialog({
                         <div
                             className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
                             style={{
-                                background: "rgba(255,255,255,0.06)",
-                                border: "1px solid rgba(255,255,255,0.12)",
+                                background: "rgba(22, 119, 255, 0.08)",
+                                border: "1px solid rgba(22, 119, 255, 0.15)",
+                                boxShadow: "0 4px 12px rgba(22, 119, 255, 0.1)",
                             }}
                         >
-                            <Lock className="w-7 h-7 text-white/70" />
+                            <Lock className="w-7 h-7 text-blue-500" style={{ color: "#1677ff" }} />
                         </div>
-                        <h2 className="text-xl font-bold text-white mb-1">
+                        <h2 className="text-xl font-bold text-slate-800 mb-1">
                             一步解锁完整功能
                         </h2>
-                        <p className="text-sm text-white/50">
-                            <span className="text-white/80 font-medium">{featureName}</span>
+                        <p className="text-sm text-slate-500">
+                            <span className="text-slate-700 font-medium">{featureName}</span>
                             {" "}需要登录，完全免费
                         </p>
                     </div>
@@ -102,12 +110,12 @@ export function LoginGateDialog({
                                 key={i}
                                 className="flex items-center gap-3 px-4 py-2.5 rounded-xl"
                                 style={{
-                                    background: "rgba(255,255,255,0.04)",
-                                    border: "1px solid rgba(255,255,255,0.06)",
+                                    background: "#f8fafc",
+                                    border: "1px solid #f1f5f9",
                                 }}
                             >
-                                <span className="text-white/50">{f.icon}</span>
-                                <span className="text-sm text-white/75">{f.label}</span>
+                                <span style={{ color: "#1677ff" }}>{f.icon}</span>
+                                <span className="text-sm text-slate-600">{f.label}</span>
                             </div>
                         ))}
                     </div>
@@ -118,9 +126,9 @@ export function LoginGateDialog({
                             onClick={handleLogin}
                             className="w-full py-3 rounded-xl font-semibold text-white text-sm transition-all duration-200 hover:opacity-90 hover:scale-[1.02] flex items-center justify-center gap-2"
                             style={{
-                                background: "linear-gradient(135deg, #334155, #475569)",
-                                border: "1px solid rgba(255,255,255,0.15)",
-                                boxShadow: "0 4px 20px rgba(0,0,0,0.3)",
+                                background: "linear-gradient(135deg, #1677ff, #4096ff)",
+                                boxShadow: "0 4px 14px rgba(22, 119, 255, 0.3)",
+                                border: "none",
                             }}
                         >
                             立即登录
@@ -128,20 +136,23 @@ export function LoginGateDialog({
                         </button>
                         <button
                             onClick={handleRegister}
-                            className="w-full py-3 rounded-xl font-medium text-white/70 text-sm transition-all duration-200 hover:text-white hover:bg-white/10"
+                            className="w-full py-3 rounded-xl font-medium text-sm transition-all duration-200 hover:bg-gray-50"
                             style={{
-                                border: "1px solid rgba(255,255,255,0.1)",
+                                color: "#1677ff",
+                                border: "1px solid #91caff",
+                                background: "white",
                             }}
                         >
                             没有账号？免费注册
                         </button>
                         <button
                             onClick={() => onOpenChange(false)}
-                            className="w-full py-2 text-xs text-white/30 hover:text-white/50 transition-colors"
+                            className="w-full py-2 text-xs text-slate-400 hover:text-slate-600 transition-colors"
                         >
                             稍后再说，继续试用
                         </button>
                     </div>
+                </div>
                 </div>
             </div>
 
