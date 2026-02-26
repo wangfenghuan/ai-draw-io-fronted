@@ -93,17 +93,8 @@ export default function DemoPage() {
     }
 
     return (
-        <div className="flex-1 w-full h-screen relative overflow-hidden">
-            <div className="w-full h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden shadow-2xl transition-all duration-300 flex flex-col">
-                {/* 顶部信息栏结构（仅占位，保持原Demo设计或简化为一个Logo栏） */}
-                <div className="w-full h-11 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm border-b border-gray-200 dark:border-gray-800 flex items-center justify-between px-4 shrink-0 transition-colors duration-300">
-                    <div className="flex items-center gap-4">
-                        <div className="text-base font-semibold text-gray-800 dark:text-gray-100">
-                            IntelliDraw Demo 环境
-                        </div>
-                    </div>
-                </div>
-
+        <div className="flex-1 w-full h-full relative overflow-hidden bg-slate-50 p-3 flex flex-col">
+            <div className="w-full h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 overflow-hidden shadow-2xl rounded-2xl border border-white/10 transition-all duration-300 flex flex-col">
                 <ResizablePanelGroup
                     id="main-panel-group"
                     direction={isMobile ? "vertical" : "horizontal"}

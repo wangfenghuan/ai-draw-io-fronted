@@ -33,7 +33,8 @@ export default function BasicLayout({ children }: Props) {
 
     // 判断是否是管理员页面（管理员页面全屏显示，图表编辑页面显示导航栏）
     const isAdminPage = pathName.startsWith("/admin")
-    const isFullPage = isAdminPage
+    const isFixedContentPage = pathName.startsWith("/user/login") || pathName.startsWith("/user/register") || pathName.startsWith("/demo")
+    const isFullPage = isAdminPage // Fixed 内容页保留Header/Footer，所以不是 FullPage
 
     const logout = useCallback(async () => {
         try {
@@ -142,10 +143,10 @@ export default function BasicLayout({ children }: Props) {
                     display: "flex",
                     flexDirection: "column",
                     width: "100%",
-                    // 编辑页/管理员页：0 padding，隐藏溢出
+                    // 编辑页/管理员页/FixedContent页：0 padding，隐藏溢出
                     // 普通页：保留 padding，允许 Y 轴滚动 (overflowY: "auto")
-                    padding: isFullPage ? 0 : 24,
-                    overflowY: isFullPage ? "hidden" : "auto",
+                    padding: (isFullPage || isFixedContentPage) ? 0 : 24,
+                    overflowY: (isFullPage || isFixedContentPage) ? "hidden" : "auto",
                     overflowX: "hidden",
                     height: "100%", // 让内容区撑满剩余高度，从而让滚动条出现在内容区内部
                 }}
@@ -215,11 +216,12 @@ export default function BasicLayout({ children }: Props) {
                 <div
                     style={{
                         width: "100%",
-                        // 编辑页/管理员页：强制占满高度，隐藏溢出
+                        // 编辑页/管理员页/FixedContent页：强制占满高度，隐藏溢出
                         // 普通页：不需要 height: 100%，让内容自然撑开；也不要 overflow: hidden
-                        ...(isFullPage
+                        ...((isFullPage || isFixedContentPage)
                             ? {
                                   height: "100%",
+                                  flex: 1,
                                   overflow: "hidden",
                                   display: "flex",
                                   flexDirection: "column",

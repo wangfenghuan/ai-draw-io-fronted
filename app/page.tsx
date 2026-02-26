@@ -13,6 +13,7 @@ import React, { useState } from "react"
 import { CreateDiagramDialog } from "@/components/create-diagram-dialog"
 import { CreateSpaceDialog } from "@/components/create-space-dialog"
 import { DemoVideoDialog } from "@/components/demo-video-dialog"
+import { InteractiveShowcase } from "@/components/interactive-showcase"
 
 const { Title, Paragraph, Text } = Typography
 
@@ -249,48 +250,8 @@ const Home: React.FC = () => {
                     </Space>
                 </div>
 
-                {/* Hero Showcase Image */}
-                <div
-                    style={{
-                        position: "relative",
-                        width: "100%",
-                        maxWidth: 900,
-                        margin: "0 auto 80px",
-                        animation: "fadeInUp 1s ease-out 0.2s both",
-                    }}
-                >
-                    <div
-                        style={{
-                            position: "relative",
-                            borderRadius: "16px",
-                            padding: "8px",
-                            background: "rgba(255, 255, 255, 0.4)",
-                            border: "1px solid rgba(255, 255, 255, 0.6)",
-                            boxShadow: "0 20px 40px rgba(0,0,0,0.08)",
-                            backdropFilter: "blur(20px)",
-                        }}
-                    >
-                        {/* Mock window header */}
-                        <div style={{ display: "flex", gap: "6px", padding: "8px", marginBottom: "4px" }}>
-                            <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f56" }} />
-                            <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ffbd2e" }} />
-                            <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#27c93f" }} />
-                        </div>
-                        <img 
-                            src="/architecture.png" 
-                            alt="IntelliDraw Hero Showcase" 
-                            style={{
-                                width: "100%",
-                                borderRadius: "8px",
-                                display: "block",
-                                border: "1px solid #f0f0f0"
-                            }}
-                        />
-                    </div>
-                    {/* Decorative blurred shapes behind image */}
-                    <div style={{ position: "absolute", top: -30, right: -30, width: 150, height: 150, background: "rgba(22, 119, 255, 0.2)", filter: "blur(40px)", borderRadius: "50%", zIndex: -1 }} />
-                    <div style={{ position: "absolute", bottom: -30, left: -30, width: 150, height: 150, background: "rgba(114, 46, 209, 0.2)", filter: "blur(40px)", borderRadius: "50%", zIndex: -1 }} />
-                </div>
+                {/* Hero Interactive Showcase */}
+                <InteractiveShowcase />
 
                 {/* Quick Action Cards */}
                 <Row gutter={[24, 24]} justify="center">
