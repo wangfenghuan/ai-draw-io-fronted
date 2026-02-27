@@ -70,7 +70,7 @@ export function CreateSpaceDialog({
                 onOpenChange(false)
                 onSuccess?.()
             } else {
-                message.error("创建失败：" + (response?.message || "未知错误"))
+                message.error(response?.message || "创建失败")
             }
         } catch (error: any) {
             if (error.errorFields) {

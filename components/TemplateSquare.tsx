@@ -12,7 +12,7 @@ import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { listMaterialVoByPage } from "@/api/materialController"
 import { CreateDiagramDialog } from "@/components/create-diagram-dialog"
-import MaterialViewer from "@/components/MaterialViewer"
+import LazyMaterialViewer from "@/components/lazy-material-viewer"
 
 const { Search } = Input
 
@@ -343,23 +343,16 @@ export default function TemplateSquare({ initialMaterials = [], initialPaginatio
                                                 className="group-hover:scale-105"
                                             />
                                         ) : material.diagramCode ? (
-                                            <div
+                                            <LazyMaterialViewer
+                                                xml={material.diagramCode}
+                                                pictureUrl={material.pictureUrl}
+                                                svgUrl={material.svgUrl}
                                                 style={{
                                                     width: "100%",
                                                     height: "100%",
-                                                    overflow: "hidden",
-                                                    pointerEvents: "none",
                                                 }}
-                                            >
-                                                <MaterialViewer
-                                                    xml={material.diagramCode}
-                                                    style={{
-                                                        width: "100%",
-                                                        height: "100%",
-                                                    }}
-                                                    className="scale-50 origin-top-left"
-                                                />
-                                            </div>
+                                                rootMargin="200px"
+                                            />
                                         ) : (
                                             <Empty description={false} />
                                         )}
@@ -537,8 +530,10 @@ export default function TemplateSquare({ initialMaterials = [], initialPaginatio
                     }}
                 >
                     {previewMaterial?.diagramCode ? (
-                        <MaterialViewer
+                        <LazyMaterialViewer
                             xml={previewMaterial.diagramCode}
+                            pictureUrl={previewMaterial.pictureUrl}
+                            svgUrl={previewMaterial.svgUrl}
                             style={{ width: "100%", height: "100%" }}
                         />
                     ) : previewMaterial?.pictureUrl ||

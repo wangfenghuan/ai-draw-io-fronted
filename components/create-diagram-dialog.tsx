@@ -113,7 +113,7 @@ export function CreateDiagramDialog({
                 onOpenChange(false)
                 onSuccess?.(response.data)
             } else {
-                message.error("创建失败：" + (response?.message || "未知错误"))
+                message.error(response?.message || "创建失败")
             }
         } catch (error: any) {
             if (error.errorFields) {
@@ -182,10 +182,10 @@ export function CreateDiagramDialog({
                             )
 
                             const countPercent =
-                                space.maxCount && space.maxCount > 0
+                                space.maxCount && Number(space.maxCount) > 0
                                     ? Math.round(
-                                          ((space.totalCount || 0) /
-                                              space.maxCount) *
+                                          (Number(space.totalCount || 0) /
+                                              Number(space.maxCount)) *
                                               100,
                                       )
                                     : 0

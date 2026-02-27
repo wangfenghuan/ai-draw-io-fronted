@@ -13,6 +13,7 @@ import React, { useState } from "react"
 import { CreateDiagramDialog } from "@/components/create-diagram-dialog"
 import { CreateSpaceDialog } from "@/components/create-space-dialog"
 import { DemoVideoDialog } from "@/components/demo-video-dialog"
+import { HomeAnnouncementDialog } from "@/components/home-announcement-dialog"
 import { InteractiveShowcase } from "@/components/interactive-showcase"
 
 const { Title, Paragraph, Text } = Typography
@@ -345,6 +346,8 @@ const Home: React.FC = () => {
                 open={demoVideoOpen}
                 onOpenChange={setDemoVideoOpen}
             />
+
+            <HomeAnnouncementDialog />
         </div>
     )
 }

@@ -44,11 +44,25 @@ async function getMaterials(page = 1, pageSize = 12) {
 
         const json: BaseResponsePageMaterialVO = await res.json()
         if (json.code === 0 && json.data) {
+            const records = json.data.records || []
+            const serverCurrent = Number(json.data.current) || 1
+            const serverSize = Number(json.data.size) || 12
+            let serverTotal = Number(json.data.total) || 0
+
+            // If total is 0 but we have records, calculate it ourselves
+            if (serverTotal === 0 && records.length > 0) {
+                if (records.length > serverSize) {
+                    serverTotal = records.length
+                } else {
+                    serverTotal = (serverCurrent - 1) * serverSize + records.length
+                }
+            }
+
             return {
-                records: json.data.records || [],
-                total: Number(json.data.total) || 0,
-                current: Number(json.data.current) || 1,
-                size: Number(json.data.size) || 12,
+                records,
+                total: serverTotal,
+                current: serverCurrent,
+                size: serverSize,
             }
         }
         return { records: [], total: 0, current: 1, size: 12 }

@@ -19,7 +19,7 @@ import {
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { getByPage } from "@/api/diagramController"
-import MaterialViewer from "@/components/MaterialViewer"
+import LazyMaterialViewer from "@/components/lazy-material-viewer"
 
 const { Search } = Input
 
@@ -310,22 +310,16 @@ export default function DiagramMarketplacePage() {
                                         }}
                                     >
                                         {diagram.diagramCode ? (
-                                            <div
+                                            <LazyMaterialViewer
+                                                xml={diagram.diagramCode}
+                                                pictureUrl={diagram.pictureUrl}
+                                                svgUrl={diagram.svgUrl}
                                                 style={{
                                                     width: "100%",
                                                     height: "100%",
-                                                    overflow: "hidden",
-                                                    pointerEvents: "none",
                                                 }}
-                                            >
-                                                <MaterialViewer
-                                                    xml={diagram.diagramCode}
-                                                    style={{
-                                                        width: "100%",
-                                                        height: "100%",
-                                                    }}
-                                                />
-                                            </div>
+                                                rootMargin="200px"
+                                            />
                                         ) : (
                                             <Empty description={false} />
                                         )}
@@ -479,8 +473,10 @@ export default function DiagramMarketplacePage() {
                     }}
                 >
                     {previewDiagram?.diagramCode ? (
-                        <MaterialViewer
+                        <LazyMaterialViewer
                             xml={previewDiagram.diagramCode}
+                            pictureUrl={previewDiagram.pictureUrl}
+                            svgUrl={previewDiagram.svgUrl}
                             style={{ width: "100%", height: "100%" }}
                         />
                     ) : (
