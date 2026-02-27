@@ -10,63 +10,86 @@ import {
 } from "@ant-design/icons"
 import type { MenuDataItem } from "@ant-design/pro-layout"
 
+// 菜单键名映射
+export const menuKeys = {
+    home: "nav.home",
+    freeTrial: "nav.freeTrial",
+    templates: "nav.templates",
+    diagramMarketplace: "nav.diagramMarketplace",
+    myDiagrams: "nav.myDiagrams",
+    myRooms: "nav.myRooms",
+    mySpaces: "nav.mySpaces",
+    announcement: "nav.announcement",
+    feedback: "nav.feedback",
+    adminConsole: "nav.adminConsole",
+} as const
+
+// 原始菜单配置（使用 key 而非直接文本）
 export const menus: MenuDataItem[] = [
     {
-        name: "首页",
+        name: "home",
         path: "/",
         icon: <HomeOutlined />,
         access: "notLogin",
     },
      {
-        name: "免费试用",
+        name: "freeTrial",
         path: "/demo",
         icon: <RocketOutlined />,
         access: "onlyNotLogin",
     },
     {
-        name: "模板广场",
+        name: "templates",
         path: "/templates",
         icon: <ShopOutlined />,
         access: "notLogin",
     },
    
     {
-        name: "图表广场",
+        name: "diagramMarketplace",
         path: "/diagram-marketplace",
         icon: <CrownOutlined />,
         access: "notLogin",
     },
     {
-        name: "我的图表",
+        name: "myDiagrams",
         path: "/my-diagrams",
         icon: <TableOutlined />,
     },
     {
-        name: "协作房间",
+        name: "myRooms",
         path: "/my-rooms",
         icon: <UserOutlined />,
     },
     {
-        name: "我的空间",
+        name: "mySpaces",
         path: "/my-spaces",
         icon: <UserOutlined />,
     },
     {
-        name: "公告",
+        name: "announcement",
         path: "/announcement",
         icon: <NotificationOutlined />,
     },
     {
-        name: "意见反馈",
+        name: "feedback",
         path: "/user/feedback",
         icon: <MessageOutlined />,
     },
     {
         path: "/admin",
-        name: "管理员控制台",
+        name: "adminConsole",
         access: "admin",
     },
 ]
+
+// 获取带翻译的菜单
+export const getTranslatedMenus = (t: (key: string) => string): MenuDataItem[] => {
+    return menus.map(item => ({
+        ...item,
+        name: t(`nav.${item.name}`),
+    }))
+}
 
 export default menus
 

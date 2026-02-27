@@ -3,6 +3,8 @@
 import { AntdRegistry } from "@ant-design/nextjs-registry"
 import { App as AntdApp, ConfigProvider } from "antd"
 import zhCN from "antd/locale/zh_CN"
+import enUS from "antd/locale/en_US"
+import { NextIntlClientProvider } from "next-intl"
 import React, { useCallback, useEffect } from "react"
 import { Provider, useDispatch } from "react-redux"
 import AccessLayout from "@/access/AccessLayout"
@@ -135,5 +137,51 @@ export function Providers({ children }: { children: React.ReactNode }) {
                 </AntdApp>
             </ConfigProvider>
         </AntdRegistry>
+    )
+}
+
+// 服务端组件包装器
+export function IntlProvider({ 
+    children, 
+    locale, 
+    messages 
+}: { 
+    children: React.ReactNode
+    locale: string
+    messages: Record<string, unknown>
+}) {
+    // 动态选择 antd locale
+    const antdLocale = locale === "en" ? enUS : zhCN
+    
+    return (
+        <NextIntlClientProvider locale={locale} messages={messages}>
+            <AntdRegistry>
+                <ConfigProvider
+                    locale={antdLocale}
+                    theme={{
+                        token: {
+                            colorPrimary: "#1677ff",
+                            colorInfo: "#1677ff",
+                            fontFamily: "var(--font-plus-jakarta-sans), sans-serif",
+                        },
+                    }}
+                >
+                    <AntdApp>
+                        <Provider store={store}>
+                            <InitLayout>
+                                <BasicLayout>
+                                    <AccessLayout>
+                                        <DiagramProvider>
+                                            {children}
+                                        </DiagramProvider>
+                                    </AccessLayout>
+                                    <GlobalAnnouncementPopup />
+                                </BasicLayout>
+                            </InitLayout>
+                        </Provider>
+                    </AntdApp>
+                </ConfigProvider>
+            </AntdRegistry>
+        </NextIntlClientProvider>
     )
 }

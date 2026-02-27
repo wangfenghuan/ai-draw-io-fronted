@@ -1,0 +1,123 @@
+{
+  "common": {
+    "loading": "加载中...",
+    "save": "保存",
+    "cancel": "取消",
+    "confirm": "确认",
+    "delete": "删除",
+    "edit": "编辑",
+    "create": "创建",
+    "search": "搜索",
+    "submit": "提交",
+    "back": "返回",
+    "next": "下一步",
+    "previous": "上一步",
+    "close": "关闭",
+    "success": "操作成功",
+    "error": "操作失败",
+    "warning": "警告",
+    "info": "提示"
+  },
+  "nav": {
+    "home": "首页",
+    "freeTrial": "免费试用",
+    "templates": "模板广场",
+    "diagramMarketplace": "图表广场",
+    "myDiagrams": "我的图表",
+    "myRooms": "协作房间",
+    "mySpaces": "我的空间",
+    "announcement": "公告",
+    "feedback": "意见反馈",
+    "adminConsole": "管理员控制台"
+  },
+  "user": {
+    "login": "登录",
+    "logout": "退出登录",
+    "register": "注册",
+    "profile": "个人信息",
+    "settings": "设置",
+    "notLoggedIn": "未登录",
+    "goToLogin": "去登录",
+    "logoutSuccess": "账号已经退出",
+    "logoutFailed": "退出失败",
+    "pleaseLogin": "请先登录",
+    "username": "用户名",
+    "password": "密码",
+    "email": "邮箱"
+  },
+  "app": {
+    "title": "IntelliDraw 智能绘图",
+    "description": "新一代在线绘图工具，支持流程图、思维导图、UML 等多种图形。AI 辅助生成，实时团队协作。",
+    "createDiagram": "新建图表",
+    "editDiagram": "编辑图表",
+    "viewDiagram": "查看图表",
+    "deleteDiagram": "删除图表",
+    "diagramName": "图表名称",
+    "diagramType": "图表类型",
+    "lastModified": "最后修改",
+    "createdAt": "创建时间"
+  },
+  "diagram": {
+    "flowchart": "流程图",
+    "mindMap": "思维导图",
+    "uml": "UML图",
+    "erDiagram": "ER图",
+    "networkTopology": "网络拓扑图",
+    "architecture": "架构图",
+    "prototype": "原型设计",
+    "save": "保存图表",
+    "saveAs": "另存为",
+    "export": "导出",
+    "import": "导入",
+    "share": "分享",
+    "collaborate": "协作"
+  },
+  "chat": {
+    "placeholder": "输入您想要生成的图表描述...",
+    "send": "发送",
+    "regenerate": "重新生成",
+    "copy": "复制",
+    "copySuccess": "复制成功",
+    "thinking": "思考中...",
+    "generating": "生成中..."
+  },
+  "space": {
+    "createSpace": "创建空间",
+    "spaceName": "空间名称",
+    "spaceDescription": "空间描述",
+    "memberManagement": "成员管理",
+    "addMember": "添加成员",
+    "removeMember": "移除成员"
+  },
+  "room": {
+    "createRoom": "创建房间",
+    "joinRoom": "加入房间",
+    "roomName": "房间名称",
+    "participants": "参与者",
+    "online": "在线",
+    "offline": "离线"
+  },
+  "admin": {
+    "userManagement": "用户管理",
+    "diagramManagement": "图表管理",
+    "spaceManagement": "空间管理",
+    "roomManagement": "房间管理",
+    "announcementManagement": "公告管理",
+    "feedbackManagement": "反馈管理",
+    "materialManagement": "素材管理",
+    "aiManagement": "AI配置管理",
+    "roleManagement": "角色管理"
+  },
+  "footer": {
+    "copyright": "© {year} IntelliDraw. 保留所有权利。",
+    "about": "关于我们",
+    "contact": "联系我们",
+    "privacy": "隐私政策",
+    "terms": "服务条款"
+  },
+  "language": {
+    "switch": "切换语言",
+    "zh": "中文",
+    "en": "English"
+  }
+}

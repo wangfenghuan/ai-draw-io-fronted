@@ -30,7 +30,7 @@ import {
     listMaterialVoByPage,
     updateMaterial,
 } from "@/api/materialController"
-import MaterialViewer from "@/components/MaterialViewer"
+import LazyMaterialViewer from "@/components/lazy-material-viewer"
 
 const { Search } = Input
 
@@ -316,45 +316,16 @@ export function AdminMaterialManagement() {
                                             overflow: "hidden",
                                         }}
                                     >
-                                        {item.pictureUrl || item.svgUrl ? (
-                                            <img
-                                                src={
-                                                    item.pictureUrl ||
-                                                    item.svgUrl
-                                                }
-                                                alt={item.name}
-                                                style={{
-                                                    maxWidth: "100%",
-                                                    maxHeight: "100%",
-                                                    objectFit: "contain",
-                                                }}
-                                            />
-                                        ) : item.diagramCode ? (
-                                            <div
-                                                style={{
-                                                    width: "100%",
-                                                    height: "100%",
-                                                    overflow: "hidden",
-                                                    pointerEvents: "none",
-                                                }}
-                                            >
-                                                <MaterialViewer
-                                                    xml={item.diagramCode}
-                                                    style={{
-                                                        width: "100%",
-                                                        height: "100%",
-                                                    }}
-                                                    className="scale-50 origin-top-left"
-                                                />
-                                            </div>
-                                        ) : (
-                                            <FileImageOutlined
-                                                style={{
-                                                    fontSize: 48,
-                                                    color: "#ccc",
-                                                }}
-                                            />
-                                        )}
+                                        <LazyMaterialViewer
+                                            xml={item.diagramCode}
+                                            pictureUrl={item.pictureUrl}
+                                            svgUrl={item.svgUrl}
+                                            style={{
+                                                width: "100%",
+                                                height: "100%",
+                                            }}
+                                            rootMargin="100px"
+                                        />
                                     </div>
                                 }
                                 actions={[

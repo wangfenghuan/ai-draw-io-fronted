@@ -1,0 +1,123 @@
+{
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "delete": "Delete",
+    "edit": "Edit",
+    "create": "Create",
+    "search": "Search",
+    "submit": "Submit",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "close": "Close",
+    "success": "Success",
+    "error": "Error",
+    "warning": "Warning",
+    "info": "Info"
+  },
+  "nav": {
+    "home": "Home",
+    "freeTrial": "Free Trial",
+    "templates": "Templates",
+    "diagramMarketplace": "Diagrams",
+    "myDiagrams": "My Diagrams",
+    "myRooms": "Collaboration Rooms",
+    "mySpaces": "My Spaces",
+    "announcement": "Announcements",
+    "feedback": "Feedback",
+    "adminConsole": "Admin Console"
+  },
+  "user": {
+    "login": "Login",
+    "logout": "Logout",
+    "register": "Register",
+    "profile": "Profile",
+    "settings": "Settings",
+    "notLoggedIn": "Not logged in",
+    "goToLogin": "Go to Login",
+    "logoutSuccess": "Successfully logged out",
+    "logoutFailed": "Logout failed",
+    "pleaseLogin": "Please login first",
+    "username": "Username",
+    "password": "Password",
+    "email": "Email"
+  },
+  "app": {
+    "title": "IntelliDraw Smart Drawing",
+    "description": "Next-generation online drawing tool supporting flowcharts, mind maps, UML and more. AI-powered generation with real-time collaboration.",
+    "createDiagram": "New Diagram",
+    "editDiagram": "Edit Diagram",
+    "viewDiagram": "View Diagram",
+    "deleteDiagram": "Delete Diagram",
+    "diagramName": "Diagram Name",
+    "diagramType": "Diagram Type",
+    "lastModified": "Last Modified",
+    "createdAt": "Created At"
+  },
+  "diagram": {
+    "flowchart": "Flowchart",
+    "mindMap": "Mind Map",
+    "uml": "UML Diagram",
+    "erDiagram": "ER Diagram",
+    "networkTopology": "Network Topology",
+    "architecture": "Architecture Diagram",
+    "prototype": "Prototype Design",
+    "save": "Save Diagram",
+    "saveAs": "Save As",
+    "export": "Export",
+    "import": "Import",
+    "share": "Share",
+    "collaborate": "Collaborate"
+  },
+  "chat": {
+    "placeholder": "Enter your diagram description...",
+    "send": "Send",
+    "regenerate": "Regenerate",
+    "copy": "Copy",
+    "copySuccess": "Copied successfully",
+    "thinking": "Thinking...",
+    "generating": "Generating..."
+  },
+  "space": {
+    "createSpace": "Create Space",
+    "spaceName": "Space Name",
+    "spaceDescription": "Space Description",
+    "memberManagement": "Member Management",
+    "addMember": "Add Member",
+    "removeMember": "Remove Member"
+  },
+  "room": {
+    "createRoom": "Create Room",
+    "joinRoom": "Join Room",
+    "roomName": "Room Name",
+    "participants": "Participants",
+    "online": "Online",
+    "offline": "Offline"
+  },
+  "admin": {
+    "userManagement": "User Management",
+    "diagramManagement": "Diagram Management",
+    "spaceManagement": "Space Management",
+    "roomManagement": "Room Management",
+    "announcementManagement": "Announcement Management",
+    "feedbackManagement": "Feedback Management",
+    "materialManagement": "Material Management",
+    "aiManagement": "AI Configuration",
+    "roleManagement": "Role Management"
+  },
+  "footer": {
+    "copyright": "© {year} IntelliDraw. All rights reserved.",
+    "about": "About Us",
+    "contact": "Contact Us",
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service"
+  },
+  "language": {
+    "switch": "Switch Language",
+    "zh": "中文",
+    "en": "English"
+  }
+}

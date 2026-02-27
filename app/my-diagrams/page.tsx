@@ -30,7 +30,7 @@ import {
     editDiagram,
     listMyDiagramVoByPage,
 } from "@/api/diagramController"
-import MaterialViewer from "@/components/MaterialViewer"
+import LazyMaterialViewer from "@/components/lazy-material-viewer"
 
 const { Search } = Input
 const { TextArea } = Input
@@ -465,26 +465,16 @@ export default function MyDiagramsPage() {
                                         overflow: "hidden",
                                     }}
                                 >
-                                    {diagram.diagramCode ? (
-                                        <div
-                                            style={{
-                                                width: "100%",
-                                                height: "100%",
-                                                overflow: "hidden",
-                                                pointerEvents: "none",
-                                            }}
-                                        >
-                                            <MaterialViewer
-                                                xml={diagram.diagramCode}
-                                                style={{
-                                                    width: "100%",
-                                                    height: "100%",
-                                                }}
-                                            />
-                                        </div>
-                                    ) : (
-                                        <Empty description={false} />
-                                    )}
+                                    <LazyMaterialViewer
+                                        xml={diagram.diagramCode}
+                                        pictureUrl={diagram.pictureUrl}
+                                        svgUrl={diagram.svgUrl}
+                                        style={{
+                                            width: "100%",
+                                            height: "100%",
+                                        }}
+                                        rootMargin="100px"
+                                    />
                                 </div>
 
                                 {/* 操作按钮区 */}

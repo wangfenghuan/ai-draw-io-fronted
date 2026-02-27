@@ -1,6 +1,7 @@
 import { Plus_Jakarta_Sans } from "next/font/google"
 import type { Metadata, Viewport } from "next"
-import { Providers } from "./providers"
+import { cookies } from "next/headers"
+import { IntlProvider } from "./providers"
 import "./globals.css"
 import "../styles/markdown.css"
 
@@ -92,11 +93,18 @@ export const metadata: Metadata = {
     manifest: "/site.webmanifest",
 }
 
-export default function RootLayout({
+export default async function RootLayout({
     children,
 }: Readonly<{
     children: React.ReactNode
 }>) {
+    // 从 cookie 获取语言设置
+    const cookieStore = await cookies()
+    const locale = cookieStore.get("locale")?.value || "zh"
+    
+    // 加载对应语言的翻译文件
+    const messages = (await import(`../messages/${locale}.json`)).default
+
     const jsonLd = {
         "@context": "https://schema.org",
         "@type": "SoftwareApplication",
@@ -116,9 +124,11 @@ export default function RootLayout({
     }
 
     return (
-        <html lang="zh">
+        <html lang={locale}>
             <body className={plusJakartaSans.className}>
-                <Providers>{children}</Providers>
+                <IntlProvider locale={locale} messages={messages}>
+                    {children}
+                </IntlProvider>
                 <script
                     type="application/ld+json"
                     dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

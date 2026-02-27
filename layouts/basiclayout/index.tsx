@@ -7,6 +7,7 @@ import {
 } from "@ant-design/icons"
 import { ProLayout } from "@ant-design/pro-components"
 import { App, Dropdown } from "antd"
+import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import type React from "react"
@@ -15,7 +16,8 @@ import { useDispatch, useSelector } from "react-redux"
 import { getAccessibleMenus } from "@/access/menuAccess"
 import { userLogout } from "@/api/userController"
 import GlobalFooter from "@/components/GlobalFooter"
-import menus from "@/config/menu"
+import { LanguageSwitcher } from "@/components/language-switcher"
+import menus, { getTranslatedMenus } from "@/config/menu"
 import { DefauleUser } from "@/constants/UserState"
 import type { AppDispatch, RootState } from "@/stores"
 import { setLoginUser } from "@/stores/loginUser"
@@ -30,6 +32,11 @@ export default function BasicLayout({ children }: Props) {
     const loginUser = useSelector((state: RootState) => state.loginUser)
     const router = useRouter()
     const dispatch = useDispatch<AppDispatch>()
+    
+    // 国际化 hooks
+    const tNav = useTranslations("nav")
+    const tUser = useTranslations("user")
+    const tApp = useTranslations("app")
 
     // 判断是否是管理员页面（管理员页面全屏显示，图表编辑页面显示导航栏）
     const isAdminPage = pathName.startsWith("/admin")
@@ -41,16 +48,16 @@ export default function BasicLayout({ children }: Props) {
             const res = await userLogout()
             // 后端返回结构: { code: 0, data: true, message: "ok" }
             if (res?.code === 0) {
-                message.success("账号已经退出")
+                message.success(tUser("logoutSuccess"))
                 dispatch(setLoginUser(DefauleUser))
                 router.push("/user/login")
             } else {
-                message.error(res?.message || "退出失败")
+                message.error(res?.message || tUser("logoutFailed"))
             }
         } catch (_e) {
-            message.error("退出失败，请稍后重试")
+            message.error(tUser("logoutFailed"))
         }
-    }, [dispatch, router, message])
+    }, [dispatch, router, message, tUser])
 
     // 判断用户是否登录
     const isLoggedIn = loginUser?.userRole !== "notLogin" && loginUser?.id
@@ -65,9 +72,9 @@ export default function BasicLayout({ children }: Props) {
         if (loginUser?.id) {
             router.push(`/user/profile/${loginUser.id}`)
         } else {
-            message.warning("请先登录")
+            message.warning(tUser("pleaseLogin"))
         }
-    }, [router, loginUser, message])
+    }, [router, loginUser, message, tUser])
 
     // 构建下拉菜单项
     const getMenuItems = useCallback(() => {
@@ -77,7 +84,7 @@ export default function BasicLayout({ children }: Props) {
                 {
                     key: "profile",
                     icon: <UserOutlined />,
-                    label: "个人信息",
+                    label: tUser("profile"),
                 },
                 {
                     type: "divider" as const,
@@ -85,7 +92,7 @@ export default function BasicLayout({ children }: Props) {
                 {
                     key: "logout",
                     icon: <LogoutOutlined />,
-                    label: "退出登录",
+                    label: tUser("logout"),
                 },
             ]
         } else {
@@ -94,11 +101,11 @@ export default function BasicLayout({ children }: Props) {
                 {
                     key: "login",
                     icon: <LoginOutlined />,
-                    label: "去登录",
+                    label: tUser("goToLogin"),
                 },
             ]
         }
-    }, [isLoggedIn])
+    }, [isLoggedIn, tUser])
 
     // 处理菜单点击
     const handleMenuClick = useCallback(
@@ -129,7 +136,7 @@ export default function BasicLayout({ children }: Props) {
             }}
         >
             <ProLayout
-                title="IntelliDraw 智能绘图"
+                title={tApp("title")}
                 logo="/favicon.ico"
                 layout="top"
                 location={{
@@ -155,7 +162,7 @@ export default function BasicLayout({ children }: Props) {
                         loginUser.userAvatar ||
                         "https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png",
                     size: "small",
-                    title: isLoggedIn ? loginUser.userName || "用户" : "未登录",
+                    title: isLoggedIn ? loginUser.userName || tUser("profile") : tUser("notLoggedIn"),
                     render: (_props, dom) => (
                         <Dropdown
                             menu={{
@@ -168,8 +175,9 @@ export default function BasicLayout({ children }: Props) {
                     ),
                 }}
                 actionsRender={(props) => {
-                    if (props.isMobile) return []
+                    if (props.isMobile) return [<LanguageSwitcher key="language" />]
                     return [
+                        <LanguageSwitcher key="language" />,
                         <a
                             key="github"
                             href="https://github.com/wangfenghuan"
@@ -188,7 +196,7 @@ export default function BasicLayout({ children }: Props) {
                         {title}
                     </Link>
                 )}
-                menuDataRender={() => getAccessibleMenus(loginUser, menus)}
+                menuDataRender={() => getAccessibleMenus(loginUser, getTranslatedMenus(tNav))}
                 menuItemRender={(item, dom) => {
                     const isActive =
                         item.path === "/"
