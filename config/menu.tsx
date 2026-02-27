@@ -31,7 +31,7 @@ export const menus: MenuDataItem[] = [
     },
    
     {
-        name: "图表市场",
+        name: "图表广场",
         path: "/diagram-marketplace",
         icon: <CrownOutlined />,
         access: "notLogin",
