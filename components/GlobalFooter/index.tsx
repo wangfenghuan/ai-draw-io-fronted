@@ -1,17 +1,20 @@
 "use client"
 import { GithubOutlined } from "@ant-design/icons"
+import { useTranslations } from "next-intl"
 import type React from "react"
 
 const GlobalFooter: React.FC = () => {
+    const t = useTranslations("footer")
+    const year = new Date().getFullYear()
+
     return (
         <div
             style={{
                 textAlign: "center",
-                padding: "12px 0", // ⬇️ 修改点1：大幅减小上下内边距 (原为 24px)
+                padding: "12px 0",
                 color: "rgba(0, 0, 0, 0.45)",
                 background: "transparent",
-                // borderTop: "1px solid rgba(0, 0, 0, 0.06)", // 如果觉得有边框显高，可以注释掉这行
-                fontSize: "12px", // ⬇️ 修改点2：字体调小，显得更紧凑
+                fontSize: "12px",
             }}
         >
             <div
@@ -19,13 +22,12 @@ const GlobalFooter: React.FC = () => {
                     display: "flex",
                     justifyContent: "center",
                     alignItems: "center",
-                    gap: "24px", // ⬇️ 修改点3：使用 Flex 布局让内容在同一行显示，中间用 gap 隔开
-                    flexWrap: "wrap", // 移动端屏幕窄时自动换行
+                    gap: "24px",
+                    flexWrap: "wrap",
                 }}
             >
                 <div>
-                    © {new Date().getFullYear()} IntelliDraw 智能绘图 |
-                    让架构设计更简单
+                    {t("copyright", { year })}
                 </div>
                 <div>
                     <a
@@ -48,7 +50,7 @@ const GlobalFooter: React.FC = () => {
                                 "rgba(0, 0, 0, 0.45)")
                         }
                     >
-                        <GithubOutlined /> 程序员 wfh
+                        <GithubOutlined /> {t("developer")}
                     </a>
                 </div>
                 <div>

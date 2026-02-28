@@ -8,6 +8,7 @@ import {
 } from "@ant-design/pro-components"
 import { ProForm } from "@ant-design/pro-form/lib"
 import { App, Tooltip } from "antd"
+import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import type React from "react"
@@ -18,6 +19,8 @@ import { setLoginUser } from "@/stores/loginUser"
 
 const UserLogin: React.FC = () => {
     const { message } = App.useApp()
+    const t = useTranslations("user")
+    const tApp = useTranslations("app")
     const [form] = ProForm.useForm()
     const dispatch = useDispatch<AppDispatch>()
     const router = useRouter()
@@ -28,7 +31,7 @@ const UserLogin: React.FC = () => {
             if (res.code === 0) {
                 // 修复：直接使用 res?.data 而不是 res?.data?.data
                 dispatch(setLoginUser(res?.data))
-                message.success("登录成功")
+                message.success(t("loginSuccess"))
                 setTimeout(() => {
                     router.replace("/")
                 }, 100)
@@ -36,7 +39,7 @@ const UserLogin: React.FC = () => {
                 form.resetFields()
             }
         } catch (_e) {
-            message.error("登录失败")
+            message.error(t("loginFailed"))
         }
     }
 
@@ -73,7 +76,7 @@ const UserLogin: React.FC = () => {
                         form={form}
                         logo="https://github.githubassets.com/favicons/favicon.png"
                         title="IntelliDraw"
-                        subTitle={<span style={{ fontWeight: 500, color: "#1677ff" }}>AI 驱动的无限创意绘图平台</span>}
+                        subTitle={<span style={{ fontWeight: 500, color: "#1677ff" }}>{tApp("subtitle")}</span>}
                         onFinish={submit}
                         contentStyle={{ padding: "0 20px" }}
                         actions={
@@ -99,7 +102,7 @@ const UserLogin: React.FC = () => {
                                 }}
                                 onClick={handleGithubLogin}
                             >
-                                <Tooltip title="GitHub 一键登录">
+                                <Tooltip title={t("githubLogin")}>
                                     <GithubOutlined
                                         style={{
                                             fontSize: 24,
@@ -123,15 +126,15 @@ const UserLogin: React.FC = () => {
                                         />
                                     ),
                                 }}
-                                placeholder={"请输入邮箱!"}
+                                placeholder={t("enterEmail")}
                                 rules={[
                                     {
                                         required: true,
-                                        message: "请输入邮箱!",
+                                        message: t("enterEmail"),
                                     },
                                     {
                                         type: "email",
-                                        message: "请输入正确的邮箱格式!",
+                                        message: t("enterValidEmail"),
                                     },
                                 ]}
                             />
@@ -158,14 +161,14 @@ const UserLogin: React.FC = () => {
                                         }
                                         const _status = getStatus()
 
-                                        return <div>强度：弱</div>
+                                        return <div>{t("passwordStrength")}</div>
                                     },
                                 }}
-                                placeholder={"请输入密码！"}
+                                placeholder={t("enterPassword")}
                                 rules={[
                                     {
                                         required: true,
-                                        message: "请输入密码！",
+                                        message: t("enterPassword"),
                                     },
                                 ]}
                             />
@@ -177,9 +180,9 @@ const UserLogin: React.FC = () => {
                         }}
                     >
                         <ProFormCheckbox noStyle name="autoLogin">
-                            自动登录
+                            {t("autoLogin")}
                         </ProFormCheckbox>
-                        <Link href={"/user/register"}>还没有账号？去注册</Link>
+                        <Link href={"/user/register"}>{t("noAccount")}{t("goToRegister")}</Link>
                     </div>
                 </LoginForm>
                 </div>

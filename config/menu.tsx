@@ -83,11 +83,11 @@ export const menus: MenuDataItem[] = [
     },
 ]
 
-// 获取带翻译的菜单
+// 获取带翻译的菜单 (t 已经是 useTranslations("nav") 的结果，不需要再加 nav. 前缀)
 export const getTranslatedMenus = (t: (key: string) => string): MenuDataItem[] => {
     return menus.map(item => ({
         ...item,
-        name: t(`nav.${item.name}`),
+        name: t(item.name as string),
     }))
 }
 

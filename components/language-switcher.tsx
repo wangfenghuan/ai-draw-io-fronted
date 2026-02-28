@@ -3,7 +3,7 @@
 import { GlobalOutlined } from "@ant-design/icons"
 import { Button, Dropdown } from "antd"
 import type React from "react"
-import { useCallback } from "react"
+import { useCallback, useState } from "react"
 import { useLocale, useTranslations } from "next-intl"
 
 interface LanguageSwitcherProps {
@@ -13,8 +13,12 @@ interface LanguageSwitcherProps {
 export function LanguageSwitcher({ style }: LanguageSwitcherProps) {
     const t = useTranslations("language")
     const locale = useLocale()
+    const [isLoading, setIsLoading] = useState(false)
 
     const switchLanguage = useCallback(async (newLocale: string) => {
+        if (isLoading) return
+        
+        setIsLoading(true)
         try {
             const response = await fetch("/api/locale", {
                 method: "POST",
@@ -25,13 +29,15 @@ export function LanguageSwitcher({ style }: LanguageSwitcherProps) {
             })
 
             if (response.ok) {
-                // 刷新页面以应用新语言
-                window.location.reload()
+                // 使用硬刷新确保服务器重新获取 cookie
+                window.location.href = window.location.pathname + window.location.search
             }
         } catch (error) {
             console.error("Failed to switch language:", error)
+        } finally {
+            setIsLoading(false)
         }
-    }, [])
+    }, [isLoading])
 
     const menuItems = [
         {
@@ -53,6 +59,7 @@ export function LanguageSwitcher({ style }: LanguageSwitcherProps) {
                 icon={<GlobalOutlined style={{ fontSize: 18 }} />}
                 style={{ color: "#666", ...style }}
                 title={t("switch")}
+                loading={isLoading}
             />
         </Dropdown>
     )

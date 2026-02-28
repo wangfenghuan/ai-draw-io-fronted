@@ -13,6 +13,7 @@ import {
 } from "@ant-design/pro-components"
 import { ProForm } from "@ant-design/pro-form/lib"
 import { App, Button } from "antd"
+import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import React, { useState, useEffect } from "react"
@@ -20,6 +21,8 @@ import { sendRegisterCode, userRegister } from "@/api/userController"
 
 const UserRegister: React.FC = () => {
     const { message } = App.useApp()
+    const t = useTranslations("user")
+    const tApp = useTranslations("app")
     const [form] = ProForm.useForm()
     const router = useRouter()
     
@@ -42,25 +45,25 @@ const UserRegister: React.FC = () => {
         try {
             const email = form.getFieldValue("userAccount")
             if (!email) {
-                message.error("请先输入邮箱地址")
+                message.error(t("enterEmailFirst"))
                 return
             }
             // Basic email validation
             if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                message.error("请输入有效的邮箱地址")
+                message.error(t("enterValidEmail"))
                 return
             }
 
             setSending(true)
             const res = await sendRegisterCode({ userAccount: email })
             if (res.code === 0) {
-                message.success("验证码已发送，请查收")
+                message.success(t("codeSent"))
                 setCountdown(60)
             } else {
-                message.error(res.message || "发送失败，请重试")
+                message.error(res.message || t("sendFailed"))
             }
         } catch (error) {
-            message.error("发送失败，请稍后重试")
+            message.error(t("sendFailedLater"))
         } finally {
             setSending(false)
         }
@@ -70,13 +73,13 @@ const UserRegister: React.FC = () => {
         try {
             const res = await userRegister(values)
             if (res.code === 0) {
-                message.success("注册成功")
+                message.success(t("registerSuccess"))
                 router.replace("/user/login")
             } else {
-                message.error(res.message || "注册失败")
+                message.error(res.message || t("registerFailed"))
             }
         } catch (_e) {
-            message.error("注册失败，请稍后重试")
+            message.error(t("registerFailed"))
         }
     }
 
@@ -113,14 +116,14 @@ const UserRegister: React.FC = () => {
                     <LoginForm
                         submitter={{
                             searchConfig: {
-                                submitText: "注册账户",
+                                submitText: t("registerAccount"),
                             },
                         }}
                         form={form}
                         onFinish={submit}
                         logo="https://github.githubassets.com/favicons/favicon.png"
                         title="IntelliDraw"
-                        subTitle={<span style={{ fontWeight: 500, color: "#1677ff" }}>开启无限可能的智能图表绘制</span>}
+                        subTitle={<span style={{ fontWeight: 500, color: "#1677ff" }}>{t("openInfinitePossibilities")}</span>}
                         contentStyle={{ padding: "0 20px" }}
                         actions={
                         <div
@@ -161,15 +164,15 @@ const UserRegister: React.FC = () => {
                             size: "large",
                             prefix: <MailOutlined className={"prefixIcon"} />,
                         }}
-                        placeholder={"请输入邮箱!"}
+                        placeholder={t("enterEmail")}
                         rules={[
                             {
                                 required: true,
-                                message: "请输入邮箱!",
+                                message: t("enterEmail"),
                             },
                             {
                                 type: "email",
-                                message: "请输入正确的邮箱格式!",
+                                message: t("enterValidEmail"),
                             },
                         ]}
                     />
@@ -179,11 +182,11 @@ const UserRegister: React.FC = () => {
                             size: "large",
                             prefix: <UserOutlined className={"prefixIcon"} />,
                         }}
-                        placeholder={"请输入用户昵称"}
+                        placeholder={t("enterUsername")}
                         rules={[
                             {
                                 required: true,
-                                message: "请输入用户昵称!",
+                                message: t("enterUsernameRequired"),
                             },
                         ]}
                     />
@@ -195,15 +198,15 @@ const UserRegister: React.FC = () => {
                             strengthText:
                                 "Password should contain numbers, letters and special characters, at least 8 characters long.",
                         }}
-                        placeholder={"请输入密码！"}
+                        placeholder={t("enterPassword")}
                         rules={[
                             {
                                 required: true,
-                                message: "请输入密码！",
+                                message: t("enterPassword"),
                             },
                             {
                                 min: 8,
-                                message: "密码至少8位",
+                                message: t("passwordMinLength"),
                             }
                         ]}
                     />
@@ -213,18 +216,18 @@ const UserRegister: React.FC = () => {
                             size: "large",
                             prefix: <LockOutlined className={"prefixIcon"} />,
                         }}
-                        placeholder={"请确认密码！"}
+                        placeholder={t("confirmPassword")}
                         rules={[
                             {
                                 required: true,
-                                message: "请确认密码！",
+                                message: t("confirmPasswordRequired"),
                             },
                             ({ getFieldValue }) => ({
                                 validator(_, value) {
                                   if (!value || getFieldValue('userPassword') === value) {
                                     return Promise.resolve();
                                   }
-                                  return Promise.reject(new Error('两次输入的密码不一致!'));
+                                  return Promise.reject(new Error(t("passwordNotMatch")));
                                 },
                             }),
                         ]}
@@ -244,19 +247,19 @@ const UserRegister: React.FC = () => {
                                     onClick={handleSendCode}
                                     style={{ padding: '0 8px' }}
                                 >
-                                    {countdown > 0 ? `${countdown}秒后重新发送` : (sending ? "发送中..." : "发送验证码")}
+                                    {countdown > 0 ? `${countdown}${t("resendAfter")}` : (sending ? t("sending") : t("sendCode"))}
                                 </Button>
                             )
                         }}
-                        placeholder={"请输入邮箱验证码"}
+                        placeholder={t("enterEmailCode")}
                         rules={[
                             {
                                 required: true,
-                                message: "请输入验证码！",
+                                message: t("enterCodeRequired"),
                             },
                             {
                                 len: 6,
-                                message: "验证码长度为6位",
+                                message: t("codeLength"),
                             }
                         ]}
                     />
@@ -267,7 +270,7 @@ const UserRegister: React.FC = () => {
                             textAlign: "end",
                         }}
                     >
-                        <Link href={"/user/login"}>去登录</Link>
+                        <Link href={"/user/login"}>{t("goToLogin")}</Link>
                     </div>
                 </LoginForm>
                 </div>

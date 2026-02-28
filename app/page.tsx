@@ -8,6 +8,7 @@ import {
     ThunderboltOutlined,
 } from "@ant-design/icons"
 import { App, Button, Card, Col, Row, Space, Typography } from "antd"
+import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
 import React, { useState } from "react"
 import { CreateDiagramDialog } from "@/components/create-diagram-dialog"
@@ -20,6 +21,9 @@ const { Title, Paragraph, Text } = Typography
 
 const Home: React.FC = () => {
     const { message } = App.useApp()
+    const t = useTranslations("home")
+    const tDiagram = useTranslations("diagram")
+    const tSpace = useTranslations("space")
     const router = useRouter()
     const [_loading, _setLoading] = React.useState(false)
     const [createSpaceDialogVisible, setCreateSpaceDialogVisible] =
@@ -47,8 +51,8 @@ const Home: React.FC = () => {
                     <ThunderboltOutlined style={{ fontSize: 24, color: "#fff" }} />
                 </div>
             ),
-            title: "快速开始",
-            desc: "创建一个空白图表，从零开始绘制",
+            title: t("quickStart"),
+            desc: t("quickStartDesc"),
             action: handleCreateDiagram,
             bg: "transparent",
         },
@@ -62,8 +66,8 @@ const Home: React.FC = () => {
                     <BulbOutlined style={{ fontSize: 24, color: "#fff" }} />
                 </div>
             ),
-            title: "AI 智能生成",
-            desc: "输入描述，让 AI 帮你生成专业图表",
+            title: t("aiGenerate"),
+            desc: t("aiGenerateDesc"),
             action: () => router.push("/demo"),
             bg: "transparent",
         },
@@ -77,8 +81,8 @@ const Home: React.FC = () => {
                     <FolderOutlined style={{ fontSize: 24, color: "#fff" }} />
                 </div>
             ),
-            title: "新建空间",
-            desc: "创建团队或个人空间，管理图表",
+            title: t("newSpace"),
+            desc: t("newSpaceDesc"),
             action: () => setCreateSpaceDialogVisible(true),
             bg: "transparent",
         },
@@ -92,8 +96,8 @@ const Home: React.FC = () => {
                     <AppstoreOutlined style={{ fontSize: 24, color: "#fff" }} />
                 </div>
             ),
-            title: "浏览模板",
-            desc: "从海量模板库中选择",
+            title: t("browseTemplates"),
+            desc: t("browseTemplatesDesc"),
             action: () => router.push("/templates"),
             bg: "transparent",
         },
@@ -182,7 +186,7 @@ const Home: React.FC = () => {
                         }}
                     >
                         <Text strong style={{ color: "#1677ff" }}>
-                            IntelliDraw 智能绘图
+                            {t("brand")}
                         </Text>
                     </div>
 
@@ -196,8 +200,8 @@ const Home: React.FC = () => {
                             letterSpacing: "-0.02em",
                         }}
                     >
-                        智能协同，
-                        <span style={{ color: "#1677ff" }}>无限创意</span>
+                        {t("heroTitle")}
+                        <span style={{ color: "#1677ff" }}>{t("heroTitleHighlight")}</span>
                     </Title>
 
                     <Paragraph
@@ -209,10 +213,9 @@ const Home: React.FC = () => {
                             lineHeight: 1.8,
                         }}
                     >
-                        IntelliDraw 是一款简单好用的在线作图工具，支持流程图、思维导图、UML
-                        等多种图形。
+                        {t("heroDescription")}
                         <br />
-                        AI 辅助生成，实时团队协作，让想法即刻落地。
+                        {t("heroDescriptionExtra")}
                     </Paragraph>
 
                     <Space size="large">
@@ -231,7 +234,7 @@ const Home: React.FC = () => {
                                 boxShadow: "0 4px 12px rgba(22, 119, 255, 0.3)",
                             }}
                         >
-                            立即免费使用
+                            {t("freeUse")}
                         </Button>
                         <Button
                             size="large"
@@ -246,7 +249,7 @@ const Home: React.FC = () => {
                             }}
                             onClick={() => setDemoVideoOpen(true)}
                         >
-                            观看演示
+                            {t("watchDemo")}
                         </Button>
                     </Space>
                 </div>
@@ -332,7 +335,7 @@ const Home: React.FC = () => {
                 open={createSpaceDialogVisible}
                 onOpenChange={setCreateSpaceDialogVisible}
                 onSuccess={() => {
-                    message.success("空间创建成功！")
+                    message.success(tSpace("createSuccess"))
                 }}
             />
 
