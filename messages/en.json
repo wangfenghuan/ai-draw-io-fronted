@@ -108,7 +108,17 @@
     "newSpace": "New Space",
     "newSpaceDesc": "Create team or personal space to manage diagrams",
     "browseTemplates": "Browse Templates",
-    "browseTemplatesDesc": "Choose from massive template library"
+    "browseTemplatesDesc": "Choose from massive template library",
+    "whyChooseUs": "Why Choose Us",
+    "valuePropTitle": "More Powerful Than Traditional draw.io",
+    "aiPowered": "AI-Powered Generation",
+    "aiPoweredDesc": "Generate professional diagrams from natural language, support code-to-architecture and ER diagrams",
+    "richTemplates": "Rich Template Library",
+    "richTemplatesDesc": "Professional templates covering architecture design, business processes, network topology and more",
+    "realTimeCollab": "Real-time Collaboration",
+    "realTimeCollabDesc": "Multi-user editing with real-time sync for efficient team collaboration",
+    "cloudStorage": "Cloud Storage",
+    "cloudStorageDesc": "Auto-save with multi-device sync, access your diagrams anywhere, anytime"
   },
   "diagram": {
     "flowchart": "Flowchart",
@@ -176,5 +186,19 @@
     "switch": "Switch Language",
     "zh": "中文",
     "en": "English"
+  },
+  "onboarding": {
+    "stepProgress": "Step {current}/{total}",
+    "dragTitle": "Drag Shapes",
+    "dragDesc": "Drag various shapes from the left shape library to the canvas and combine them freely. Supports rectangles, circles, diamonds, and more basic shapes.",
+    "connectTitle": "Connect Nodes",
+    "connectDesc": "After selecting a shape, drag the connection points to create lines. Supports straight lines, curves, arrows, and more line styles to make your diagrams more professional.",
+    "exportTitle": "Export & Share",
+    "exportDesc": "After editing, click the export button to save your diagram as PNG, SVG, PDF, and other formats for easy sharing and printing.",
+    "skip": "Skip",
+    "previous": "Previous",
+    "next": "Next",
+    "gotIt": "Get Started",
+    "keyboardHint": "Press Esc to skip · Arrow keys to navigate · Enter to confirm"
   }
 }

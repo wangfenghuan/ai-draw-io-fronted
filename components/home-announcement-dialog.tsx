@@ -2,6 +2,7 @@
 
 import { Modal } from "antd"
 import { useEffect, useState } from "react"
+import ReactMarkdown from "react-markdown"
 import { listAnnouncementVoByPage } from "@/api/announcementController"
 
 export const HomeAnnouncementDialog = () => {
@@ -70,7 +71,6 @@ export const HomeAnnouncementDialog = () => {
             </div>
             <div
                 style={{
-                    whiteSpace: "pre-wrap",
                     maxHeight: "60vh",
                     overflowY: "auto",
                     fontSize: "14px",
@@ -79,7 +79,26 @@ export const HomeAnnouncementDialog = () => {
                     marginBottom: "12px",
                 }}
             >
-                {announcement.content}
+                <ReactMarkdown
+                    components={{
+                        a: ({ href, children }) => (
+                            <a
+                                href={href}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                style={{
+                                    color: "#1677ff",
+                                    textDecoration: "underline",
+                                }}
+                            >
+                                {children}
+                            </a>
+                        ),
+                        p: ({ children }) => <p style={{ marginBottom: "8px" }}>{children}</p>,
+                    }}
+                >
+                    {announcement.content || ""}
+                </ReactMarkdown>
             </div>
             <div
                 style={{

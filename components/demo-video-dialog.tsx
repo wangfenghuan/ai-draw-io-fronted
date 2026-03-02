@@ -1,32 +1,32 @@
 "use client"
 
 import { X, Play } from "lucide-react"
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useState } from "react"
 
-interface DemoVideo {
+interface DemoGif {
     key: string
     label: string
     src: string
     description: string
 }
 
-const DEMO_VIDEOS: DemoVideo[] = [
+const DEMO_GIFS: DemoGif[] = [
     {
         key: "springboot",
         label: "Spring Boot 架构图",
-        src: "/生成Spring Boot架构图.mp4",
+        src: "/生成SpringBoot架构图.gif",
         description: "上传 Spring Boot 项目 ZIP，AI 自动解析并生成分层架构图",
     },
     {
         key: "sql",
         label: "SQL → ER 图",
-        src: "/根据sql生成er图.mp4",
+        src: "/生成ER图.gif",
         description: "上传 SQL DDL 文件，一键生成专业实体关系图（ERD）",
     },
     {
         key: "flow",
         label: "AI 生成流程图",
-        src: "/ai生成登录流程图.mp4",
+        src: "/ai生成流程图.gif",
         description: "用自然语言描述业务流程，AI 即刻生成标准流程图",
     },
 ]
@@ -37,22 +37,14 @@ interface DemoVideoDialogProps {
 }
 
 export function DemoVideoDialog({ open, onOpenChange }: DemoVideoDialogProps) {
-    const [activeKey, setActiveKey] = useState(DEMO_VIDEOS[0].key)
-    const videoRef = useRef<HTMLVideoElement>(null)
+    const [activeKey, setActiveKey] = useState(DEMO_GIFS[0].key)
 
-    // Reset to first tab and reload video whenever dialog opens
+    // Reset to first tab whenever dialog opens
     useEffect(() => {
         if (open) {
-            setActiveKey(DEMO_VIDEOS[0].key)
+            setActiveKey(DEMO_GIFS[0].key)
         }
     }, [open])
-
-    // Reload video when tab changes
-    useEffect(() => {
-        if (videoRef.current) {
-            videoRef.current.load()
-        }
-    }, [activeKey])
 
     // Close on Escape key
     useEffect(() => {
@@ -66,7 +58,7 @@ export function DemoVideoDialog({ open, onOpenChange }: DemoVideoDialogProps) {
 
     if (!open) return null
 
-    const activeVideo = DEMO_VIDEOS.find((v) => v.key === activeKey)!
+    const activeGif = DEMO_GIFS.find((g) => g.key === activeKey)!
 
     return (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center">
@@ -107,12 +99,12 @@ export function DemoVideoDialog({ open, onOpenChange }: DemoVideoDialogProps) {
                 <div
                     className="flex gap-1 px-6 pt-4 pb-0"
                 >
-                    {DEMO_VIDEOS.map((video) => {
-                        const isActive = video.key === activeKey
+                    {DEMO_GIFS.map((gif) => {
+                        const isActive = gif.key === activeKey
                         return (
                             <button
-                                key={video.key}
-                                onClick={() => setActiveKey(video.key)}
+                                key={gif.key}
+                                onClick={() => setActiveKey(gif.key)}
                                 className="px-4 py-2 rounded-t-lg text-sm font-medium transition-all duration-200"
                                 style={{
                                     background: isActive
@@ -124,18 +116,18 @@ export function DemoVideoDialog({ open, onOpenChange }: DemoVideoDialogProps) {
                                         : "2px solid transparent",
                                 }}
                             >
-                                {video.label}
+                                {gif.label}
                             </button>
                         )
                     })}
                 </div>
 
-                {/* Video area */}
+                {/* GIF area */}
                 <div className="px-6 pb-6 pt-3">
                     {/* Description */}
-                    <p className="text-white/50 text-xs mb-3">{activeVideo.description}</p>
+                    <p className="text-white/50 text-xs mb-3">{activeGif.description}</p>
 
-                    {/* Video player */}
+                    {/* GIF display */}
                     <div
                         className="w-full overflow-hidden rounded-xl"
                         style={{
@@ -144,17 +136,12 @@ export function DemoVideoDialog({ open, onOpenChange }: DemoVideoDialogProps) {
                             boxShadow: "0 8px 40px rgba(0,0,0,0.5)",
                         }}
                     >
-                        <video
-                            ref={videoRef}
+                        <img
                             key={activeKey}
+                            src={activeGif.src}
+                            alt={activeGif.label}
                             className="w-full h-full object-contain"
-                            controls
-                            autoPlay
-                            playsInline
-                        >
-                            <source src={activeVideo.src} type="video/mp4" />
-                            您的浏览器不支持 video 标签。
-                        </video>
+                        />
                     </div>
                 </div>
             </div>

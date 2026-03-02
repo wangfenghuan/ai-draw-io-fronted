@@ -108,7 +108,17 @@
     "newSpace": "新建空间",
     "newSpaceDesc": "创建团队或个人空间，管理图表",
     "browseTemplates": "浏览模板",
-    "browseTemplatesDesc": "从海量模板库中选择"
+    "browseTemplatesDesc": "从海量模板库中选择",
+    "whyChooseUs": "为什么选择我们",
+    "valuePropTitle": "比传统 draw.io 更强大的功能",
+    "aiPowered": "AI 智能生成",
+    "aiPoweredDesc": "自然语言描述即可生成专业图表，支持代码解析生成架构图、ER图等",
+    "richTemplates": "丰富模板库",
+    "richTemplatesDesc": "覆盖架构设计、业务流程、网络拓扑等多个领域的专业模板",
+    "realTimeCollab": "实时协作",
+    "realTimeCollabDesc": "多人同时编辑，实时同步，让团队协作更高效流畅",
+    "cloudStorage": "云端存储",
+    "cloudStorageDesc": "自动保存，多端同步，随时随地访问你的图表文件"
   },
   "diagram": {
     "flowchart": "流程图",
@@ -176,5 +186,19 @@
     "switch": "切换语言",
     "zh": "中文",
     "en": "English"
+  },
+  "onboarding": {
+    "stepProgress": "步骤 {current}/{total}",
+    "dragTitle": "拖拽图形",
+    "dragDesc": "从左侧图形库中拖拽各种形状到画布上，自由组合你的创意。支持矩形、圆形、菱形等多种基础图形。",
+    "connectTitle": "连接节点",
+    "connectDesc": "选中图形后，拖拽连接点即可创建连线。支持直线、曲线、箭头等多种连线样式，让你的图表更专业。",
+    "exportTitle": "导出分享",
+    "exportDesc": "完成编辑后，点击导出按钮即可将图表保存为 PNG、SVG、PDF 等多种格式，方便分享和打印。",
+    "skip": "跳过",
+    "previous": "上一步",
+    "next": "下一步",
+    "gotIt": "开始使用",
+    "keyboardHint": "按 Esc 跳过 · 方向键导航 · Enter 确认"
   }
 }

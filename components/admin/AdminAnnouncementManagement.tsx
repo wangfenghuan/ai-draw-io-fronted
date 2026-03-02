@@ -4,6 +4,7 @@ import {
     DeleteOutlined,
     EditOutlined,
     ExclamationCircleOutlined,
+    EyeOutlined,
     PlusOutlined,
     SearchOutlined,
 } from "@ant-design/icons"
@@ -18,10 +19,12 @@ import {
     Popconfirm,
     Space,
     Table,
+    Tabs,
     Tag,
 } from "antd"
 import type { ColumnsType } from "antd/es/table"
 import { useEffect, useState } from "react"
+import ReactMarkdown from "react-markdown"
 import {
     addAnnouncement,
     deleteAnnouncement,
@@ -45,15 +48,20 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
     loading,
 }) => {
     const [form] = Form.useForm()
+    const [content, setContent] = useState("")
+    const [activeTab, setActiveTab] = useState("edit")
 
     useEffect(() => {
         if (visible) {
             if (initialValues) {
                 form.setFieldsValue(initialValues)
+                setContent(initialValues.content || "")
             } else {
                 form.resetFields()
                 form.setFieldsValue({ priority: 1 })
+                setContent("")
             }
+            setActiveTab("edit")
         }
     }, [visible, initialValues, form])
 
@@ -66,6 +74,10 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
         }
     }
 
+    const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+        setContent(e.target.value)
+    }
+
     return (
         <Modal
             title={initialValues ? "编辑公告" : "新建公告"}
@@ -74,7 +86,7 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
             onCancel={onCancel}
             confirmLoading={loading}
             destroyOnClose
-            width={600}
+            width={700}
         >
             <Form form={form} layout="vertical" preserve={false}>
                 <Form.Item
@@ -86,14 +98,85 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                 </Form.Item>
                 <Form.Item
                     name="content"
-                    label="公告内容"
+                    label={
+                        <span>
+                            公告内容
+                            <span style={{ color: "#999", fontWeight: "normal", fontSize: "12px", marginLeft: "8px" }}>
+                                (支持 Markdown 格式，如 [链接文字](https://example.com))
+                            </span>
+                        </span>
+                    }
                     rules={[{ required: true, message: "请输入公告内容" }]}
                 >
-                    <Input.TextArea
-                        placeholder="请输入公告内容"
-                        rows={6}
-                        maxLength={1000}
-                        showCount
+                    <Tabs
+                        activeKey={activeTab}
+                        onChange={setActiveTab}
+                        size="small"
+                        items={[
+                            {
+                                key: "edit",
+                                label: "编辑",
+                                children: (
+                                    <Input.TextArea
+                                        placeholder="请输入公告内容，支持 Markdown 格式&#10;例如：点击 [这里](https://example.com) 查看详情"
+                                        rows={6}
+                                        maxLength={1000}
+                                        showCount
+                                        value={content}
+                                        onChange={handleContentChange}
+                                    />
+                                ),
+                            },
+                            {
+                                key: "preview",
+                                label: (
+                                    <span>
+                                        <EyeOutlined style={{ marginRight: 4 }} />
+                                        预览
+                                    </span>
+                                ),
+                                children: (
+                                    <div
+                                        style={{
+                                            minHeight: 150,
+                                            maxHeight: 300,
+                                            overflowY: "auto",
+                                            padding: "12px",
+                                            border: "1px solid #d9d9d9",
+                                            borderRadius: "6px",
+                                            background: "#fafafa",
+                                        }}
+                                    >
+                                        {content ? (
+                                            <ReactMarkdown
+                                                components={{
+                                                    a: ({ href, children }) => (
+                                                        <a
+                                                            href={href}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            style={{
+                                                                color: "#1677ff",
+                                                                textDecoration: "underline",
+                                                            }}
+                                                        >
+                                                            {children}
+                                                        </a>
+                                                    ),
+                                                    p: ({ children }) => (
+                                                        <p style={{ marginBottom: "8px" }}>{children}</p>
+                                                    ),
+                                                }}
+                                            >
+                                                {content}
+                                            </ReactMarkdown>
+                                        ) : (
+                                            <span style={{ color: "#999" }}>暂无内容，请先编辑</span>
+                                        )}
+                                    </div>
+                                ),
+                            },
+                        ]}
                     />
                 </Form.Item>
                 <Form.Item

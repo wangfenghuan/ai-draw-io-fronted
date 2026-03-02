@@ -6,6 +6,10 @@ import {
     FolderOutlined,
     PlusOutlined,
     ThunderboltOutlined,
+    RocketOutlined,
+    CloudSyncOutlined,
+    AppstoreAddOutlined,
+    ThunderboltOutlined as BoltOutlined,
 } from "@ant-design/icons"
 import { App, Button, Card, Col, Row, Space, Typography } from "antd"
 import { useTranslations } from "next-intl"
@@ -16,6 +20,7 @@ import { CreateSpaceDialog } from "@/components/create-space-dialog"
 import { DemoVideoDialog } from "@/components/demo-video-dialog"
 import { HomeAnnouncementDialog } from "@/components/home-announcement-dialog"
 import { InteractiveShowcase } from "@/components/interactive-showcase"
+import { OnboardingGuide } from "@/components/onboarding-guide"
 
 const { Title, Paragraph, Text } = Typography
 
@@ -254,6 +259,193 @@ const Home: React.FC = () => {
                     </Space>
                 </div>
 
+                {/* Value Proposition Section - Why choose us over traditional draw.io */}
+                <div
+                    style={{
+                        background: "linear-gradient(135deg, rgba(22, 119, 255, 0.05) 0%, rgba(114, 46, 209, 0.05) 100%)",
+                        borderRadius: 24,
+                        padding: "40px 32px",
+                        marginBottom: 48,
+                        border: "1px solid rgba(22, 119, 255, 0.1)",
+                    }}
+                >
+                    <div style={{ textAlign: "center", marginBottom: 32 }}>
+                        <div
+                            style={{
+                                display: "inline-flex",
+                                alignItems: "center",
+                                gap: 8,
+                                padding: "6px 16px",
+                                background: "linear-gradient(135deg, #1677ff 0%, #722ed1 100%)",
+                                borderRadius: 20,
+                                marginBottom: 16,
+                            }}
+                        >
+                            <RocketOutlined style={{ color: "#fff", fontSize: 14 }} />
+                            <span style={{ color: "#fff", fontSize: 13, fontWeight: 500 }}>
+                                {t("whyChooseUs")}
+                            </span>
+                        </div>
+                        <Title
+                            level={3}
+                            style={{
+                                margin: 0,
+                                color: "#1e293b",
+                                fontWeight: 700,
+                                fontSize: 24,
+                            }}
+                        >
+                            {t("valuePropTitle")}
+                        </Title>
+                    </div>
+
+                    <Row gutter={[24, 24]}>
+                        {/* AI Intelligence */}
+                        <Col xs={24} sm={12} md={6}>
+                            <div
+                                style={{
+                                    textAlign: "center",
+                                    padding: "24px 16px",
+                                    background: "rgba(255,255,255,0.8)",
+                                    borderRadius: 16,
+                                    height: "100%",
+                                    transition: "all 0.3s ease",
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        width: 56,
+                                        height: 56,
+                                        borderRadius: 16,
+                                        background: "linear-gradient(135deg, #1677ff 0%, #0958d9 100%)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        margin: "0 auto 16px",
+                                        boxShadow: "0 8px 24px rgba(22, 119, 255, 0.25)",
+                                    }}
+                                >
+                                    <ThunderboltOutlined style={{ fontSize: 28, color: "#fff" }} />
+                                </div>
+                                <Text strong style={{ display: "block", marginBottom: 8, fontSize: 16, color: "#1e293b" }}>
+                                    {t("aiPowered")}
+                                </Text>
+                                <Text type="secondary" style={{ fontSize: 13, lineHeight: 1.6 }}>
+                                    {t("aiPoweredDesc")}
+                                </Text>
+                            </div>
+                        </Col>
+
+                        {/* Rich Templates */}
+                        <Col xs={24} sm={12} md={6}>
+                            <div
+                                style={{
+                                    textAlign: "center",
+                                    padding: "24px 16px",
+                                    background: "rgba(255,255,255,0.8)",
+                                    borderRadius: 16,
+                                    height: "100%",
+                                    transition: "all 0.3s ease",
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        width: 56,
+                                        height: 56,
+                                        borderRadius: 16,
+                                        background: "linear-gradient(135deg, #52c41a 0%, #389e0d 100%)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        margin: "0 auto 16px",
+                                        boxShadow: "0 8px 24px rgba(82, 196, 26, 0.25)",
+                                    }}
+                                >
+                                    <AppstoreAddOutlined style={{ fontSize: 28, color: "#fff" }} />
+                                </div>
+                                <Text strong style={{ display: "block", marginBottom: 8, fontSize: 16, color: "#1e293b" }}>
+                                    {t("richTemplates")}
+                                </Text>
+                                <Text type="secondary" style={{ fontSize: 13, lineHeight: 1.6 }}>
+                                    {t("richTemplatesDesc")}
+                                </Text>
+                            </div>
+                        </Col>
+
+                        {/* Real-time Collaboration */}
+                        <Col xs={24} sm={12} md={6}>
+                            <div
+                                style={{
+                                    textAlign: "center",
+                                    padding: "24px 16px",
+                                    background: "rgba(255,255,255,0.8)",
+                                    borderRadius: 16,
+                                    height: "100%",
+                                    transition: "all 0.3s ease",
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        width: 56,
+                                        height: 56,
+                                        borderRadius: 16,
+                                        background: "linear-gradient(135deg, #722ed1 0%, #531dab 100%)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        margin: "0 auto 16px",
+                                        boxShadow: "0 8px 24px rgba(114, 46, 209, 0.25)",
+                                    }}
+                                >
+                                    <CloudSyncOutlined style={{ fontSize: 28, color: "#fff" }} />
+                                </div>
+                                <Text strong style={{ display: "block", marginBottom: 8, fontSize: 16, color: "#1e293b" }}>
+                                    {t("realTimeCollab")}
+                                </Text>
+                                <Text type="secondary" style={{ fontSize: 13, lineHeight: 1.6 }}>
+                                    {t("realTimeCollabDesc")}
+                                </Text>
+                            </div>
+                        </Col>
+
+                        {/* Cloud Storage */}
+                        <Col xs={24} sm={12} md={6}>
+                            <div
+                                style={{
+                                    textAlign: "center",
+                                    padding: "24px 16px",
+                                    background: "rgba(255,255,255,0.8)",
+                                    borderRadius: 16,
+                                    height: "100%",
+                                    transition: "all 0.3s ease",
+                                }}
+                            >
+                                <div
+                                    style={{
+                                        width: 56,
+                                        height: 56,
+                                        borderRadius: 16,
+                                        background: "linear-gradient(135deg, #faad14 0%, #d46b08 100%)",
+                                        display: "flex",
+                                        alignItems: "center",
+                                        justifyContent: "center",
+                                        margin: "0 auto 16px",
+                                        boxShadow: "0 8px 24px rgba(250, 173, 20, 0.25)",
+                                    }}
+                                >
+                                    <FolderOutlined style={{ fontSize: 28, color: "#fff" }} />
+                                </div>
+                                <Text strong style={{ display: "block", marginBottom: 8, fontSize: 16, color: "#1e293b" }}>
+                                    {t("cloudStorage")}
+                                </Text>
+                                <Text type="secondary" style={{ fontSize: 13, lineHeight: 1.6 }}>
+                                    {t("cloudStorageDesc")}
+                                </Text>
+                            </div>
+                        </Col>
+                    </Row>
+                </div>
+
                 {/* Hero Interactive Showcase */}
                 <InteractiveShowcase />
 
@@ -351,6 +543,9 @@ const Home: React.FC = () => {
             />
 
             <HomeAnnouncementDialog />
+
+            {/* Onboarding Guide for first-time users */}
+            <OnboardingGuide />
         </div>
     )
 }
