@@ -75,7 +75,10 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
     }
 
     const handleContentChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
-        setContent(e.target.value)
+        const value = e.target.value
+        setContent(value)
+        // 同步更新 Form 字段的值
+        form.setFieldsValue({ content: value })
     }
 
     return (

@@ -430,7 +430,7 @@ ${JSON.stringify(tables, null, 2)}
             })
 
             // 竞速：保存逻辑 vs 超时
-            await Promise.race([
+            const saveResult = await Promise.race([
                 saveDiagramToServer({
                     diagramId: diagramId,
                     userId: loginUser?.id || "",
@@ -440,7 +440,11 @@ ${JSON.stringify(tables, null, 2)}
                 timeoutPromise,
             ])
 
-            toast.success("保存成功")
+            // saveDiagramToServer 内部已经显示了 toast.success，这里只需要重置状态
+            // 但如果返回 false（保存失败但未抛出错误），需要额外处理
+            if (saveResult === false) {
+                throw new Error("保存失败，请重试")
+            }
 
             // 保存成功，重置未保存状态
             setHasUnsavedChanges(false)
