@@ -27,8 +27,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         "/solutions/db-diagram",
         "/solutions/topology",
         "/solutions/mind-map",
+        "/solutions/springboot-architecture",
         "/wiki/what-is-uml-diagram",
         "/wiki/how-to-draw-flowchart",
+        "/wiki/er-diagram-guide",
+        "/wiki/aws-architecture-design",
+        "/wiki/spring-boot-architecture-analysis",
     ].map((route) => ({
         url: `${appUrl}${route}`,
         lastModified: new Date(),

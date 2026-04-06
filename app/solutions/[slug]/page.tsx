@@ -51,9 +51,63 @@ export default async function SolutionPage({ params }: Props) {
 
     return (
         <div className="min-h-screen bg-slate-50">
+            {/* FAQ Schema for SEO */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "FAQPage",
+                        mainEntity: solution.faq.map((item) => ({
+                            "@type": "Question",
+                            name: item.question,
+                            acceptedAnswer: {
+                                "@type": "Answer",
+                                text: item.answer,
+                            },
+                        })),
+                    }),
+                }}
+            />
+            {/* Breadcrumb Schema */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "BreadcrumbList",
+                        itemListElement: [
+                            {
+                                "@type": "ListItem",
+                                position: 1,
+                                name: "首页",
+                                item: "/",
+                            },
+                            {
+                                "@type": "ListItem",
+                                position: 2,
+                                name: solution.title,
+                                item: `/solutions/${slug}`,
+                            },
+                        ],
+                    }),
+                }}
+            />
             {/* Hero Section */}
             <section className="bg-white border-b border-gray-100">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24 text-center">
+                {/* Breadcrumb Navigation */}
+                <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-4">
+                    <ol className="flex items-center space-x-2 text-sm text-slate-500">
+                        <li>
+                            <Link href="/" className="hover:text-blue-600">
+                                首页
+                            </Link>
+                        </li>
+                        <li>/</li>
+                        <li className="text-slate-900">{solution.title}</li>
+                    </ol>
+                </nav>
+                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
                     <h1 className="text-4xl font-extrabold text-slate-900 sm:text-5xl md:text-6xl mb-6">
                         {solution.heroTitle}
                     </h1>

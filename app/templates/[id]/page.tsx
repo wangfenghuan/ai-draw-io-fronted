@@ -118,7 +118,59 @@ export default async function TemplatePage({ params }: Props) {
             <div className="absolute -top-24 -right-24 w-96 h-96 bg-blue-100 rounded-full blur-3xl opacity-30 pointer-events-none" />
             <div className="absolute top-48 -left-24 w-72 h-72 bg-indigo-100 rounded-full blur-3xl opacity-30 pointer-events-none" />
 
+            {/* Breadcrumb Schema */}
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{
+                    __html: JSON.stringify({
+                        "@context": "https://schema.org",
+                        "@type": "BreadcrumbList",
+                        itemListElement: [
+                            {
+                                "@type": "ListItem",
+                                position: 1,
+                                name: "首页",
+                                item: "/",
+                            },
+                            {
+                                "@type": "ListItem",
+                                position: 2,
+                                name: "模板广场",
+                                item: "/templates",
+                            },
+                            {
+                                "@type": "ListItem",
+                                position: 3,
+                                name: material.name || "模板详情",
+                                item: `/templates/${id}`,
+                            },
+                        ],
+                    }),
+                }}
+            />
+
             <div className="max-w-6xl mx-auto px-4 sm:px-6 relative z-10">
+                {/* Breadcrumb Navigation */}
+                <nav className="mb-6">
+                    <ol className="flex items-center space-x-2 text-sm text-slate-500">
+                        <li>
+                            <Link href="/" className="hover:text-blue-600">
+                                首页
+                            </Link>
+                        </li>
+                        <li>/</li>
+                        <li>
+                            <Link href="/templates" className="hover:text-blue-600">
+                                模板广场
+                            </Link>
+                        </li>
+                        <li>/</li>
+                        <li className="text-slate-900 truncate max-w-[200px]">
+                            {material.name || "模板详情"}
+                        </li>
+                    </ol>
+                </nav>
+
                 <div className="mb-8">
                     <Link
                         href="/templates"

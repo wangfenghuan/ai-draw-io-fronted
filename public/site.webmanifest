@@ -1,0 +1,16 @@
+{
+    "name": "IntelliDraw 智能绘图",
+    "short_name": "IntelliDraw",
+    "description": "AI驱动的在线绘图工具，支持流程图、思维导图、UML等多种图形",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#1890ff",
+    "icons": [
+        {
+            "src": "/favicon.ico",
+            "sizes": "48x48",
+            "type": "image/x-icon"
+        }
+    ]
+}

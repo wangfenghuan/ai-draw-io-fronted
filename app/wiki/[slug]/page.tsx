@@ -62,10 +62,35 @@ export default async function WikiPage({ params }: Props) {
             name: "IntelliDraw",
             logo: {
                 "@type": "ImageObject",
-                url: "http://47.95.35.178/logo.png", // Replace with real logo
+                url: "http://47.95.35.178/logo.png",
             },
         },
-        datePublished: "2024-01-01T08:00:00+08:00", // Should be dynamic
+        datePublished: "2024-01-01T08:00:00+08:00",
+    }
+
+    const breadcrumbJsonLd = {
+        "@context": "https://schema.org",
+        "@type": "BreadcrumbList",
+        itemListElement: [
+            {
+                "@type": "ListItem",
+                position: 1,
+                name: "首页",
+                item: "/",
+            },
+            {
+                "@type": "ListItem",
+                position: 2,
+                name: "知识库",
+                item: "/wiki",
+            },
+            {
+                "@type": "ListItem",
+                position: 3,
+                name: article.title,
+                item: `/wiki/${slug}`,
+            },
+        ],
     }
 
     return (
@@ -74,8 +99,30 @@ export default async function WikiPage({ params }: Props) {
                 type="application/ld+json"
                 dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
             />
+            <script
+                type="application/ld+json"
+                dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+            />
 
             <article className="max-w-4xl mx-auto px-4 sm:px-6 py-12">
+                {/* Breadcrumb Navigation */}
+                <nav className="mb-8">
+                    <ol className="flex items-center space-x-2 text-sm text-gray-500">
+                        <li>
+                            <Link href="/" className="hover:text-blue-600">
+                                首页
+                            </Link>
+                        </li>
+                        <li>/</li>
+                        <li>
+                            <Link href="/wiki" className="hover:text-blue-600">
+                                知识库
+                            </Link>
+                        </li>
+                        <li>/</li>
+                        <li className="text-slate-900">{article.title}</li>
+                    </ol>
+                </nav>
                 <header className="mb-10 text-center">
                     <div className="flex items-center justify-center gap-4 text-sm text-gray-500 mb-4">
                         <span className="flex items-center gap-1">
