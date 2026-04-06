@@ -22,8 +22,8 @@ import {
 } from "../lib/cryptoUtils"
 import { usePersistence } from "../lib/use-persistence"
 import { useYjsCollaboration } from "../lib/use-yjs-collaboration"
-import type { OnlineUser } from "../lib/yjs-collab"
 import { extractDiagramXML, validateAndFixXml } from "../lib/utils"
+import type { OnlineUser } from "../lib/yjs-collab"
 
 interface DiagramContextType {
     chartXML: string
@@ -205,7 +205,8 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
     // 获取 WebSocket URL
     const getWSUrl = () => {
         // 优先使用环境变量，否则强制使用线上地址
-        const wsUrl = process.env.NEXT_PUBLIC_WS_URL || "wss://ws.intellidraw.top:1234"
+        const wsUrl =
+            process.env.NEXT_PUBLIC_WS_URL || "wss://ws.intellidraw.top:1234"
         return wsUrl.replace(/\/$/, "")
     }
 

@@ -118,11 +118,14 @@ export function useBackendChat({
 
                 // 检查是否返回了 JSON 格式的错误信息
                 const contentType = response.headers.get("content-type")
-                if (contentType && contentType.includes("application/json")) {
+                if (contentType?.includes("application/json")) {
                     const jsonRes = await response.json()
                     // 如果后端返回了业务错误（如 code !== 0 或特定错误码）
                     if (jsonRes.code && jsonRes.code !== 0) {
-                        throw new Error(jsonRes.message || `请求失败，错误码：${jsonRes.code}`)
+                        throw new Error(
+                            jsonRes.message ||
+                                `请求失败，错误码：${jsonRes.code}`,
+                        )
                     }
                 }
 
@@ -148,7 +151,7 @@ export function useBackendChat({
                     // 聚合所有 data 行的数据，并检查 event 类型
                     let eventData = ""
                     let eventName = ""
-                    
+
                     const lines = event.trim().split(/\n/)
 
                     for (const line of lines) {
@@ -171,13 +174,13 @@ export function useBackendChat({
                     if (eventName === "error") {
                         const errorMsg = eventData
                         console.error("[SSE] Received error event:", errorMsg)
-                        
+
                         // 更新助手消息为错误信息
                         const err = new Error(errorMsg)
                         setError(err)
                         onError?.(err)
                         toast.error(`AI 生成失败: ${errorMsg}`)
-                        
+
                         setMessages((prev) =>
                             prev.map((msg) =>
                                 msg.id === assistantMessageId
@@ -202,9 +205,9 @@ export function useBackendChat({
                                 prev.map((msg) =>
                                     msg.id === assistantMessageId
                                         ? {
-                                                ...msg,
-                                                content: fullContent,
-                                            }
+                                              ...msg,
+                                              content: fullContent,
+                                          }
                                         : msg,
                                 ),
                             )
@@ -214,10 +217,7 @@ export function useBackendChat({
                             parsed.content
                         ) {
                             // 工具调用消息：显示工具调用信息
-                            console.log(
-                                "[SSE] Tool call:",
-                                parsed.content,
-                            )
+                            console.log("[SSE] Tool call:", parsed.content)
                             const toolCallMessage = `\n🔧 ${parsed.content}\n`
                             fullContent += toolCallMessage
 
@@ -225,9 +225,9 @@ export function useBackendChat({
                                 prev.map((msg) =>
                                     msg.id === assistantMessageId
                                         ? {
-                                                ...msg,
-                                                content: fullContent,
-                                            }
+                                              ...msg,
+                                              content: fullContent,
+                                          }
                                         : msg,
                                 ),
                             )
@@ -265,15 +265,13 @@ export function useBackendChat({
                                 onMessageComplete?.(fullContent)
 
                                 // 添加完成消息
-                                const completionMessage =
-                                    "✅ 图表已生成"
+                                const completionMessage = "✅ 图表已生成"
                                 fullContent += completionMessage
                             } else {
                                 console.warn(
                                     "[SSE] Tool call result did not contain valid mxfile XML",
                                 )
-                                const completionMessage =
-                                    "\n\n⚠️ 图表生成失败"
+                                const completionMessage = "\n\n⚠️ 图表生成失败"
                                 fullContent += completionMessage
                             }
 
@@ -281,9 +279,9 @@ export function useBackendChat({
                                 prev.map((msg) =>
                                     msg.id === assistantMessageId
                                         ? {
-                                                ...msg,
-                                                content: fullContent,
-                                            }
+                                              ...msg,
+                                              content: fullContent,
+                                          }
                                         : msg,
                                 ),
                             )
@@ -298,7 +296,8 @@ export function useBackendChat({
                 }
 
                 // SSE 数据超时处理：如果长时间没有收到任何数据，自动断开
-                let dataTimeoutTimer: ReturnType<typeof setTimeout> | null = null
+                let dataTimeoutTimer: ReturnType<typeof setTimeout> | null =
+                    null
                 const clearTimeoutTimer = () => {
                     if (dataTimeoutTimer) {
                         clearTimeout(dataTimeoutTimer)
@@ -308,7 +307,11 @@ export function useBackendChat({
                 const resetTimeoutTimer = () => {
                     clearTimeoutTimer()
                     dataTimeoutTimer = setTimeout(() => {
-                        console.warn("[SSE] Data timeout - no data received for", SSE_DATA_TIMEOUT_MS, "ms")
+                        console.warn(
+                            "[SSE] Data timeout - no data received for",
+                            SSE_DATA_TIMEOUT_MS,
+                            "ms",
+                        )
                         abortController.abort()
                         const timeoutErr = new Error("AI 响应超时，请稍后重试")
                         setError(timeoutErr)
@@ -317,7 +320,12 @@ export function useBackendChat({
                         setMessages((prev) =>
                             prev.map((msg) =>
                                 msg.id === assistantMessageId
-                                    ? { ...msg, content: fullContent || "⏰ AI 响应超时，请稍后重试" }
+                                    ? {
+                                          ...msg,
+                                          content:
+                                              fullContent ||
+                                              "⏰ AI 响应超时，请稍后重试",
+                                      }
                                     : msg,
                             ),
                         )
@@ -333,13 +341,19 @@ export function useBackendChat({
 
                     if (done) {
                         clearTimeoutTimer()
-                        console.log("[SSE] Stream complete. Buffer length:", buffer.length)
+                        console.log(
+                            "[SSE] Stream complete. Buffer length:",
+                            buffer.length,
+                        )
                         // 处理剩余的 buffer
                         if (buffer.trim()) {
-                            console.log("[SSE] Processing remaining buffer:", buffer)
+                            console.log(
+                                "[SSE] Processing remaining buffer:",
+                                buffer,
+                            )
                             processSseEvent(buffer)
                         }
-                        
+
                         setIsLoading(false)
                         onMessageComplete?.(fullContent)
                         break
@@ -389,7 +403,10 @@ export function useBackendChat({
                     setMessages((prev) =>
                         prev.map((msg) =>
                             msg.id === assistantMessageId
-                                ? { ...msg, content: `⛔️ 出错了: ${error.message}` }
+                                ? {
+                                      ...msg,
+                                      content: `⛔️ 出错了: ${error.message}`,
+                                  }
                                 : msg,
                         ),
                     )

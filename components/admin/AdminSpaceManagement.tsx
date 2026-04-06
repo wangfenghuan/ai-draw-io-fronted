@@ -38,12 +38,6 @@ import {
 
 const { Search } = Input
 
-// 空间类型枚举
-enum SpaceType {
-    PERSONAL = 0, // 个人空间
-    TEAM = 1, // 团队空间
-}
-
 // 空间类型映射
 const SPACE_TYPE_MAP: Record<
     number,

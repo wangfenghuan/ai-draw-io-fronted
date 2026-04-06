@@ -1,15 +1,15 @@
 "use client"
 
-import React, { useState, useEffect } from "react"
-import { Typography } from "antd"
 import {
     ApartmentOutlined,
-    NodeIndexOutlined,
-    FormOutlined,
     AppstoreOutlined,
+    NodeIndexOutlined,
 } from "@ant-design/icons"
+import { Typography } from "antd"
+import type React from "react"
+import { useState } from "react"
 
-const { Title, Text, Paragraph } = Typography
+const { Title, Paragraph } = Typography
 
 type MainTabKey = "mindmap" | "flowchart" | "library"
 
@@ -190,8 +190,11 @@ export const InteractiveShowcase: React.FC = () => {
                     width: "100%",
                     alignItems: "stretch",
                     opacity: isTransitioning ? 0 : 1,
-                    transform: isTransitioning ? "translateY(10px)" : "translateY(0)",
-                    transition: "opacity 0.2s ease-out, transform 0.2s ease-out",
+                    transform: isTransitioning
+                        ? "translateY(10px)"
+                        : "translateY(0)",
+                    transition:
+                        "opacity 0.2s ease-out, transform 0.2s ease-out",
                 }}
                 className="flex-col md:flex-row" // Tailwind classes for responsive
             >
@@ -220,17 +223,54 @@ export const InteractiveShowcase: React.FC = () => {
                             gap: "8px",
                         }}
                     >
-                        <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ff5f56" }} />
-                        <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#ffbd2e" }} />
-                        <div style={{ width: 12, height: 12, borderRadius: "50%", background: "#27c93f" }} />
-                        
-                        <div style={{ flex: 1, textAlign: "center", fontSize: "12px", color: "#8c8c8c", fontWeight: 500 }}>
+                        <div
+                            style={{
+                                width: 12,
+                                height: 12,
+                                borderRadius: "50%",
+                                background: "#ff5f56",
+                            }}
+                        />
+                        <div
+                            style={{
+                                width: 12,
+                                height: 12,
+                                borderRadius: "50%",
+                                background: "#ffbd2e",
+                            }}
+                        />
+                        <div
+                            style={{
+                                width: 12,
+                                height: 12,
+                                borderRadius: "50%",
+                                background: "#27c93f",
+                            }}
+                        />
+                        <div
+                            style={{
+                                flex: 1,
+                                textAlign: "center",
+                                fontSize: "12px",
+                                color: "#8c8c8c",
+                                fontWeight: 500,
+                            }}
+                        >
                             IntelliDraw - {currentData.label}
                         </div>
-                        <div style={{ width: 44 }}></div> {/* Spacer for balance */}
+                        <div style={{ width: 44 }}></div>{" "}
+                        {/* Spacer for balance */}
                     </div>
                     {/* Image Content */}
-                    <div style={{ padding: "0 0 20px 0", flex: 1, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                    <div
+                        style={{
+                            padding: "0 0 20px 0",
+                            flex: 1,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                        }}
+                    >
                         <img
                             src={currentData.image}
                             alt={currentData.label}
@@ -239,7 +279,7 @@ export const InteractiveShowcase: React.FC = () => {
                                 height: "auto",
                                 objectFit: "contain",
                                 borderRadius: "8px",
-                                marginTop: "20px"
+                                marginTop: "20px",
                             }}
                         />
                     </div>
@@ -265,13 +305,27 @@ export const InteractiveShowcase: React.FC = () => {
                                     padding: "24px",
                                     borderRadius: "12px",
                                     cursor: "pointer",
-                                    background: isActive ? "#eff6ff" : "transparent",
+                                    background: isActive
+                                        ? "#eff6ff"
+                                        : "transparent",
                                     border: "1px solid",
-                                    borderColor: isActive ? "transparent" : (index !== currentData.features.length - 1 ? "#f0f0f0" : "transparent"),
-                                    borderBottomColor: (!isActive && index !== currentData.features.length - 1) ? "#f0f0f0" : "transparent",
+                                    borderColor: isActive
+                                        ? "transparent"
+                                        : index !==
+                                            currentData.features.length - 1
+                                          ? "#f0f0f0"
+                                          : "transparent",
+                                    borderBottomColor:
+                                        !isActive &&
+                                        index !==
+                                            currentData.features.length - 1
+                                            ? "#f0f0f0"
+                                            : "transparent",
                                     position: "relative",
                                     transition: "all 0.3s ease",
-                                    boxShadow: isActive ? "0 4px 12px rgba(0,0,0,0.02)" : "none",
+                                    boxShadow: isActive
+                                        ? "0 4px 12px rgba(0,0,0,0.02)"
+                                        : "none",
                                 }}
                             >
                                 {/* Active Indicator Bar */}
@@ -317,8 +371,34 @@ export const InteractiveShowcase: React.FC = () => {
             </div>
 
             {/* Decorative background blurs specifically for this component */}
-            <div style={{ position: "absolute", top: "20%", left: "-10%", width: 300, height: 300, background: "rgba(22, 119, 255, 0.05)", filter: "blur(60px)", borderRadius: "50%", zIndex: -1, pointerEvents: "none" }} />
-            <div style={{ position: "absolute", bottom: "-10%", right: "-5%", width: 250, height: 250, background: "rgba(114, 46, 209, 0.05)", filter: "blur(60px)", borderRadius: "50%", zIndex: -1, pointerEvents: "none" }} />
+            <div
+                style={{
+                    position: "absolute",
+                    top: "20%",
+                    left: "-10%",
+                    width: 300,
+                    height: 300,
+                    background: "rgba(22, 119, 255, 0.05)",
+                    filter: "blur(60px)",
+                    borderRadius: "50%",
+                    zIndex: -1,
+                    pointerEvents: "none",
+                }}
+            />
+            <div
+                style={{
+                    position: "absolute",
+                    bottom: "-10%",
+                    right: "-5%",
+                    width: 250,
+                    height: 250,
+                    background: "rgba(114, 46, 209, 0.05)",
+                    filter: "blur(60px)",
+                    borderRadius: "50%",
+                    zIndex: -1,
+                    pointerEvents: "none",
+                }}
+            />
         </div>
     )
 }

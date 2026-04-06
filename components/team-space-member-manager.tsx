@@ -136,7 +136,7 @@ export function TeamSpaceMemberManager({
         }
     }
 
-    const getRoleTag = (role?: string) => {
+    const _getRoleTag = (role?: string) => {
         switch (role) {
             case SpaceRole.SPACE_ADMIN:
                 return <Tag color="red">空间管理员</Tag>

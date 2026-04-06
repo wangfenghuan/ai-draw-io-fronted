@@ -29,9 +29,8 @@ const nextConfig: NextConfig = {
     },
     webpack: (config, { isServer, webpack }) => {
         if (!isServer) {
-            
         }
-        
+
         // Enable async WebAssembly
         config.experiments = {
             ...config.experiments,
@@ -47,7 +46,7 @@ const nextConfig: NextConfig = {
         //        contextRegExp: /web-tree-sitter/,
         //    })
         // )
-        
+
         // Add rule to handle .wasm files if not already present
         // config.module.rules.push({
         //   test: /\.wasm$/,

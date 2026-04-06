@@ -14,12 +14,12 @@ import {
     Col,
     InputNumber,
     Layout,
+    message,
     Row,
     Space,
     Statistic,
     Switch,
     Typography,
-    message,
 } from "antd"
 import { useEffect, useState } from "react"
 import {
@@ -147,7 +147,7 @@ export function AdminAiManagement() {
                             value={aiUsage}
                             prefix={<ClockCircleOutlined />}
                         />
-                         <div style={{ marginTop: 16 }}>
+                        <div style={{ marginTop: 16 }}>
                             <Badge
                                 status={globalAiEnabled ? "success" : "error"}
                                 text={

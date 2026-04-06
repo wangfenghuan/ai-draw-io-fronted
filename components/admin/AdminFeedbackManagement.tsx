@@ -132,7 +132,7 @@ export function AdminFeedbackManagement() {
             } else {
                 message.error("更新状态失败：" + res.message)
             }
-        } catch (error) {
+        } catch (_error) {
             message.error("操作失败，请重试")
         }
     }
@@ -149,7 +149,7 @@ export function AdminFeedbackManagement() {
             } else {
                 message.error("删除失败：" + res.message)
             }
-        } catch (error) {
+        } catch (_error) {
             message.error("删除失败，请重试")
         }
     }
@@ -183,7 +183,7 @@ export function AdminFeedbackManagement() {
             dataIndex: "content",
             key: "content",
             ellipsis: true,
-            render: (text: string, record: API.FeedbackVO) => (
+            render: (text: string, _record: API.FeedbackVO) => (
                 <div>
                     <div>{text}</div>
                 </div>

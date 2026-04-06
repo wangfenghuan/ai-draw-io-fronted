@@ -4,7 +4,6 @@ import {
     AppstoreOutlined,
     DeleteOutlined,
     EditOutlined,
-    FileImageOutlined,
     PlusOutlined,
     SearchOutlined,
     UserOutlined,
@@ -19,8 +18,6 @@ import {
     Modal,
     Pagination,
     Popconfirm,
-    Space,
-    Tag,
     Tooltip,
 } from "antd"
 import { useEffect, useRef, useState } from "react"

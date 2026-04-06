@@ -1,19 +1,18 @@
 "use client"
 
 import {
+    AppstoreAddOutlined,
     AppstoreOutlined,
     BulbOutlined,
+    CloudSyncOutlined,
     FolderOutlined,
     PlusOutlined,
-    ThunderboltOutlined,
     RocketOutlined,
-    CloudSyncOutlined,
-    AppstoreAddOutlined,
-    ThunderboltOutlined as BoltOutlined,
+    ThunderboltOutlined,
 } from "@ant-design/icons"
 import { App, Button, Card, Col, Row, Space, Typography } from "antd"
-import { useTranslations } from "next-intl"
 import { useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import React, { useState } from "react"
 import { CreateDiagramDialog } from "@/components/create-diagram-dialog"
 import { CreateSpaceDialog } from "@/components/create-space-dialog"
@@ -27,7 +26,7 @@ const { Title, Paragraph, Text } = Typography
 const Home: React.FC = () => {
     const { message } = App.useApp()
     const t = useTranslations("home")
-    const tDiagram = useTranslations("diagram")
+    const _tDiagram = useTranslations("diagram")
     const tSpace = useTranslations("space")
     const router = useRouter()
     const [_loading, _setLoading] = React.useState(false)
@@ -48,12 +47,23 @@ const Home: React.FC = () => {
     const quickTemplates = [
         {
             icon: (
-                <div style={{
-                    width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, #4096ff 0%, #0958d9 100%)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    boxShadow: "inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -4px 6px rgba(0,0,0,0.2), 0 8px 16px rgba(9, 88, 217, 0.3)"
-                }}>
-                    <ThunderboltOutlined style={{ fontSize: 24, color: "#fff" }} />
+                <div
+                    style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 14,
+                        background:
+                            "linear-gradient(135deg, #4096ff 0%, #0958d9 100%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow:
+                            "inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -4px 6px rgba(0,0,0,0.2), 0 8px 16px rgba(9, 88, 217, 0.3)",
+                    }}
+                >
+                    <ThunderboltOutlined
+                        style={{ fontSize: 24, color: "#fff" }}
+                    />
                 </div>
             ),
             title: t("quickStart"),
@@ -63,11 +73,20 @@ const Home: React.FC = () => {
         },
         {
             icon: (
-                <div style={{
-                    width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, #ffc53d 0%, #d46b08 100%)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    boxShadow: "inset 0 2px 4px rgba(255,255,255,0.5), inset 0 -4px 6px rgba(0,0,0,0.2), 0 8px 16px rgba(212, 107, 8, 0.3)"
-                }}>
+                <div
+                    style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 14,
+                        background:
+                            "linear-gradient(135deg, #ffc53d 0%, #d46b08 100%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow:
+                            "inset 0 2px 4px rgba(255,255,255,0.5), inset 0 -4px 6px rgba(0,0,0,0.2), 0 8px 16px rgba(212, 107, 8, 0.3)",
+                    }}
+                >
                     <BulbOutlined style={{ fontSize: 24, color: "#fff" }} />
                 </div>
             ),
@@ -78,11 +97,20 @@ const Home: React.FC = () => {
         },
         {
             icon: (
-                <div style={{
-                    width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, #73d13d 0%, #389e0d 100%)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    boxShadow: "inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -4px 6px rgba(0,0,0,0.2), 0 8px 16px rgba(56, 158, 13, 0.3)"
-                }}>
+                <div
+                    style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 14,
+                        background:
+                            "linear-gradient(135deg, #73d13d 0%, #389e0d 100%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow:
+                            "inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -4px 6px rgba(0,0,0,0.2), 0 8px 16px rgba(56, 158, 13, 0.3)",
+                    }}
+                >
                     <FolderOutlined style={{ fontSize: 24, color: "#fff" }} />
                 </div>
             ),
@@ -93,11 +121,20 @@ const Home: React.FC = () => {
         },
         {
             icon: (
-                <div style={{
-                    width: 48, height: 48, borderRadius: 14, background: "linear-gradient(135deg, #b37feb 0%, #531dab 100%)",
-                    display: "flex", alignItems: "center", justifyContent: "center",
-                    boxShadow: "inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -4px 6px rgba(0,0,0,0.2), 0 8px 16px rgba(83, 29, 171, 0.3)"
-                }}>
+                <div
+                    style={{
+                        width: 48,
+                        height: 48,
+                        borderRadius: 14,
+                        background:
+                            "linear-gradient(135deg, #b37feb 0%, #531dab 100%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow:
+                            "inset 0 2px 4px rgba(255,255,255,0.4), inset 0 -4px 6px rgba(0,0,0,0.2), 0 8px 16px rgba(83, 29, 171, 0.3)",
+                    }}
+                >
                     <AppstoreOutlined style={{ fontSize: 24, color: "#fff" }} />
                 </div>
             ),
@@ -130,41 +167,244 @@ const Home: React.FC = () => {
             }}
         >
             {/* Background Geometric Decorations to emphasize the "Drawing/Creativity" theme */}
-            <svg style={{ position: "absolute", top: "12%", right: "18%", zIndex: 0, opacity: 0.15 }} width="80" height="80" viewBox="0 0 80 80" fill="none">
-                <circle cx="40" cy="40" r="38" stroke="#1677ff" strokeWidth="2" strokeDasharray="8 8" />
+            <svg
+                style={{
+                    position: "absolute",
+                    top: "12%",
+                    right: "18%",
+                    zIndex: 0,
+                    opacity: 0.15,
+                }}
+                width="80"
+                height="80"
+                viewBox="0 0 80 80"
+                fill="none"
+            >
+                <circle
+                    cx="40"
+                    cy="40"
+                    r="38"
+                    stroke="#1677ff"
+                    strokeWidth="2"
+                    strokeDasharray="8 8"
+                />
             </svg>
-            <svg style={{ position: "absolute", top: "50%", left: "8%", zIndex: 0, opacity: 0.12 }} width="100" height="100" viewBox="0 0 100 100" fill="none">
-                <rect x="10" y="10" width="80" height="80" rx="16" stroke="#faad14" strokeWidth="3" transform="rotate(15 50 50)" />
+            <svg
+                style={{
+                    position: "absolute",
+                    top: "50%",
+                    left: "8%",
+                    zIndex: 0,
+                    opacity: 0.12,
+                }}
+                width="100"
+                height="100"
+                viewBox="0 0 100 100"
+                fill="none"
+            >
+                <rect
+                    x="10"
+                    y="10"
+                    width="80"
+                    height="80"
+                    rx="16"
+                    stroke="#faad14"
+                    strokeWidth="3"
+                    transform="rotate(15 50 50)"
+                />
             </svg>
-            <svg style={{ position: "absolute", bottom: "15%", right: "12%", zIndex: 0, opacity: 0.2 }} width="120" height="60" viewBox="0 0 120 60" fill="none">
-                <path d="M0 30 Q 30 0, 60 30 T 120 30" stroke="#52c41a" strokeWidth="3" fill="none" strokeLinecap="round" />
-                <path d="M0 45 Q 30 15, 60 45 T 120 45" stroke="#1677ff" strokeWidth="2" fill="none" strokeLinecap="round" opacity="0.6" />
+            <svg
+                style={{
+                    position: "absolute",
+                    bottom: "15%",
+                    right: "12%",
+                    zIndex: 0,
+                    opacity: 0.2,
+                }}
+                width="120"
+                height="60"
+                viewBox="0 0 120 60"
+                fill="none"
+            >
+                <path
+                    d="M0 30 Q 30 0, 60 30 T 120 30"
+                    stroke="#52c41a"
+                    strokeWidth="3"
+                    fill="none"
+                    strokeLinecap="round"
+                />
+                <path
+                    d="M0 45 Q 30 15, 60 45 T 120 45"
+                    stroke="#1677ff"
+                    strokeWidth="2"
+                    fill="none"
+                    strokeLinecap="round"
+                    opacity="0.6"
+                />
             </svg>
-            <svg style={{ position: "absolute", top: "28%", left: "20%", zIndex: 0, opacity: 0.1 }} width="60" height="60" viewBox="0 0 60 60" fill="none">
-                <polygon points="30,5 55,50 5,50" stroke="#722ed1" strokeWidth="3" fill="none" transform="rotate(-20 30 30)" strokeLinejoin="round" />
+            <svg
+                style={{
+                    position: "absolute",
+                    top: "28%",
+                    left: "20%",
+                    zIndex: 0,
+                    opacity: 0.1,
+                }}
+                width="60"
+                height="60"
+                viewBox="0 0 60 60"
+                fill="none"
+            >
+                <polygon
+                    points="30,5 55,50 5,50"
+                    stroke="#722ed1"
+                    strokeWidth="3"
+                    fill="none"
+                    transform="rotate(-20 30 30)"
+                    strokeLinejoin="round"
+                />
             </svg>
-            <svg style={{ position: "absolute", bottom: "30%", left: "25%", zIndex: 0, opacity: 0.15 }} width="50" height="50" viewBox="0 0 50 50" fill="none">
+            <svg
+                style={{
+                    position: "absolute",
+                    bottom: "30%",
+                    left: "25%",
+                    zIndex: 0,
+                    opacity: 0.15,
+                }}
+                width="50"
+                height="50"
+                viewBox="0 0 50 50"
+                fill="none"
+            >
                 <circle cx="10" cy="10" r="4" fill="#ff4d4f" />
                 <circle cx="40" cy="20" r="6" fill="#1890ff" />
                 <circle cx="20" cy="40" r="5" fill="#52c41a" />
-                <path d="M10 10 L40 20 L20 40 Z" stroke="#d9d9d9" strokeWidth="1" strokeDasharray="4 4" />
+                <path
+                    d="M10 10 L40 20 L20 40 Z"
+                    stroke="#d9d9d9"
+                    strokeWidth="1"
+                    strokeDasharray="4 4"
+                />
             </svg>
-            <svg style={{ position: "absolute", top: "65%", right: "25%", zIndex: 0, opacity: 0.15 }} width="70" height="70" viewBox="0 0 70 70" fill="none">
-                <path d="M10 35 H60 M35 10 V60" stroke="#1677ff" strokeWidth="2" strokeLinecap="round" />
-                <circle cx="35" cy="35" r="20" stroke="#faad14" strokeWidth="2" />
+            <svg
+                style={{
+                    position: "absolute",
+                    top: "65%",
+                    right: "25%",
+                    zIndex: 0,
+                    opacity: 0.15,
+                }}
+                width="70"
+                height="70"
+                viewBox="0 0 70 70"
+                fill="none"
+            >
+                <path
+                    d="M10 35 H60 M35 10 V60"
+                    stroke="#1677ff"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                />
+                <circle
+                    cx="35"
+                    cy="35"
+                    r="20"
+                    stroke="#faad14"
+                    strokeWidth="2"
+                />
             </svg>
-            <svg style={{ position: "absolute", top: "15%", left: "35%", zIndex: 0, opacity: 0.1 }} width="40" height="40" viewBox="0 0 40 40" fill="none">
-                <rect x="5" y="5" width="30" height="30" rx="6" stroke="#eb2f96" strokeWidth="2" strokeDasharray="4 4" transform="rotate(45 20 20)" />
+            <svg
+                style={{
+                    position: "absolute",
+                    top: "15%",
+                    left: "35%",
+                    zIndex: 0,
+                    opacity: 0.1,
+                }}
+                width="40"
+                height="40"
+                viewBox="0 0 40 40"
+                fill="none"
+            >
+                <rect
+                    x="5"
+                    y="5"
+                    width="30"
+                    height="30"
+                    rx="6"
+                    stroke="#eb2f96"
+                    strokeWidth="2"
+                    strokeDasharray="4 4"
+                    transform="rotate(45 20 20)"
+                />
             </svg>
-            <svg style={{ position: "absolute", bottom: "20%", right: "35%", zIndex: 0, opacity: 0.08 }} width="100" height="100" viewBox="0 0 100 100" fill="none">
-                <path d="M20 50 Q 35 20, 50 50 T 80 50" stroke="#13c2c2" strokeWidth="4" fill="none" strokeLinecap="round" />
+            <svg
+                style={{
+                    position: "absolute",
+                    bottom: "20%",
+                    right: "35%",
+                    zIndex: 0,
+                    opacity: 0.08,
+                }}
+                width="100"
+                height="100"
+                viewBox="0 0 100 100"
+                fill="none"
+            >
+                <path
+                    d="M20 50 Q 35 20, 50 50 T 80 50"
+                    stroke="#13c2c2"
+                    strokeWidth="4"
+                    fill="none"
+                    strokeLinecap="round"
+                />
             </svg>
-            <svg style={{ position: "absolute", top: "40%", right: "8%", zIndex: 0, opacity: 0.12 }} width="60" height="60" viewBox="0 0 60 60" fill="none">
-                <circle cx="30" cy="30" r="25" stroke="#722ed1" strokeWidth="3" fill="none" strokeDasharray="10 5" />
+            <svg
+                style={{
+                    position: "absolute",
+                    top: "40%",
+                    right: "8%",
+                    zIndex: 0,
+                    opacity: 0.12,
+                }}
+                width="60"
+                height="60"
+                viewBox="0 0 60 60"
+                fill="none"
+            >
+                <circle
+                    cx="30"
+                    cy="30"
+                    r="25"
+                    stroke="#722ed1"
+                    strokeWidth="3"
+                    fill="none"
+                    strokeDasharray="10 5"
+                />
                 <circle cx="30" cy="30" r="15" fill="#13c2c2" opacity="0.3" />
             </svg>
-            <svg style={{ position: "absolute", bottom: "10%", left: "8%", zIndex: 0, opacity: 0.15 }} width="80" height="80" viewBox="0 0 80 80" fill="none">
-                <path d="M40 5 L75 75 L5 75 Z" stroke="#faad14" strokeWidth="2" fill="none" strokeLinejoin="miter" transform="rotate(-15 40 40)" />
+            <svg
+                style={{
+                    position: "absolute",
+                    bottom: "10%",
+                    left: "8%",
+                    zIndex: 0,
+                    opacity: 0.15,
+                }}
+                width="80"
+                height="80"
+                viewBox="0 0 80 80"
+                fill="none"
+            >
+                <path
+                    d="M40 5 L75 75 L5 75 Z"
+                    stroke="#faad14"
+                    strokeWidth="2"
+                    fill="none"
+                    strokeLinejoin="miter"
+                    transform="rotate(-15 40 40)"
+                />
                 <circle cx="40" cy="50" r="10" fill="#eb2f96" opacity="0.2" />
             </svg>
 
@@ -206,7 +446,9 @@ const Home: React.FC = () => {
                         }}
                     >
                         {t("heroTitle")}
-                        <span style={{ color: "#1677ff" }}>{t("heroTitleHighlight")}</span>
+                        <span style={{ color: "#1677ff" }}>
+                            {t("heroTitleHighlight")}
+                        </span>
                     </Title>
 
                     <Paragraph
@@ -262,7 +504,8 @@ const Home: React.FC = () => {
                 {/* Value Proposition Section - Why choose us over traditional draw.io */}
                 <div
                     style={{
-                        background: "linear-gradient(135deg, rgba(22, 119, 255, 0.05) 0%, rgba(114, 46, 209, 0.05) 100%)",
+                        background:
+                            "linear-gradient(135deg, rgba(22, 119, 255, 0.05) 0%, rgba(114, 46, 209, 0.05) 100%)",
                         borderRadius: 24,
                         padding: "40px 32px",
                         marginBottom: 48,
@@ -276,13 +519,22 @@ const Home: React.FC = () => {
                                 alignItems: "center",
                                 gap: 8,
                                 padding: "6px 16px",
-                                background: "linear-gradient(135deg, #1677ff 0%, #722ed1 100%)",
+                                background:
+                                    "linear-gradient(135deg, #1677ff 0%, #722ed1 100%)",
                                 borderRadius: 20,
                                 marginBottom: 16,
                             }}
                         >
-                            <RocketOutlined style={{ color: "#fff", fontSize: 14 }} />
-                            <span style={{ color: "#fff", fontSize: 13, fontWeight: 500 }}>
+                            <RocketOutlined
+                                style={{ color: "#fff", fontSize: 14 }}
+                            />
+                            <span
+                                style={{
+                                    color: "#fff",
+                                    fontSize: 13,
+                                    fontWeight: 500,
+                                }}
+                            >
                                 {t("whyChooseUs")}
                             </span>
                         </div>
@@ -317,20 +569,35 @@ const Home: React.FC = () => {
                                         width: 56,
                                         height: 56,
                                         borderRadius: 16,
-                                        background: "linear-gradient(135deg, #1677ff 0%, #0958d9 100%)",
+                                        background:
+                                            "linear-gradient(135deg, #1677ff 0%, #0958d9 100%)",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
                                         margin: "0 auto 16px",
-                                        boxShadow: "0 8px 24px rgba(22, 119, 255, 0.25)",
+                                        boxShadow:
+                                            "0 8px 24px rgba(22, 119, 255, 0.25)",
                                     }}
                                 >
-                                    <ThunderboltOutlined style={{ fontSize: 28, color: "#fff" }} />
+                                    <ThunderboltOutlined
+                                        style={{ fontSize: 28, color: "#fff" }}
+                                    />
                                 </div>
-                                <Text strong style={{ display: "block", marginBottom: 8, fontSize: 16, color: "#1e293b" }}>
+                                <Text
+                                    strong
+                                    style={{
+                                        display: "block",
+                                        marginBottom: 8,
+                                        fontSize: 16,
+                                        color: "#1e293b",
+                                    }}
+                                >
                                     {t("aiPowered")}
                                 </Text>
-                                <Text type="secondary" style={{ fontSize: 13, lineHeight: 1.6 }}>
+                                <Text
+                                    type="secondary"
+                                    style={{ fontSize: 13, lineHeight: 1.6 }}
+                                >
                                     {t("aiPoweredDesc")}
                                 </Text>
                             </div>
@@ -353,20 +620,35 @@ const Home: React.FC = () => {
                                         width: 56,
                                         height: 56,
                                         borderRadius: 16,
-                                        background: "linear-gradient(135deg, #52c41a 0%, #389e0d 100%)",
+                                        background:
+                                            "linear-gradient(135deg, #52c41a 0%, #389e0d 100%)",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
                                         margin: "0 auto 16px",
-                                        boxShadow: "0 8px 24px rgba(82, 196, 26, 0.25)",
+                                        boxShadow:
+                                            "0 8px 24px rgba(82, 196, 26, 0.25)",
                                     }}
                                 >
-                                    <AppstoreAddOutlined style={{ fontSize: 28, color: "#fff" }} />
+                                    <AppstoreAddOutlined
+                                        style={{ fontSize: 28, color: "#fff" }}
+                                    />
                                 </div>
-                                <Text strong style={{ display: "block", marginBottom: 8, fontSize: 16, color: "#1e293b" }}>
+                                <Text
+                                    strong
+                                    style={{
+                                        display: "block",
+                                        marginBottom: 8,
+                                        fontSize: 16,
+                                        color: "#1e293b",
+                                    }}
+                                >
                                     {t("richTemplates")}
                                 </Text>
-                                <Text type="secondary" style={{ fontSize: 13, lineHeight: 1.6 }}>
+                                <Text
+                                    type="secondary"
+                                    style={{ fontSize: 13, lineHeight: 1.6 }}
+                                >
                                     {t("richTemplatesDesc")}
                                 </Text>
                             </div>
@@ -389,20 +671,35 @@ const Home: React.FC = () => {
                                         width: 56,
                                         height: 56,
                                         borderRadius: 16,
-                                        background: "linear-gradient(135deg, #722ed1 0%, #531dab 100%)",
+                                        background:
+                                            "linear-gradient(135deg, #722ed1 0%, #531dab 100%)",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
                                         margin: "0 auto 16px",
-                                        boxShadow: "0 8px 24px rgba(114, 46, 209, 0.25)",
+                                        boxShadow:
+                                            "0 8px 24px rgba(114, 46, 209, 0.25)",
                                     }}
                                 >
-                                    <CloudSyncOutlined style={{ fontSize: 28, color: "#fff" }} />
+                                    <CloudSyncOutlined
+                                        style={{ fontSize: 28, color: "#fff" }}
+                                    />
                                 </div>
-                                <Text strong style={{ display: "block", marginBottom: 8, fontSize: 16, color: "#1e293b" }}>
+                                <Text
+                                    strong
+                                    style={{
+                                        display: "block",
+                                        marginBottom: 8,
+                                        fontSize: 16,
+                                        color: "#1e293b",
+                                    }}
+                                >
                                     {t("realTimeCollab")}
                                 </Text>
-                                <Text type="secondary" style={{ fontSize: 13, lineHeight: 1.6 }}>
+                                <Text
+                                    type="secondary"
+                                    style={{ fontSize: 13, lineHeight: 1.6 }}
+                                >
                                     {t("realTimeCollabDesc")}
                                 </Text>
                             </div>
@@ -425,20 +722,35 @@ const Home: React.FC = () => {
                                         width: 56,
                                         height: 56,
                                         borderRadius: 16,
-                                        background: "linear-gradient(135deg, #faad14 0%, #d46b08 100%)",
+                                        background:
+                                            "linear-gradient(135deg, #faad14 0%, #d46b08 100%)",
                                         display: "flex",
                                         alignItems: "center",
                                         justifyContent: "center",
                                         margin: "0 auto 16px",
-                                        boxShadow: "0 8px 24px rgba(250, 173, 20, 0.25)",
+                                        boxShadow:
+                                            "0 8px 24px rgba(250, 173, 20, 0.25)",
                                     }}
                                 >
-                                    <FolderOutlined style={{ fontSize: 28, color: "#fff" }} />
+                                    <FolderOutlined
+                                        style={{ fontSize: 28, color: "#fff" }}
+                                    />
                                 </div>
-                                <Text strong style={{ display: "block", marginBottom: 8, fontSize: 16, color: "#1e293b" }}>
+                                <Text
+                                    strong
+                                    style={{
+                                        display: "block",
+                                        marginBottom: 8,
+                                        fontSize: 16,
+                                        color: "#1e293b",
+                                    }}
+                                >
                                     {t("cloudStorage")}
                                 </Text>
-                                <Text type="secondary" style={{ fontSize: 13, lineHeight: 1.6 }}>
+                                <Text
+                                    type="secondary"
+                                    style={{ fontSize: 13, lineHeight: 1.6 }}
+                                >
                                     {t("cloudStorageDesc")}
                                 </Text>
                             </div>
@@ -462,8 +774,10 @@ const Home: React.FC = () => {
                                     border: "1px solid rgba(255,255,255,0.8)",
                                     background: "rgba(255,255,255,0.7)",
                                     backdropFilter: "blur(10px)",
-                                    boxShadow: "0 10px 30px -10px rgba(0,0,0,0.08)",
-                                    transition: "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
+                                    boxShadow:
+                                        "0 10px 30px -10px rgba(0,0,0,0.08)",
+                                    transition:
+                                        "all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)",
                                 }}
                                 styles={{
                                     body: {

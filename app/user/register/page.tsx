@@ -4,8 +4,8 @@ import {
     GithubOutlined,
     LockOutlined,
     MailOutlined,
-    UserOutlined,
     SafetyCertificateOutlined,
+    UserOutlined,
 } from "@ant-design/icons"
 import {
     LoginForm,
@@ -14,20 +14,21 @@ import {
 } from "@ant-design/pro-components"
 import { ProForm } from "@ant-design/pro-form/lib"
 import { App, Button, Tag } from "antd"
-import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
-import React, { useState, useEffect } from "react"
+import { useTranslations } from "next-intl"
+import type React from "react"
+import { useEffect, useState } from "react"
 import { sendRegisterCode, userRegister } from "@/api/userController"
 
 const UserRegister: React.FC = () => {
     const { message } = App.useApp()
     const t = useTranslations("user")
-    const tApp = useTranslations("app")
+    const _tApp = useTranslations("app")
     const [form] = ProForm.useForm()
     const router = useRouter()
     const searchParams = useSearchParams()
-    
+
     // Countdown state
     const [countdown, setCountdown] = useState(0)
     const [sending, setSending] = useState(false)
@@ -75,7 +76,7 @@ const UserRegister: React.FC = () => {
             } else {
                 message.error(res.message || t("sendFailed"))
             }
-        } catch (error) {
+        } catch (_error) {
             message.error(t("sendFailedLater"))
         } finally {
             setSending(false)
@@ -97,7 +98,7 @@ const UserRegister: React.FC = () => {
     }
 
     const handleGithubLogin = () => {
-        const isDev = process.env.NODE_ENV === "development"
+        const _isDev = process.env.NODE_ENV === "development"
         const baseURL = "/api"
         window.location.href = `${baseURL}/oauth2/authorization/github`
     }
@@ -110,22 +111,55 @@ const UserRegister: React.FC = () => {
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    background: "linear-gradient(135deg, #f0f7ff 0%, #ffffff 50%, #f9f0ff 100%)",
+                    background:
+                        "linear-gradient(135deg, #f0f7ff 0%, #ffffff 50%, #f9f0ff 100%)",
                     position: "relative",
                     overflow: "hidden",
                 }}
             >
                 {/* Decorative background blurs */}
-                <div style={{ position: "absolute", top: "15%", left: "10%", width: 400, height: 400, background: "rgba(22, 119, 255, 0.1)", filter: "blur(80px)", borderRadius: "50%", zIndex: 0 }} />
-                <div style={{ position: "absolute", bottom: "10%", right: "20%", width: 400, height: 400, background: "rgba(114, 46, 209, 0.1)", filter: "blur(80px)", borderRadius: "50%", zIndex: 0 }} />
-                
-                <div style={{
-                    width: "100%", maxWidth: 440, zIndex: 1, padding: "20px",
-                    background: "rgba(255,255,255,0.7)", backdropFilter: "blur(12px)",
-                    borderRadius: 24, boxShadow: "0 10px 40px -10px rgba(0,0,0,0.08)",
-                    border: "1px solid rgba(255,255,255,0.8)",
-                    maxHeight: "95vh", overflowY: "auto"
-                }}>
+                <div
+                    style={{
+                        position: "absolute",
+                        top: "15%",
+                        left: "10%",
+                        width: 400,
+                        height: 400,
+                        background: "rgba(22, 119, 255, 0.1)",
+                        filter: "blur(80px)",
+                        borderRadius: "50%",
+                        zIndex: 0,
+                    }}
+                />
+                <div
+                    style={{
+                        position: "absolute",
+                        bottom: "10%",
+                        right: "20%",
+                        width: 400,
+                        height: 400,
+                        background: "rgba(114, 46, 209, 0.1)",
+                        filter: "blur(80px)",
+                        borderRadius: "50%",
+                        zIndex: 0,
+                    }}
+                />
+
+                <div
+                    style={{
+                        width: "100%",
+                        maxWidth: 440,
+                        zIndex: 1,
+                        padding: "20px",
+                        background: "rgba(255,255,255,0.7)",
+                        backdropFilter: "blur(12px)",
+                        borderRadius: 24,
+                        boxShadow: "0 10px 40px -10px rgba(0,0,0,0.08)",
+                        border: "1px solid rgba(255,255,255,0.8)",
+                        maxHeight: "95vh",
+                        overflowY: "auto",
+                    }}
+                >
                     <LoginForm
                         submitter={{
                             searchConfig: {
@@ -136,172 +170,207 @@ const UserRegister: React.FC = () => {
                         onFinish={submit}
                         logo="https://github.githubassets.com/favicons/favicon.png"
                         title="IntelliDraw"
-                        subTitle={<span style={{ fontWeight: 500, color: "#1677ff" }}>{t("openInfinitePossibilities")}</span>}
+                        subTitle={
+                            <span style={{ fontWeight: 500, color: "#1677ff" }}>
+                                {t("openInfinitePossibilities")}
+                            </span>
+                        }
                         contentStyle={{ padding: "0 20px" }}
                         actions={
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                flexDirection: "column",
-                            }}
-                        >
                             <div
                                 style={{
                                     display: "flex",
                                     justifyContent: "center",
                                     alignItems: "center",
                                     flexDirection: "column",
-                                    height: 40,
-                                    width: 40,
-                                    border: "1px solid #D4D8DD",
-                                    borderRadius: "50%",
-                                    cursor: "pointer",
                                 }}
-                                onClick={handleGithubLogin}
                             >
-                                <GithubOutlined
+                                <div
                                     style={{
-                                        fontSize: 24,
-                                        color: "#1677ff",
+                                        display: "flex",
+                                        justifyContent: "center",
+                                        alignItems: "center",
+                                        flexDirection: "column",
+                                        height: 40,
+                                        width: 40,
+                                        border: "1px solid #D4D8DD",
+                                        borderRadius: "50%",
+                                        cursor: "pointer",
                                     }}
-                                />
-                            </div>
-                        </div>
-                    }
-                >
-                    <ProFormText
-                        name="userAccount"
-                        fieldProps={{
-                            size: "large",
-                            prefix: <MailOutlined className={"prefixIcon"} />,
-                        }}
-                        placeholder={t("enterEmail")}
-                        rules={[
-                            {
-                                required: true,
-                                message: t("enterEmail"),
-                            },
-                            {
-                                type: "email",
-                                message: t("enterValidEmail"),
-                            },
-                        ]}
-                    />
-                    <ProFormText
-                        name="userName"
-                        fieldProps={{
-                            size: "large",
-                            prefix: <UserOutlined className={"prefixIcon"} />,
-                        }}
-                        placeholder={t("enterUsername")}
-                        rules={[
-                            {
-                                required: true,
-                                message: t("enterUsernameRequired"),
-                            },
-                        ]}
-                    />
-                    <ProFormText.Password
-                        name="userPassword"
-                        fieldProps={{
-                            size: "large",
-                            prefix: <LockOutlined className={"prefixIcon"} />,
-                            strengthText:
-                                "Password should contain numbers, letters and special characters, at least 8 characters long.",
-                        }}
-                        placeholder={t("enterPassword")}
-                        rules={[
-                            {
-                                required: true,
-                                message: t("enterPassword"),
-                            },
-                            {
-                                min: 8,
-                                message: t("passwordMinLength"),
-                            }
-                        ]}
-                    />
-                    <ProFormText.Password
-                        name="checkPassword"
-                        fieldProps={{
-                            size: "large",
-                            prefix: <LockOutlined className={"prefixIcon"} />,
-                        }}
-                        placeholder={t("confirmPassword")}
-                        rules={[
-                            {
-                                required: true,
-                                message: t("confirmPasswordRequired"),
-                            },
-                            ({ getFieldValue }) => ({
-                                validator(_, value) {
-                                  if (!value || getFieldValue('userPassword') === value) {
-                                    return Promise.resolve();
-                                  }
-                                  return Promise.reject(new Error(t("passwordNotMatch")));
-                                },
-                            }),
-                        ]}
-                    />
-                   
-                    <ProFormText
-                        name="emailCode"
-                        fieldProps={{
-                            size: "large",
-                            prefix: (
-                                <SafetyCertificateOutlined className={"prefixIcon"} />
-                            ),
-                            addonAfter: (
-                                <Button 
-                                    type="link" 
-                                    disabled={countdown > 0 || sending} 
-                                    onClick={handleSendCode}
-                                    style={{ padding: '0 8px' }}
+                                    onClick={handleGithubLogin}
                                 >
-                                    {countdown > 0 ? `${countdown}${t("resendAfter")}` : (sending ? t("sending") : t("sendCode"))}
-                                </Button>
-                            )
-                        }}
-                        placeholder={t("enterEmailCode")}
-                        rules={[
-                            {
-                                required: true,
-                                message: t("enterCodeRequired"),
-                            },
-                            {
-                                len: 6,
-                                message: t("codeLength"),
-                            }
-                        ]}
-                    />
-                    
-                    {/* Invite code field */}
-                    <ProFormText
-                        name="inviteCode"
-                        fieldProps={{
-                            size: "large",
-                            prefix: <GiftOutlined className={"prefixIcon"} />,
-                        }}
-                        placeholder={t("inviteCodePlaceholder") || "邀请码（选填，填写后双方可获得AI额度奖励）"}
-                        tooltip={t("inviteCodeTooltip") || "填写好友的邀请码，注册成功后双方各获得5次AI额度奖励"}
-                    />
-                    {inviteCode && (
-                        <div style={{ marginTop: -16, marginBottom: 16 }}>
-                            <Tag color="green">{t("inviteCodeApplied") || "已应用邀请码，注册后双方各获得5次AI额度奖励！"}</Tag>
-                        </div>
-                    )}
-                    
-                    <div
-                        style={{
-                            marginBlockEnd: 24,
-                            textAlign: "end",
-                        }}
+                                    <GithubOutlined
+                                        style={{
+                                            fontSize: 24,
+                                            color: "#1677ff",
+                                        }}
+                                    />
+                                </div>
+                            </div>
+                        }
                     >
-                        <Link href={"/user/login"}>{t("goToLogin")}</Link>
-                    </div>
-                </LoginForm>
+                        <ProFormText
+                            name="userAccount"
+                            fieldProps={{
+                                size: "large",
+                                prefix: (
+                                    <MailOutlined className={"prefixIcon"} />
+                                ),
+                            }}
+                            placeholder={t("enterEmail")}
+                            rules={[
+                                {
+                                    required: true,
+                                    message: t("enterEmail"),
+                                },
+                                {
+                                    type: "email",
+                                    message: t("enterValidEmail"),
+                                },
+                            ]}
+                        />
+                        <ProFormText
+                            name="userName"
+                            fieldProps={{
+                                size: "large",
+                                prefix: (
+                                    <UserOutlined className={"prefixIcon"} />
+                                ),
+                            }}
+                            placeholder={t("enterUsername")}
+                            rules={[
+                                {
+                                    required: true,
+                                    message: t("enterUsernameRequired"),
+                                },
+                            ]}
+                        />
+                        <ProFormText.Password
+                            name="userPassword"
+                            fieldProps={{
+                                size: "large",
+                                prefix: (
+                                    <LockOutlined className={"prefixIcon"} />
+                                ),
+                                strengthText:
+                                    "Password should contain numbers, letters and special characters, at least 8 characters long.",
+                            }}
+                            placeholder={t("enterPassword")}
+                            rules={[
+                                {
+                                    required: true,
+                                    message: t("enterPassword"),
+                                },
+                                {
+                                    min: 8,
+                                    message: t("passwordMinLength"),
+                                },
+                            ]}
+                        />
+                        <ProFormText.Password
+                            name="checkPassword"
+                            fieldProps={{
+                                size: "large",
+                                prefix: (
+                                    <LockOutlined className={"prefixIcon"} />
+                                ),
+                            }}
+                            placeholder={t("confirmPassword")}
+                            rules={[
+                                {
+                                    required: true,
+                                    message: t("confirmPasswordRequired"),
+                                },
+                                ({ getFieldValue }) => ({
+                                    validator(_, value) {
+                                        if (
+                                            !value ||
+                                            getFieldValue("userPassword") ===
+                                                value
+                                        ) {
+                                            return Promise.resolve()
+                                        }
+                                        return Promise.reject(
+                                            new Error(t("passwordNotMatch")),
+                                        )
+                                    },
+                                }),
+                            ]}
+                        />
+
+                        <ProFormText
+                            name="emailCode"
+                            fieldProps={{
+                                size: "large",
+                                prefix: (
+                                    <SafetyCertificateOutlined
+                                        className={"prefixIcon"}
+                                    />
+                                ),
+                                addonAfter: (
+                                    <Button
+                                        type="link"
+                                        disabled={countdown > 0 || sending}
+                                        onClick={handleSendCode}
+                                        style={{ padding: "0 8px" }}
+                                    >
+                                        {countdown > 0
+                                            ? `${countdown}${t("resendAfter")}`
+                                            : sending
+                                              ? t("sending")
+                                              : t("sendCode")}
+                                    </Button>
+                                ),
+                            }}
+                            placeholder={t("enterEmailCode")}
+                            rules={[
+                                {
+                                    required: true,
+                                    message: t("enterCodeRequired"),
+                                },
+                                {
+                                    len: 6,
+                                    message: t("codeLength"),
+                                },
+                            ]}
+                        />
+
+                        {/* Invite code field */}
+                        <ProFormText
+                            name="inviteCode"
+                            fieldProps={{
+                                size: "large",
+                                prefix: (
+                                    <GiftOutlined className={"prefixIcon"} />
+                                ),
+                            }}
+                            placeholder={
+                                t("inviteCodePlaceholder") ||
+                                "邀请码（选填，填写后双方可获得AI额度奖励）"
+                            }
+                            tooltip={
+                                t("inviteCodeTooltip") ||
+                                "填写好友的邀请码，注册成功后双方各获得5次AI额度奖励"
+                            }
+                        />
+                        {inviteCode && (
+                            <div style={{ marginTop: -16, marginBottom: 16 }}>
+                                <Tag color="green">
+                                    {t("inviteCodeApplied") ||
+                                        "已应用邀请码，注册后双方各获得5次AI额度奖励！"}
+                                </Tag>
+                            </div>
+                        )}
+
+                        <div
+                            style={{
+                                marginBlockEnd: 24,
+                                textAlign: "end",
+                            }}
+                        >
+                            <Link href={"/user/login"}>{t("goToLogin")}</Link>
+                        </div>
+                    </LoginForm>
                 </div>
             </div>
         </ProConfigProvider>

@@ -3,10 +3,10 @@ import {
     HomeOutlined,
     MessageOutlined,
     NotificationOutlined,
+    RocketOutlined,
     ShopOutlined,
     TableOutlined,
     UserOutlined,
-    RocketOutlined,
 } from "@ant-design/icons"
 import type { MenuDataItem } from "@ant-design/pro-layout"
 
@@ -32,7 +32,7 @@ export const menus: MenuDataItem[] = [
         icon: <HomeOutlined />,
         access: "notLogin",
     },
-     {
+    {
         name: "freeTrial",
         path: "/demo",
         icon: <RocketOutlined />,
@@ -44,7 +44,7 @@ export const menus: MenuDataItem[] = [
         icon: <ShopOutlined />,
         access: "notLogin",
     },
-   
+
     {
         name: "diagramMarketplace",
         path: "/diagram-marketplace",
@@ -84,8 +84,10 @@ export const menus: MenuDataItem[] = [
 ]
 
 // 获取带翻译的菜单 (t 已经是 useTranslations("nav") 的结果，不需要再加 nav. 前缀)
-export const getTranslatedMenus = (t: (key: string) => string): MenuDataItem[] => {
-    return menus.map(item => ({
+export const getTranslatedMenus = (
+    t: (key: string) => string,
+): MenuDataItem[] => {
+    return menus.map((item) => ({
         ...item,
         name: t(item.name as string),
     }))

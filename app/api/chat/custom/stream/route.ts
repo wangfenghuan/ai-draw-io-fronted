@@ -1,4 +1,4 @@
-import { NextRequest, NextResponse } from "next/server"
+import { type NextRequest, NextResponse } from "next/server"
 
 const BACKEND_URL =
     process.env.NODE_ENV === "development"
@@ -25,10 +25,14 @@ export async function POST(request: NextRequest) {
         )
 
         if (!backendResponse.ok) {
-            const errorText = await backendResponse.text().catch(() => "Unknown error")
+            const errorText = await backendResponse
+                .text()
+                .catch(() => "Unknown error")
             try {
                 const errorJson = JSON.parse(errorText)
-                return NextResponse.json(errorJson, { status: backendResponse.status })
+                return NextResponse.json(errorJson, {
+                    status: backendResponse.status,
+                })
             } catch {
                 return NextResponse.json(
                     { error: errorText },
@@ -41,7 +45,9 @@ export async function POST(request: NextRequest) {
         const contentType = backendResponse.headers.get("content-type") || ""
         if (contentType.includes("application/json")) {
             const jsonResponse = await backendResponse.json().catch(() => ({}))
-            return NextResponse.json(jsonResponse, { status: backendResponse.status })
+            return NextResponse.json(jsonResponse, {
+                status: backendResponse.status,
+            })
         }
 
         if (!backendResponse.body) {
@@ -54,7 +60,7 @@ export async function POST(request: NextRequest) {
         // 将后端的 SSE 流直接透传给前端，不缓冲
         const stream = new ReadableStream({
             async start(controller) {
-                const reader = backendResponse.body!.getReader()
+                const reader = backendResponse.body?.getReader()
                 try {
                     while (true) {
                         const { done, value } = await reader.read()

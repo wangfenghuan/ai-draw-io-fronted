@@ -26,9 +26,7 @@ const GlobalFooter: React.FC = () => {
                     flexWrap: "wrap",
                 }}
             >
-                <div>
-                    {t("copyright", { year })}
-                </div>
+                <div>{t("copyright", { year })}</div>
                 <div>
                     <a
                         href="https://github.com/wangfenghuan"

@@ -3,5 +3,7 @@
 
 export function register() {
     // Telemetry disabled - backend handles AI observability
-    console.log("[Instrumentation] Telemetry disabled - backend handles AI observability")
+    console.log(
+        "[Instrumentation] Telemetry disabled - backend handles AI observability",
+    )
 }

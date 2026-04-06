@@ -1,6 +1,6 @@
 "use client"
 
-import { X, Play } from "lucide-react"
+import { Play, X } from "lucide-react"
 import { useEffect, useState } from "react"
 
 interface DemoGif {
@@ -75,7 +75,8 @@ export function DemoVideoDialog({ open, onOpenChange }: DemoVideoDialogProps) {
                     maxWidth: 880,
                     background: "#0f172a",
                     border: "1px solid rgba(255,255,255,0.08)",
-                    animation: "demoVideoIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                    animation:
+                        "demoVideoIn 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)",
                 }}
             >
                 {/* Header */}
@@ -85,7 +86,9 @@ export function DemoVideoDialog({ open, onOpenChange }: DemoVideoDialogProps) {
                 >
                     <div className="flex items-center gap-2">
                         <Play className="w-4 h-4 text-white/60" />
-                        <span className="text-white font-semibold text-sm">功能演示</span>
+                        <span className="text-white font-semibold text-sm">
+                            功能演示
+                        </span>
                     </div>
                     <button
                         onClick={() => onOpenChange(false)}
@@ -96,9 +99,7 @@ export function DemoVideoDialog({ open, onOpenChange }: DemoVideoDialogProps) {
                 </div>
 
                 {/* Tab bar */}
-                <div
-                    className="flex gap-1 px-6 pt-4 pb-0"
-                >
+                <div className="flex gap-1 px-6 pt-4 pb-0">
                     {DEMO_GIFS.map((gif) => {
                         const isActive = gif.key === activeKey
                         return (
@@ -110,7 +111,9 @@ export function DemoVideoDialog({ open, onOpenChange }: DemoVideoDialogProps) {
                                     background: isActive
                                         ? "rgba(255,255,255,0.08)"
                                         : "transparent",
-                                    color: isActive ? "#fff" : "rgba(255,255,255,0.45)",
+                                    color: isActive
+                                        ? "#fff"
+                                        : "rgba(255,255,255,0.45)",
                                     borderBottom: isActive
                                         ? "2px solid rgba(255,255,255,0.5)"
                                         : "2px solid transparent",
@@ -125,7 +128,9 @@ export function DemoVideoDialog({ open, onOpenChange }: DemoVideoDialogProps) {
                 {/* GIF area */}
                 <div className="px-6 pb-6 pt-3">
                     {/* Description */}
-                    <p className="text-white/50 text-xs mb-3">{activeGif.description}</p>
+                    <p className="text-white/50 text-xs mb-3">
+                        {activeGif.description}
+                    </p>
 
                     {/* GIF display */}
                     <div

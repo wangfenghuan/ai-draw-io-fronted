@@ -7,7 +7,9 @@ import { listAnnouncementVoByPage } from "@/api/announcementController"
 
 export const HomeAnnouncementDialog = () => {
     const [visible, setVisible] = useState(false)
-    const [announcement, setAnnouncement] = useState<API.AnnouncementVO | null>(null)
+    const [announcement, setAnnouncement] = useState<API.AnnouncementVO | null>(
+        null,
+    )
 
     useEffect(() => {
         const fetchAnnouncement = async () => {
@@ -19,9 +21,13 @@ export const HomeAnnouncementDialog = () => {
                     sortOrder: "descend",
                 })
 
-                if (res.code === 0 && res.data?.records && res.data.records.length > 0) {
+                if (
+                    res.code === 0 &&
+                    res.data?.records &&
+                    res.data.records.length > 0
+                ) {
                     const latestAnnouncement = res.data.records[0]
-                    
+
                     if (latestAnnouncement) {
                         setAnnouncement(latestAnnouncement)
                         setVisible(true)
@@ -31,7 +37,7 @@ export const HomeAnnouncementDialog = () => {
                 console.error("Failed to fetch home announcement", error)
             }
         }
-        
+
         fetchAnnouncement()
     }, [])
 
@@ -94,7 +100,9 @@ export const HomeAnnouncementDialog = () => {
                                 {children}
                             </a>
                         ),
-                        p: ({ children }) => <p style={{ marginBottom: "8px" }}>{children}</p>,
+                        p: ({ children }) => (
+                            <p style={{ marginBottom: "8px" }}>{children}</p>
+                        ),
                     }}
                 >
                     {announcement.content || ""}

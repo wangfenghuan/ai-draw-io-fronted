@@ -2,9 +2,9 @@
 
 import { GlobalOutlined } from "@ant-design/icons"
 import { Button, Dropdown } from "antd"
+import { useLocale, useTranslations } from "next-intl"
 import type React from "react"
 import { useCallback, useState } from "react"
-import { useLocale, useTranslations } from "next-intl"
 
 interface LanguageSwitcherProps {
     style?: React.CSSProperties
@@ -15,29 +15,33 @@ export function LanguageSwitcher({ style }: LanguageSwitcherProps) {
     const locale = useLocale()
     const [isLoading, setIsLoading] = useState(false)
 
-    const switchLanguage = useCallback(async (newLocale: string) => {
-        if (isLoading) return
-        
-        setIsLoading(true)
-        try {
-            const response = await fetch("/api/locale", {
-                method: "POST",
-                headers: {
-                    "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ locale: newLocale }),
-            })
+    const switchLanguage = useCallback(
+        async (newLocale: string) => {
+            if (isLoading) return
 
-            if (response.ok) {
-                // 使用硬刷新确保服务器重新获取 cookie
-                window.location.href = window.location.pathname + window.location.search
+            setIsLoading(true)
+            try {
+                const response = await fetch("/api/locale", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({ locale: newLocale }),
+                })
+
+                if (response.ok) {
+                    // 使用硬刷新确保服务器重新获取 cookie
+                    window.location.href =
+                        window.location.pathname + window.location.search
+                }
+            } catch (error) {
+                console.error("Failed to switch language:", error)
+            } finally {
+                setIsLoading(false)
             }
-        } catch (error) {
-            console.error("Failed to switch language:", error)
-        } finally {
-            setIsLoading(false)
-        }
-    }, [isLoading])
+        },
+        [isLoading],
+    )
 
     const menuItems = [
         {
@@ -53,7 +57,10 @@ export function LanguageSwitcher({ style }: LanguageSwitcherProps) {
     ]
 
     return (
-        <Dropdown menu={{ items: menuItems, selectedKeys: [locale] }} trigger={["click"]}>
+        <Dropdown
+            menu={{ items: menuItems, selectedKeys: [locale] }}
+            trigger={["click"]}
+        >
             <Button
                 type="text"
                 icon={<GlobalOutlined style={{ fontSize: 18 }} />}

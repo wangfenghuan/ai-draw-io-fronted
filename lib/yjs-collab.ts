@@ -66,7 +66,7 @@ export class YjsCollaboration {
         this.yXmlText = this.ydoc.getText("xml")
 
         // 监听文档变化
-        this.ydoc.on("update", (update: Uint8Array, origin: any) => {
+        this.ydoc.on("update", (_update: Uint8Array, origin: any) => {
             // 如果不是远程更新，则忽略（本地更新已经在 pushUpdate 中处理）
             if (origin === this) return
             // 远程更新：通知外部
@@ -74,7 +74,7 @@ export class YjsCollaboration {
         })
 
         // 监听 Y.Text 变化
-        this.yXmlText.observe((event) => {
+        this.yXmlText.observe((_event) => {
             if (this.isUpdatingFromRemote) return
             this.handleRemoteUpdate()
         })
@@ -153,8 +153,14 @@ export class YjsCollaboration {
                         // 收集用户信息
                         onlineUsers.push({
                             clientID,
-                            userId: state.cursor?.userId || state.user?.userId || String(clientID),
-                            userName: state.cursor?.userName || state.user?.userName || `用户${clientID}`,
+                            userId:
+                                state.cursor?.userId ||
+                                state.user?.userId ||
+                                String(clientID),
+                            userName:
+                                state.cursor?.userName ||
+                                state.user?.userName ||
+                                `用户${clientID}`,
                             isCurrentUser: clientID === myClientID,
                         })
 
@@ -267,8 +273,14 @@ export class YjsCollaboration {
         states.forEach((state: any, clientID: number) => {
             users.push({
                 clientID,
-                userId: state.cursor?.userId || state.user?.userId || String(clientID),
-                userName: state.cursor?.userName || state.user?.userName || `用户${clientID}`,
+                userId:
+                    state.cursor?.userId ||
+                    state.user?.userId ||
+                    String(clientID),
+                userName:
+                    state.cursor?.userName ||
+                    state.user?.userName ||
+                    `用户${clientID}`,
                 isCurrentUser: clientID === myClientID,
             })
         })

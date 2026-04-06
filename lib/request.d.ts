@@ -1,5 +1,4 @@
 import { AxiosRequestConfig } from "axios"
-import type { API } from "../api/typings"
 
 declare module "@/lib/request" {
     export interface AxiosInstance {

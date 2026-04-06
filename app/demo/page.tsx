@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import { DrawIoEmbed } from "react-drawio"
 import type { ImperativePanelHandle } from "react-resizable-panels"
+import DemoChatPanel from "@/components/demo-chat-panel"
 import { LoginGateDialog } from "@/components/login-gate-dialog"
 import {
     ResizableHandle,
@@ -10,8 +11,6 @@ import {
     ResizablePanelGroup,
 } from "@/components/ui/resizable"
 import { useDiagram } from "@/contexts/diagram-context"
-
-import DemoChatPanel from "@/components/demo-chat-panel"
 
 const drawioBaseUrl =
     process.env.NEXT_PUBLIC_DRAWIO_BASE_URL || "https://embed.diagrams.net"
@@ -84,7 +83,7 @@ export default function DemoPage() {
         setLoginGateOpen(true)
     }
 
-    const toggleDarkMode = () => {
+    const _toggleDarkMode = () => {
         const newValue = !darkMode
         setDarkMode(newValue)
         localStorage.setItem("next-ai-draw-io-dark-mode", String(newValue))
@@ -140,27 +139,27 @@ export default function DemoPage() {
 
                     {/* Demo Chat/Upload Panel */}
                     <ResizablePanel
-                    id="chat-panel"
-                    ref={chatPanelRef}
-                    defaultSize={isMobile ? 50 : 33}
-                    minSize={isMobile ? 20 : 15}
-                    maxSize={isMobile ? 80 : 50}
-                    collapsible={!isMobile}
-                    collapsedSize={isMobile ? 0 : 3}
-                    onCollapse={() => setIsChatVisible(false)}
-                    onExpand={() => setIsChatVisible(true)}
-                >
-                    <div className="h-full w-full overflow-hidden">
-                        <DemoChatPanel
-                            isVisible={isChatVisible}
-                            onToggleVisibility={toggleChatPanel}
-                            darkMode={darkMode}
-                            isMobile={isMobile}
-                            onRequireLogin={requireLogin}
-                        />
-                    </div>
-                </ResizablePanel>
-            </ResizablePanelGroup>
+                        id="chat-panel"
+                        ref={chatPanelRef}
+                        defaultSize={isMobile ? 50 : 33}
+                        minSize={isMobile ? 20 : 15}
+                        maxSize={isMobile ? 80 : 50}
+                        collapsible={!isMobile}
+                        collapsedSize={isMobile ? 0 : 3}
+                        onCollapse={() => setIsChatVisible(false)}
+                        onExpand={() => setIsChatVisible(true)}
+                    >
+                        <div className="h-full w-full overflow-hidden">
+                            <DemoChatPanel
+                                isVisible={isChatVisible}
+                                onToggleVisibility={toggleChatPanel}
+                                darkMode={darkMode}
+                                isMobile={isMobile}
+                                onRequireLogin={requireLogin}
+                            />
+                        </div>
+                    </ResizablePanel>
+                </ResizablePanelGroup>
             </div>
 
             <LoginGateDialog

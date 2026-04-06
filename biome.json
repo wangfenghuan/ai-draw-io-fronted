@@ -32,17 +32,24 @@
                 "noStaticElementInteractions": "off",
                 "useKeyWithClickEvents": "off",
                 "noLabelWithoutControl": "off",
-                "noNoninteractiveTabindex": "off"
+                "noNoninteractiveTabindex": "off",
+                "noSvgWithoutTitle": "off"
             },
             "correctness": {
-                "useExhaustiveDependencies": "off"
+                "useExhaustiveDependencies": "off",
+                "noUnusedFunctionParameters": "off",
+                "noUnusedVariables": "off"
             },
             "style": {
                 "useNodejsImportProtocol": "off",
-                "useTemplate": "off"
+                "useTemplate": "off",
+                "noNonNullAssertion": "off"
             },
             "security": {
                 "noDangerouslySetInnerHtml": "off"
+            },
+            "performance": {
+                "noImgElement": "off"
             }
         }
     },
@@ -69,6 +76,18 @@
     "overrides": [
         {
             "includes": ["components/ui/**"],
+            "formatter": {
+                "enabled": false
+            },
+            "linter": {
+                "enabled": false
+            },
+            "assist": {
+                "enabled": false
+            }
+        },
+        {
+            "includes": ["api/**"],
             "formatter": {
                 "enabled": false
             },

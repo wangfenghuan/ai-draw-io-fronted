@@ -1,14 +1,9 @@
 "use client"
 
-import Link from "next/link";
-import {
-    AppstoreOutlined,
-    RocketOutlined,
-    SearchOutlined,
-    UserOutlined,
-} from "@ant-design/icons"
+import { RocketOutlined, SearchOutlined, UserOutlined } from "@ant-design/icons"
 import { App, Button, Card, Empty, Input, Modal, Pagination, Tag } from "antd"
-import { useRouter } from "next/navigation" 
+import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { listMaterialVoByPage } from "@/api/materialController"
 import { CreateDiagramDialog } from "@/components/create-diagram-dialog"
@@ -25,17 +20,21 @@ interface TemplateSquareProps {
     }
 }
 
-export default function TemplateSquare({ initialMaterials = [], initialPagination = { current: 1, pageSize: 12, total: 0 } }: TemplateSquareProps) {
+export default function TemplateSquare({
+    initialMaterials = [],
+    initialPagination = { current: 1, pageSize: 12, total: 0 },
+}: TemplateSquareProps) {
     const { message } = App.useApp()
     const router = useRouter()
 
-    const [materials, setMaterials] = useState<API.MaterialVO[]>(initialMaterials)
+    const [materials, setMaterials] =
+        useState<API.MaterialVO[]>(initialMaterials)
     const [loading, setLoading] = useState(false)
     const [pagination, setPagination] = useState(initialPagination)
 
     const [searchText, setSearchText] = useState("")
     const [previewVisible, setPreviewVisible] = useState(false)
-    const [previewMaterial, setPreviewMaterial] =
+    const [previewMaterial, _setPreviewMaterial] =
         useState<API.MaterialVO | null>(null)
 
     // Create Diagram State
@@ -453,7 +452,7 @@ export default function TemplateSquare({ initialMaterials = [], initialPaginatio
                                                             </Tag>
                                                         )
                                                     }
-                                                } catch (e) {
+                                                } catch (_e) {
                                                     // ignore
                                                 }
                                                 return null
@@ -604,7 +603,7 @@ export default function TemplateSquare({ initialMaterials = [], initialPaginatio
                                         ) : (
                                             <Tag>{previewMaterial.tags}</Tag>
                                         )
-                                    } catch (e) {
+                                    } catch (_e) {
                                         return (
                                             <Tag>{previewMaterial?.tags}</Tag>
                                         )

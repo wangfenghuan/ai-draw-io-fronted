@@ -10,7 +10,6 @@ import {
     MAX_EXTRACTED_CHARS,
 } from "@/lib/pdf-utils"
 
-
 export interface FileData {
     text: string
     charCount: number

@@ -3,9 +3,9 @@
 import {
     ChevronDown,
     Code,
+    Database,
     Download,
     FileCode,
-    Database,
     MessageSquare,
     Save,
     Send,
@@ -19,12 +19,13 @@ import ReactMarkdown from "react-markdown"
 import { useSelector } from "react-redux"
 import remarkGfm from "remark-gfm"
 import { toast } from "sonner"
+import { parseSql, uploadAndAnalyzeSimple } from "@/api/codeParser"
 import { listDiagramChatHistory } from "@/api/conversionController"
-import { uploadAndAnalyzeSimple, parseSql } from "@/api/codeParser"
 import { AIConfigDialog, useAIConfig } from "@/components/ai-config-dialog"
 import { CodeBlock } from "@/components/code-block"
 import { CollaborationPanel } from "@/components/collaboration-panel"
 import { DownloadDialog } from "@/components/download-dialog"
+import { FilePreviewList } from "@/components/file-preview-list"
 import { removeThinkingTags, ThinkingBlock } from "@/components/thinking-block"
 import { Button } from "@/components/ui/button"
 import {
@@ -36,8 +37,6 @@ import { useDiagram } from "@/contexts/diagram-context"
 import { type Message, useBackendChat } from "@/lib/use-backend-chat"
 import { useDiagramSave } from "@/lib/use-diagram-save"
 import { useFileProcessor } from "@/lib/use-file-processor"
-
-import { FilePreviewList } from "@/components/file-preview-list"
 import { parseXmlAndLoadDiagram } from "@/lib/utils"
 import type { RootState } from "@/stores"
 
@@ -68,7 +67,10 @@ export default function SimpleChatPanel({
     const [isSaving, setIsSaving] = useState(false)
 
     // Helper: gate any action behind login on demo page
-    const requireLogin = (featureName: string, action?: () => void): boolean => {
+    const requireLogin = (
+        featureName: string,
+        action?: () => void,
+    ): boolean => {
         if (onRequireLogin) {
             onRequireLogin(featureName)
             return true // blocked
@@ -79,7 +81,6 @@ export default function SimpleChatPanel({
 
     // File upload state and hooks
     const { files, pdfData, handleFileChange, setFiles } = useFileProcessor()
-
 
     const [aiConfig, setAiConfig] = useAIConfig()
     const {
@@ -237,7 +238,8 @@ export default function SimpleChatPanel({
                 const layerList = Array.from(arch.layers || []).join("、")
                 const componentCount = arch.components?.length ?? 0
                 const linkCount = arch.links?.length ?? 0
-                const externalList = (arch.externalSystems || []).join("、") || "无"
+                const externalList =
+                    (arch.externalSystems || []).join("、") || "无"
 
                 const prompt = `你现在是一位资深的软件架构师。我使用 AST 解析器提取了 Spring Boot 项目的架构元数据（包含组件节点、架构层级、角色定义和真实的调用链路）。
 
@@ -275,9 +277,16 @@ ${JSON.stringify(arch, null, 2)}
 \`\`\``
 
                 await sendMessage(prompt)
-                toast.success(`分析完成！检测到 ${componentCount} 个组件，正在生成架构图...`, { id: toastId })
+                toast.success(
+                    `分析完成！检测到 ${componentCount} 个组件，正在生成架构图...`,
+                    { id: toastId },
+                )
             } else {
-                toast.error(res.message || "项目解析失败，请检查是否上传了有效的 Spring Boot ZIP", { id: toastId })
+                toast.error(
+                    res.message ||
+                        "项目解析失败，请检查是否上传了有效的 Spring Boot ZIP",
+                    { id: toastId },
+                )
             }
         } catch (error) {
             console.error("代码上传错误:", error)
@@ -297,7 +306,9 @@ ${JSON.stringify(arch, null, 2)}
             if (res.code === 0 && res.data) {
                 const tables = res.data
                 const tableCount = tables.length
-                const tableNames = tables.map((t: any) => t.tableName).join("、")
+                const tableNames = tables
+                    .map((t: any) => t.tableName)
+                    .join("、")
 
                 const prompt = `你现在是一位资深的数据库架构师。我使用 SQL DDL 解析器提取了数据库的结构元数据（包含表定义、字段信息、主外键约束和索引信息）。
 
@@ -329,9 +340,15 @@ ${JSON.stringify(tables, null, 2)}
 \`\`\``
 
                 await sendMessage(prompt)
-                toast.success(`解析完成！共 ${tableCount} 张表，正在生成 ER 图...`, { id: toastId })
+                toast.success(
+                    `解析完成！共 ${tableCount} 张表，正在生成 ER 图...`,
+                    { id: toastId },
+                )
             } else {
-                toast.error(res.message || "SQL 解析失败，请检查文件格式是否为标准 DDL", { id: toastId })
+                toast.error(
+                    res.message || "SQL 解析失败，请检查文件格式是否为标准 DDL",
+                    { id: toastId },
+                )
             }
         } catch (error) {
             console.error("SQL上传错误:", error)
@@ -345,24 +362,25 @@ ${JSON.stringify(tables, null, 2)}
         e.preventDefault()
         if ((!input.trim() && files.length === 0) || isLoading) return
         if (requireLogin("AI 对话")) return
-        
+
         let messageContent = input.trim()
-        
+
         // Process files if any
         if (files.length > 0) {
             const filePrompts: string[] = []
-            
+
             for (const file of files) {
                 const data = pdfData.get(file)
                 if (data && !data.isExtracting) {
-
-                    filePrompts.push(`\n\n[文件上下文: ${file.name}]\n${data.text}\n`)
-                } else if (data && data.isExtracting) {
+                    filePrompts.push(
+                        `\n\n[文件上下文: ${file.name}]\n${data.text}\n`,
+                    )
+                } else if (data?.isExtracting) {
                     toast.warning(`正在处理文件 ${file.name}，请稍候...`)
                     return
                 }
             }
-            
+
             if (filePrompts.length > 0) {
                 const combinedPrompt = filePrompts.join("\n")
                 // If user didn't type anything, use a default prompt
@@ -491,7 +509,9 @@ ${JSON.stringify(tables, null, 2)}
                     <CollaborationPanel spaceId={spaceId} />
 
                     <button
-                        onClick={() => { if (!requireLogin("保存图表")) handleSaveDiagram() }}
+                        onClick={() => {
+                            if (!requireLogin("保存图表")) handleSaveDiagram()
+                        }}
                         disabled={isSaving || !chartXML}
                         className={`p-1.5 rounded-lg transition-all duration-200 hover:scale-105 border flex-shrink-0
                             ${
@@ -509,7 +529,10 @@ ${JSON.stringify(tables, null, 2)}
                     </button>
 
                     <button
-                        onClick={() => { if (!requireLogin("AI 模型配置")) setConfigDialogOpen(true) }}
+                        onClick={() => {
+                            if (!requireLogin("AI 模型配置"))
+                                setConfigDialogOpen(true)
+                        }}
                         className={`p-1.5 rounded-lg transition-all duration-200 hover:scale-105 flex-shrink-0 ${
                             aiConfig.mode === "custom"
                                 ? "bg-green-500/20 text-green-400 border border-green-500/30"
@@ -525,7 +548,10 @@ ${JSON.stringify(tables, null, 2)}
                     </button>
 
                     <button
-                        onClick={() => { if (!requireLogin("下载图表")) setDownloadDialogOpen(true) }}
+                        onClick={() => {
+                            if (!requireLogin("下载图表"))
+                                setDownloadDialogOpen(true)
+                        }}
                         className="p-1.5 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10 transition-all duration-200 hover:scale-105 flex-shrink-0"
                         title="下载图表"
                     >
@@ -677,7 +703,9 @@ ${JSON.stringify(tables, null, 2)}
                                                                 children,
                                                                 ...props
                                                             }: any) {
-                                                                const { inline } = props
+                                                                const {
+                                                                    inline,
+                                                                } = props
                                                                 const match =
                                                                     /language-(\w+)/.exec(
                                                                         className ||
@@ -790,11 +818,19 @@ ${JSON.stringify(tables, null, 2)}
                                                 </>
                                             ) : (
                                                 <span className="text-white/40 italic flex items-center gap-2">
-                                                    <span className="text-sm">正在生成中，请稍候</span>
+                                                    <span className="text-sm">
+                                                        正在生成中，请稍候
+                                                    </span>
                                                     <span className="flex gap-1">
-                                                        <span className="animate-pulse">●</span>
-                                                        <span className="animate-pulse delay-75">●</span>
-                                                        <span className="animate-pulse delay-150">●</span>
+                                                        <span className="animate-pulse">
+                                                            ●
+                                                        </span>
+                                                        <span className="animate-pulse delay-75">
+                                                            ●
+                                                        </span>
+                                                        <span className="animate-pulse delay-150">
+                                                            ●
+                                                        </span>
                                                     </span>
                                                 </span>
                                             )}
@@ -819,14 +855,19 @@ ${JSON.stringify(tables, null, 2)}
                 <div className="px-3 pt-3 pb-2">
                     <div className="flex items-center gap-1.5 mb-2">
                         <Zap className="h-3 w-3 text-yellow-400" />
-                        <span className="text-xs text-white/40 font-medium">智能分析</span>
+                        <span className="text-xs text-white/40 font-medium">
+                            智能分析
+                        </span>
                     </div>
                     <div className="flex gap-2">
                         {/* Spring Boot 架构图按钮 */}
                         <button
                             type="button"
                             disabled={isLoading}
-                            onClick={() => { if (!requireLogin("Spring Boot 架构图分析")) fileInputCodeRef.current?.click() }}
+                            onClick={() => {
+                                if (!requireLogin("Spring Boot 架构图分析"))
+                                    fileInputCodeRef.current?.click()
+                            }}
                             className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 group
                                 bg-emerald-500/10 border-emerald-500/30 hover:bg-emerald-500/20 hover:border-emerald-400/50
                                 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -836,8 +877,12 @@ ${JSON.stringify(tables, null, 2)}
                                 <FileCode className="h-3.5 w-3.5 text-emerald-400" />
                             </div>
                             <div className="text-left min-w-0">
-                                <div className="text-xs font-semibold text-emerald-300 leading-tight">Spring Boot 架构图</div>
-                                <div className="text-[10px] text-white/40 leading-tight truncate">上传 .zip → 自动生成分层架构图</div>
+                                <div className="text-xs font-semibold text-emerald-300 leading-tight">
+                                    Spring Boot 架构图
+                                </div>
+                                <div className="text-[10px] text-white/40 leading-tight truncate">
+                                    上传 .zip → 自动生成分层架构图
+                                </div>
                             </div>
                         </button>
 
@@ -845,7 +890,10 @@ ${JSON.stringify(tables, null, 2)}
                         <button
                             type="button"
                             disabled={isLoading}
-                            onClick={() => { if (!requireLogin("SQL ER 图分析")) fileInputSqlRef.current?.click() }}
+                            onClick={() => {
+                                if (!requireLogin("SQL ER 图分析"))
+                                    fileInputSqlRef.current?.click()
+                            }}
                             className="flex-1 flex items-center gap-2 px-3 py-2 rounded-lg border transition-all duration-200 group
                                 bg-violet-500/10 border-violet-500/30 hover:bg-violet-500/20 hover:border-violet-400/50
                                 disabled:opacity-40 disabled:cursor-not-allowed"
@@ -855,8 +903,12 @@ ${JSON.stringify(tables, null, 2)}
                                 <Database className="h-3.5 w-3.5 text-violet-400" />
                             </div>
                             <div className="text-left min-w-0">
-                                <div className="text-xs font-semibold text-violet-300 leading-tight">SQL ER 图</div>
-                                <div className="text-[10px] text-white/40 leading-tight truncate">上传 .sql → 自动生成实体关系图</div>
+                                <div className="text-xs font-semibold text-violet-300 leading-tight">
+                                    SQL ER 图
+                                </div>
+                                <div className="text-[10px] text-white/40 leading-tight truncate">
+                                    上传 .sql → 自动生成实体关系图
+                                </div>
                             </div>
                         </button>
                     </div>
@@ -868,19 +920,30 @@ ${JSON.stringify(tables, null, 2)}
                         <div className="mb-2">
                             <FilePreviewList
                                 files={files}
-                                onRemoveFile={(file) => setFiles(files.filter(f => f !== file))}
+                                onRemoveFile={(file) =>
+                                    setFiles(files.filter((f) => f !== file))
+                                }
                                 pdfData={pdfData}
                             />
                         </div>
                     )}
 
-                    <form onSubmit={handleSubmit} className="flex gap-2 items-end">
+                    <form
+                        onSubmit={handleSubmit}
+                        className="flex gap-2 items-end"
+                    >
                         <input
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            onFocus={() => { if (onRequireLogin) onRequireLogin("AI 对话") }}
-                            placeholder={onRequireLogin ? "登录后即可使用 AI 对话..." : "输入你的问题..."}
+                            onFocus={() => {
+                                if (onRequireLogin) onRequireLogin("AI 对话")
+                            }}
+                            placeholder={
+                                onRequireLogin
+                                    ? "登录后即可使用 AI 对话..."
+                                    : "输入你的问题..."
+                            }
                             disabled={isLoading}
                             className="flex-1 px-4 py-3 rounded-xl border border-white/20 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all disabled:opacity-50 text-sm"
                         />

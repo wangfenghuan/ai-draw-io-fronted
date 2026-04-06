@@ -7,7 +7,6 @@ import { useSelector } from "react-redux"
 import type { ImperativePanelHandle } from "react-resizable-panels"
 import { toast } from "sonner"
 import { getDiagramVoById } from "@/api/diagramController"
-import { CollaborationPanel } from "@/components/collaboration-panel"
 import { DiagramToolbar } from "@/components/diagram-toolbar"
 import { STORAGE_CLOSE_PROTECTION_KEY } from "@/components/settings-dialog"
 import SimpleChatPanel from "@/components/simple-chat-panel"
@@ -44,8 +43,7 @@ export default function DrawioHome() {
         hasUnsavedChanges,
         setHasUnsavedChanges,
     } = useDiagram()
-    const { saveDiagram, downloadDiagram, handleExportCallback } =
-        useDiagramSave(drawioRef)
+    const { saveDiagram, handleExportCallback } = useDiagramSave(drawioRef)
 
     const [isMobile, setIsMobile] = useState(false)
     const [isChatVisible, setIsChatVisible] = useState(true)
@@ -130,7 +128,6 @@ export default function DrawioHome() {
                         )
                         // 如果 ref 不存在，等待一小段时间
                         await new Promise((resolve) => setTimeout(resolve, 500))
-
 
                         if (!drawioRef?.current) {
                             console.error("❌ DrawIo ref 仍然不存在，跳过加载")

@@ -1,16 +1,16 @@
 "use client"
 
-import { useTranslations } from "next-intl"
-import { useEffect, useState, useCallback } from "react"
 import {
-    MousePointer2,
-    GitBranch,
-    Download,
-    X,
     ChevronLeft,
     ChevronRight,
+    Download,
+    GitBranch,
+    MousePointer2,
     Sparkles,
+    X,
 } from "lucide-react"
+import { useTranslations } from "next-intl"
+import { useCallback, useEffect, useState } from "react"
 
 const ONBOARDING_STORAGE_KEY = "intellidraw-onboarding-completed"
 
@@ -122,7 +122,8 @@ export function OnboardingGuide() {
             <div
                 className="relative w-full mx-4 max-w-lg"
                 style={{
-                    animation: "onboardingIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
+                    animation:
+                        "onboardingIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)",
                 }}
             >
                 {/* Close Button */}
@@ -137,7 +138,8 @@ export function OnboardingGuide() {
                 <div
                     className="rounded-3xl overflow-hidden shadow-2xl"
                     style={{
-                        background: "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
+                        background:
+                            "linear-gradient(135deg, #1e293b 0%, #0f172a 100%)",
                         border: "1px solid rgba(255,255,255,0.1)",
                     }}
                 >
@@ -152,7 +154,10 @@ export function OnboardingGuide() {
                         >
                             <Sparkles className="w-4 h-4" />
                             <span className="text-sm font-medium">
-                                {t("stepProgress", { current: currentStep + 1, total: steps.length })}
+                                {t("stepProgress", {
+                                    current: currentStep + 1,
+                                    total: steps.length,
+                                })}
                             </span>
                         </div>
                     </div>
@@ -185,49 +190,69 @@ export function OnboardingGuide() {
                                         <div
                                             className="absolute w-16 h-12 rounded-lg flex items-center justify-center text-white text-xs font-medium shadow-lg"
                                             style={{
-                                                background: "linear-gradient(135deg, #1677ff 0%, #0958d9 100%)",
+                                                background:
+                                                    "linear-gradient(135deg, #1677ff 0%, #0958d9 100%)",
                                                 left: "20%",
                                                 top: "30%",
-                                                animation: "dragShape1 3s ease-in-out infinite",
+                                                animation:
+                                                    "dragShape1 3s ease-in-out infinite",
                                             }}
                                         >
-                                            <span className="opacity-70">拖拽</span>
+                                            <span className="opacity-70">
+                                                拖拽
+                                            </span>
                                         </div>
                                         {/* Shape 2 - Circle */}
                                         <div
                                             className="absolute w-14 h-14 rounded-full flex items-center justify-center text-white text-xs font-medium shadow-lg"
                                             style={{
-                                                background: "linear-gradient(135deg, #52c41a 0%, #389e0d 100%)",
+                                                background:
+                                                    "linear-gradient(135deg, #52c41a 0%, #389e0d 100%)",
                                                 left: "60%",
                                                 top: "20%",
-                                                animation: "dragShape2 3s ease-in-out infinite 0.5s",
+                                                animation:
+                                                    "dragShape2 3s ease-in-out infinite 0.5s",
                                             }}
                                         >
-                                            <span className="opacity-70">移动</span>
+                                            <span className="opacity-70">
+                                                移动
+                                            </span>
                                         </div>
                                         {/* Shape 3 - Diamond */}
                                         <div
                                             className="absolute w-12 h-12 flex items-center justify-center text-white text-xs font-medium shadow-lg"
                                             style={{
-                                                background: "linear-gradient(135deg, #722ed1 0%, #531dab 100%)",
+                                                background:
+                                                    "linear-gradient(135deg, #722ed1 0%, #531dab 100%)",
                                                 left: "40%",
                                                 top: "55%",
                                                 transform: "rotate(45deg)",
-                                                animation: "dragShape3 3s ease-in-out infinite 1s",
+                                                animation:
+                                                    "dragShape3 3s ease-in-out infinite 1s",
                                             }}
                                         >
-                                            <span className="opacity-70" style={{ transform: "rotate(-45deg)" }}>放置</span>
+                                            <span
+                                                className="opacity-70"
+                                                style={{
+                                                    transform: "rotate(-45deg)",
+                                                }}
+                                            >
+                                                放置
+                                            </span>
                                         </div>
                                         {/* Cursor */}
                                         <div
                                             className="absolute"
                                             style={{
-                                                animation: "cursorMove 3s ease-in-out infinite",
+                                                animation:
+                                                    "cursorMove 3s ease-in-out infinite",
                                             }}
                                         >
                                             <MousePointer2
                                                 className="w-6 h-6 text-white drop-shadow-lg"
-                                                style={{ filter: "drop-shadow(0 0 4px rgba(22,119,255,0.8))" }}
+                                                style={{
+                                                    filter: "drop-shadow(0 0 4px rgba(22,119,255,0.8))",
+                                                }}
                                             />
                                         </div>
                                     </div>
@@ -253,7 +278,8 @@ export function OnboardingGuide() {
                                         <div
                                             className="absolute w-14 h-10 rounded-lg flex items-center justify-center text-white text-xs font-medium shadow-lg"
                                             style={{
-                                                background: "linear-gradient(135deg, #1677ff 0%, #0958d9 100%)",
+                                                background:
+                                                    "linear-gradient(135deg, #1677ff 0%, #0958d9 100%)",
                                                 left: "15%",
                                                 top: "40%",
                                             }}
@@ -264,7 +290,8 @@ export function OnboardingGuide() {
                                         <div
                                             className="absolute w-14 h-10 rounded-lg flex items-center justify-center text-white text-xs font-medium shadow-lg"
                                             style={{
-                                                background: "linear-gradient(135deg, #52c41a 0%, #389e0d 100%)",
+                                                background:
+                                                    "linear-gradient(135deg, #52c41a 0%, #389e0d 100%)",
                                                 right: "15%",
                                                 top: "40%",
                                             }}
@@ -289,7 +316,8 @@ export function OnboardingGuide() {
                                                 style={{
                                                     strokeDasharray: "100",
                                                     strokeDashoffset: "100",
-                                                    animation: "drawLine 2s ease-in-out infinite",
+                                                    animation:
+                                                        "drawLine 2s ease-in-out infinite",
                                                 }}
                                             />
                                             {/* Arrow */}
@@ -298,13 +326,26 @@ export function OnboardingGuide() {
                                                 fill="#52c41a"
                                                 style={{
                                                     opacity: 0,
-                                                    animation: "fadeInArrow 2s ease-in-out infinite 0.8s",
+                                                    animation:
+                                                        "fadeInArrow 2s ease-in-out infinite 0.8s",
                                                 }}
                                             />
                                             <defs>
-                                                <linearGradient id="connectGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                                                    <stop offset="0%" stopColor="#1677ff" />
-                                                    <stop offset="100%" stopColor="#52c41a" />
+                                                <linearGradient
+                                                    id="connectGradient"
+                                                    x1="0%"
+                                                    y1="0%"
+                                                    x2="100%"
+                                                    y2="0%"
+                                                >
+                                                    <stop
+                                                        offset="0%"
+                                                        stopColor="#1677ff"
+                                                    />
+                                                    <stop
+                                                        offset="100%"
+                                                        stopColor="#52c41a"
+                                                    />
                                                 </linearGradient>
                                             </defs>
                                         </svg>
@@ -315,8 +356,10 @@ export function OnboardingGuide() {
                                                 background: "#1677ff",
                                                 left: "calc(15% + 50px)",
                                                 top: "calc(40% + 17px)",
-                                                transform: "translate(-50%, -50%)",
-                                                animation: "pulse 2s ease-in-out infinite",
+                                                transform:
+                                                    "translate(-50%, -50%)",
+                                                animation:
+                                                    "pulse 2s ease-in-out infinite",
                                             }}
                                         />
                                         <div
@@ -325,8 +368,10 @@ export function OnboardingGuide() {
                                                 background: "#52c41a",
                                                 right: "calc(15% + 50px)",
                                                 top: "calc(40% + 17px)",
-                                                transform: "translate(50%, -50%)",
-                                                animation: "pulse 2s ease-in-out infinite 0.5s",
+                                                transform:
+                                                    "translate(50%, -50%)",
+                                                animation:
+                                                    "pulse 2s ease-in-out infinite 0.5s",
                                             }}
                                         />
                                     </div>
@@ -345,25 +390,35 @@ export function OnboardingGuide() {
                                                 height: "70px",
                                                 left: "50%",
                                                 top: "50%",
-                                                transform: "translate(-50%, -50%)",
-                                                background: "linear-gradient(135deg, #334155 0%, #1e293b 100%)",
+                                                transform:
+                                                    "translate(-50%, -50%)",
+                                                background:
+                                                    "linear-gradient(135deg, #334155 0%, #1e293b 100%)",
                                                 border: "1px solid rgba(255,255,255,0.1)",
-                                                boxShadow: "0 8px 32px rgba(0,0,0,0.3)",
+                                                boxShadow:
+                                                    "0 8px 32px rgba(0,0,0,0.3)",
                                             }}
                                         >
                                             {/* Mini diagram */}
                                             <div className="absolute inset-2 flex items-center justify-center gap-1">
                                                 <div
                                                     className="w-4 h-3 rounded"
-                                                    style={{ background: "#1677ff" }}
+                                                    style={{
+                                                        background: "#1677ff",
+                                                    }}
                                                 />
                                                 <div
                                                     className="w-6 h-0.5"
-                                                    style={{ background: "rgba(255,255,255,0.3)" }}
+                                                    style={{
+                                                        background:
+                                                            "rgba(255,255,255,0.3)",
+                                                    }}
                                                 />
                                                 <div
                                                     className="w-4 h-3 rounded"
-                                                    style={{ background: "#52c41a" }}
+                                                    style={{
+                                                        background: "#52c41a",
+                                                    }}
                                                 />
                                             </div>
                                         </div>
@@ -374,30 +429,36 @@ export function OnboardingGuide() {
                                                 right: "20%",
                                                 top: "50%",
                                                 transform: "translateY(-50%)",
-                                                animation: "exportBounce 1.5s ease-in-out infinite",
+                                                animation:
+                                                    "exportBounce 1.5s ease-in-out infinite",
                                             }}
                                         >
                                             <Download
                                                 className="w-8 h-8 text-white"
-                                                style={{ filter: "drop-shadow(0 0 8px rgba(114,46,209,0.6))" }}
+                                                style={{
+                                                    filter: "drop-shadow(0 0 8px rgba(114,46,209,0.6))",
+                                                }}
                                             />
                                         </div>
                                         {/* Format labels */}
-                                        {["PNG", "SVG", "PDF"].map((format, i) => (
-                                            <div
-                                                key={format}
-                                                className="absolute px-2 py-1 rounded text-xs font-medium text-white"
-                                                style={{
-                                                    background: "rgba(114,46,209,0.3)",
-                                                    border: "1px solid rgba(114,46,209,0.5)",
-                                                    right: "8%",
-                                                    top: `${25 + i * 25}%`,
-                                                    animation: `formatSlide 2s ease-in-out infinite ${i * 0.2}s`,
-                                                }}
-                                            >
-                                                {format}
-                                            </div>
-                                        ))}
+                                        {["PNG", "SVG", "PDF"].map(
+                                            (format, i) => (
+                                                <div
+                                                    key={format}
+                                                    className="absolute px-2 py-1 rounded text-xs font-medium text-white"
+                                                    style={{
+                                                        background:
+                                                            "rgba(114,46,209,0.3)",
+                                                        border: "1px solid rgba(114,46,209,0.5)",
+                                                        right: "8%",
+                                                        top: `${25 + i * 25}%`,
+                                                        animation: `formatSlide 2s ease-in-out infinite ${i * 0.2}s`,
+                                                    }}
+                                                >
+                                                    {format}
+                                                </div>
+                                            ),
+                                        )}
                                     </div>
                                 </div>
                             )}
@@ -431,7 +492,10 @@ export function OnboardingGuide() {
                                     width: i === currentStep ? "24px" : "8px",
                                     height: "8px",
                                     borderRadius: "4px",
-                                    background: i === currentStep ? step.color : "rgba(255,255,255,0.2)",
+                                    background:
+                                        i === currentStep
+                                            ? step.color
+                                            : "rgba(255,255,255,0.2)",
                                 }}
                             />
                         ))}
@@ -467,8 +531,12 @@ export function OnboardingGuide() {
                                     boxShadow: `0 4px 16px ${step.color}40`,
                                 }}
                             >
-                                {currentStep === steps.length - 1 ? t("gotIt") : t("next")}
-                                {currentStep < steps.length - 1 && <ChevronRight className="w-4 h-4" />}
+                                {currentStep === steps.length - 1
+                                    ? t("gotIt")
+                                    : t("next")}
+                                {currentStep < steps.length - 1 && (
+                                    <ChevronRight className="w-4 h-4" />
+                                )}
                             </button>
                         </div>
                     </div>
@@ -565,5 +633,10 @@ export function useOnboardingStatus() {
         setShouldShowOnboarding(true)
     }, [])
 
-    return { shouldShowOnboarding, isLoading, completeOnboarding, resetOnboarding }
+    return {
+        shouldShowOnboarding,
+        isLoading,
+        completeOnboarding,
+        resetOnboarding,
+    }
 }

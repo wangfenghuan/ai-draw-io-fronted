@@ -12,7 +12,11 @@
 
 import { useEffect, useRef, useState } from "react"
 import type { UserRole } from "./collab-protocol"
-import { createYjsCollaboration, type OnlineUser, type YjsCollaboration } from "./yjs-collab"
+import {
+    createYjsCollaboration,
+    type OnlineUser,
+    type YjsCollaboration,
+} from "./yjs-collab"
 
 export interface UseYjsCollaborationOptions {
     roomName: string

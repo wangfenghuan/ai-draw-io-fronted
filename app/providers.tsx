@@ -2,9 +2,9 @@
 
 import { AntdRegistry } from "@ant-design/nextjs-registry"
 import { App as AntdApp, ConfigProvider } from "antd"
-import zhCN from "antd/locale/zh_CN"
 import enUS from "antd/locale/en_US"
-import { NextIntlClientProvider, useTranslations } from "next-intl"
+import zhCN from "antd/locale/zh_CN"
+import { NextIntlClientProvider } from "next-intl"
 import React, { useCallback, useEffect } from "react"
 import { Provider, useDispatch } from "react-redux"
 import AccessLayout from "@/access/AccessLayout"
@@ -40,7 +40,7 @@ const InitLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
             currentPath.startsWith("/demo") ||
             currentPath.startsWith("/templates") ||
             currentPath.startsWith("/solutions") || // Also add solutions for SEO page
-            currentPath.startsWith("/wiki") ||      // Also add wiki for SEO page
+            currentPath.startsWith("/wiki") || // Also add wiki for SEO page
             currentPath.startsWith("/diagram-marketplace") ||
             currentPath.startsWith("/user/") ||
             currentPath.includes("sitemap.xml") ||
@@ -141,18 +141,18 @@ export function Providers({ children }: { children: React.ReactNode }) {
 }
 
 // 服务端组件包装器
-export function IntlProvider({ 
-    children, 
-    locale, 
-    messages 
-}: { 
+export function IntlProvider({
+    children,
+    locale,
+    messages,
+}: {
     children: React.ReactNode
     locale: string
     messages: Record<string, unknown>
 }) {
     // 动态选择 antd locale
     const antdLocale = locale === "en" ? enUS : zhCN
-    
+
     return (
         <NextIntlClientProvider locale={locale} messages={messages}>
             <AntdRegistry>
@@ -162,7 +162,8 @@ export function IntlProvider({
                         token: {
                             colorPrimary: "#1677ff",
                             colorInfo: "#1677ff",
-                            fontFamily: "var(--font-plus-jakarta-sans), sans-serif",
+                            fontFamily:
+                                "var(--font-plus-jakarta-sans), sans-serif",
                         },
                     }}
                 >

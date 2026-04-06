@@ -42,7 +42,7 @@ export const FeedbackSubmitForm: React.FC<FeedbackSubmitFormProps> = ({
         setPreviewImage(file.url || (file.thumbUrl as string))
         setPreviewOpen(true)
         setPreviewTitle(
-            file.name || file.url!.substring(file.url!.lastIndexOf("/") + 1),
+            file.name || file.url?.substring(file.url?.lastIndexOf("/") + 1),
         )
     }
 

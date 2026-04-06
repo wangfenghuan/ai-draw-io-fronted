@@ -1,7 +1,7 @@
 "use client"
 
-import { ClockCircleOutlined, DeleteOutlined } from "@ant-design/icons"
-import { App, Avatar, Button, Card, Empty, List, Popconfirm, Tag } from "antd"
+import { ClockCircleOutlined } from "@ant-design/icons"
+import { App, Avatar, Card, Empty, List } from "antd"
 import type React from "react"
 import { useEffect, useRef, useState } from "react"
 import { listMyFeedbackVoByPage } from "@/api/feedBackController"
@@ -18,7 +18,7 @@ export const FeedbackList: React.FC<FeedbackListProps> = ({ active }) => {
     const [current, setCurrent] = useState(1)
 
     // To prevent strict mode double fetch
-    const loadedRef = useRef(false)
+    const _loadedRef = useRef(false)
 
     const loadData = async (page = 1) => {
         setLoading(true)

@@ -7,9 +7,9 @@ import {
 } from "@ant-design/icons"
 import { ProLayout } from "@ant-design/pro-components"
 import { App, Dropdown } from "antd"
-import { useTranslations } from "next-intl"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
+import { useTranslations } from "next-intl"
 import type React from "react"
 import { useCallback } from "react"
 import { useDispatch, useSelector } from "react-redux"
@@ -17,7 +17,7 @@ import { getAccessibleMenus } from "@/access/menuAccess"
 import { userLogout } from "@/api/userController"
 import GlobalFooter from "@/components/GlobalFooter"
 import { LanguageSwitcher } from "@/components/language-switcher"
-import menus, { getTranslatedMenus } from "@/config/menu"
+import { getTranslatedMenus } from "@/config/menu"
 import { DefauleUser } from "@/constants/UserState"
 import type { AppDispatch, RootState } from "@/stores"
 import { setLoginUser } from "@/stores/loginUser"
@@ -32,7 +32,7 @@ export default function BasicLayout({ children }: Props) {
     const loginUser = useSelector((state: RootState) => state.loginUser)
     const router = useRouter()
     const dispatch = useDispatch<AppDispatch>()
-    
+
     // 国际化 hooks
     const tNav = useTranslations("nav")
     const tUser = useTranslations("user")
@@ -40,7 +40,10 @@ export default function BasicLayout({ children }: Props) {
 
     // 判断是否是管理员页面（管理员页面全屏显示，图表编辑页面显示导航栏）
     const isAdminPage = pathName.startsWith("/admin")
-    const isFixedContentPage = pathName.startsWith("/user/login") || pathName.startsWith("/user/register") || pathName.startsWith("/demo")
+    const isFixedContentPage =
+        pathName.startsWith("/user/login") ||
+        pathName.startsWith("/user/register") ||
+        pathName.startsWith("/demo")
     const isFullPage = isAdminPage // Fixed 内容页保留Header/Footer，所以不是 FullPage
 
     const logout = useCallback(async () => {
@@ -152,8 +155,9 @@ export default function BasicLayout({ children }: Props) {
                     width: "100%",
                     // 编辑页/管理员页/FixedContent页：0 padding，隐藏溢出
                     // 普通页：保留 padding，允许 Y 轴滚动 (overflowY: "auto")
-                    padding: (isFullPage || isFixedContentPage) ? 0 : 24,
-                    overflowY: (isFullPage || isFixedContentPage) ? "hidden" : "auto",
+                    padding: isFullPage || isFixedContentPage ? 0 : 24,
+                    overflowY:
+                        isFullPage || isFixedContentPage ? "hidden" : "auto",
                     overflowX: "hidden",
                     height: "100%", // 让内容区撑满剩余高度，从而让滚动条出现在内容区内部
                 }}
@@ -162,7 +166,9 @@ export default function BasicLayout({ children }: Props) {
                         loginUser.userAvatar ||
                         "https://gw.alipayobjects.com/zos/antfincdn/XAosXuNZyF/BiazfanxmamNRoxxVxka.png",
                     size: "small",
-                    title: isLoggedIn ? loginUser.userName || tUser("profile") : tUser("notLoggedIn"),
+                    title: isLoggedIn
+                        ? loginUser.userName || tUser("profile")
+                        : tUser("notLoggedIn"),
                     render: (_props, dom) => (
                         <Dropdown
                             menu={{
@@ -175,7 +181,8 @@ export default function BasicLayout({ children }: Props) {
                     ),
                 }}
                 actionsRender={(props) => {
-                    if (props.isMobile) return [<LanguageSwitcher key="language" />]
+                    if (props.isMobile)
+                        return [<LanguageSwitcher key="language" />]
                     return [
                         <LanguageSwitcher key="language" />,
                         <a
@@ -196,7 +203,9 @@ export default function BasicLayout({ children }: Props) {
                         {title}
                     </Link>
                 )}
-                menuDataRender={() => getAccessibleMenus(loginUser, getTranslatedMenus(tNav))}
+                menuDataRender={() =>
+                    getAccessibleMenus(loginUser, getTranslatedMenus(tNav))
+                }
                 menuItemRender={(item, dom) => {
                     const isActive =
                         item.path === "/"
@@ -226,7 +235,7 @@ export default function BasicLayout({ children }: Props) {
                         width: "100%",
                         // 编辑页/管理员页/FixedContent页：强制占满高度，隐藏溢出
                         // 普通页：不需要 height: 100%，让内容自然撑开；也不要 overflow: hidden
-                        ...((isFullPage || isFixedContentPage)
+                        ...(isFullPage || isFixedContentPage
                             ? {
                                   height: "100%",
                                   flex: 1,

@@ -11,31 +11,22 @@ import Image from "next/image"
 import Link from "next/link"
 import type React from "react"
 import { useCallback, useEffect, useRef, useState } from "react"
-import { flushSync } from "react-dom"
 import { FaGithub } from "react-icons/fa"
 import { useSelector } from "react-redux"
 import { Toaster, toast } from "sonner"
+import { parseSql, uploadAndAnalyzeSimple } from "@/api/codeParser"
 import { listDiagramChatHistory } from "@/api/conversionController"
-import { uploadAndAnalyzeSimple, parseSql } from "@/api/codeParser"
 import { ButtonWithTooltip } from "@/components/button-with-tooltip"
 import { ChatInput } from "@/components/chat-input"
 import { ResetWarningModal } from "@/components/reset-warning-modal"
-import { SettingsDialog, STORAGE_CLOSE_PROTECTION_KEY } from "@/components/settings-dialog"
+import { SettingsDialog } from "@/components/settings-dialog"
 import { useDiagram } from "@/contexts/diagram-context"
-import { isPdfFile, isTextFile } from "@/lib/pdf-utils"
-import { type FileData, useFileProcessor } from "@/lib/use-file-processor"
+import { type Message, useBackendChat } from "@/lib/use-backend-chat"
+import { useFileProcessor } from "@/lib/use-file-processor"
 import { useQuotaManager } from "@/lib/use-quota-manager"
-import {
-    applyDiagramOperations,
-    formatXML,
-    isMxCellXmlComplete,
-    wrapWithMxFile,
-    parseXmlAndLoadDiagram,
-} from "@/lib/utils"
-
+import { parseXmlAndLoadDiagram } from "@/lib/utils"
 import type { RootState } from "@/stores"
 import { ChatMessageDisplay } from "./chat-message-display"
-import { type Message, useBackendChat } from "@/lib/use-backend-chat"
 
 // localStorage keys for persistence
 const STORAGE_MESSAGES_KEY = "next-ai-draw-io-messages"
@@ -75,7 +66,7 @@ interface ChatPanelProps {
     diagramId?: string
 }
 
-const DEBUG = process.env.NODE_ENV === "development"
+const _DEBUG = process.env.NODE_ENV === "development"
 
 export default function ChatPanel({
     isVisible,
@@ -112,7 +103,9 @@ export default function ChatPanel({
             if (res.code === 0 && res.data) {
                 const prompt = `I have uploaded a Spring Boot project. Here is the simplified architecture analysis in JSON format:\n\n\`\`\`json\n${JSON.stringify(res.data, null, 2)}\n\`\`\`\n\nPlease analyze this architecture and generate **Draw.io compatible XML code** for an architecture diagram or class diagram. Ensure the XML code can be directly loaded and displayed by Draw.io. Focus on the Controller, Service, and Repository layers. Please wrap the XML code in \`\`\`xml and \`\`\` code blocks.`
                 await sendMessage(prompt)
-                toast.success("Analysis complete, generating diagram...", { id: toastId })
+                toast.success("Analysis complete, generating diagram...", {
+                    id: toastId,
+                })
             } else {
                 toast.error(res.message || "Analysis failed", { id: toastId })
             }
@@ -134,7 +127,9 @@ export default function ChatPanel({
             if (res.code === 0 && res.data) {
                 const prompt = `I have uploaded a SQL DDL file. Here is the parsed schema structure in JSON format:\n\n\`\`\`json\n${JSON.stringify(res.data, null, 2)}\n\`\`\`\n\nPlease analyze this schema and generate **Draw.io compatible XML code** for an Entity Relationship (ER) diagram. Include all tables, columns, primary keys, and inferred relationships. Please wrap the XML code in \`\`\`xml and \`\`\` code blocks.`
                 await sendMessage(prompt)
-                toast.success("Parsing complete, generating ER diagram...", { id: toastId })
+                toast.success("Parsing complete, generating ER diagram...", {
+                    id: toastId,
+                })
             } else {
                 toast.error(res.message || "Parsing failed", { id: toastId })
             }
@@ -150,7 +145,7 @@ export default function ChatPanel({
     const loginUser = useSelector((state: RootState) => state.loginUser)
     const userId = loginUser?.id
 
-    const onFetchChart = (saveToHistory = true) => {
+    const _onFetchChart = (saveToHistory = true) => {
         return Promise.race([
             new Promise<string>((resolve) => {
                 if (resolverRef && "current" in resolverRef) {
@@ -248,11 +243,14 @@ export default function ChatPanel({
     }
 
     // Convert UIMessage[] to Message[] for storage
-    const convertFromUIMessages = (uiMessages: UIMessage[]): Message[] => {
+    const _convertFromUIMessages = (uiMessages: UIMessage[]): Message[] => {
         return uiMessages.map((msg) => ({
             id: msg.id,
             role: msg.role,
-            content: msg.parts?.find((p) => p.type === "text")?.text || msg.content || "",
+            content:
+                msg.parts?.find((p) => p.type === "text")?.text ||
+                msg.content ||
+                "",
             timestamp: Date.now(),
         }))
     }
@@ -340,7 +338,8 @@ export default function ChatPanel({
                     )
                     .map((conv: API.Conversion) => ({
                         id: `msg-${conv.id}`,
-                        role: conv.messageType === "user" ? "user" : "assistant",
+                        role:
+                            conv.messageType === "user" ? "user" : "assistant",
                         content: conv.message || "",
                         timestamp: new Date(conv.createTime || 0).getTime(),
                     }))
@@ -365,7 +364,9 @@ export default function ChatPanel({
                 }
             }
 
-            const savedSnapshots = localStorage.getItem(STORAGE_XML_SNAPSHOTS_KEY)
+            const savedSnapshots = localStorage.getItem(
+                STORAGE_XML_SNAPSHOTS_KEY,
+            )
             if (savedSnapshots) {
                 const parsed = JSON.parse(savedSnapshots)
                 xmlSnapshotsRef.current = new Map(parsed)
@@ -388,7 +389,9 @@ export default function ChatPanel({
         hasDiagramRestoredRef.current = true
 
         try {
-            const savedDiagramXml = localStorage.getItem(STORAGE_DIAGRAM_XML_KEY)
+            const savedDiagramXml = localStorage.getItem(
+                STORAGE_DIAGRAM_XML_KEY,
+            )
             if (savedDiagramXml) {
                 onDisplayChart(savedDiagramXml, true)
                 chartXMLRef.current = savedDiagramXml

@@ -1,4 +1,3 @@
-
 export interface SolutionData {
     slug: string
     title: string
@@ -21,10 +20,12 @@ export const solutions: Record<string, SolutionData> = {
     "uml-diagram": {
         slug: "uml-diagram",
         title: "免费在线 UML 类图工具 - IntelliDraw",
-        description: "IntelliDraw 是最好的免费在线 UML 绘图工具。支持类图、时序图、用例图等所有 UML 2.5 标准图形。无需安装，打开浏览器即可使用，支持 AI 辅助生成代码。",
+        description:
+            "IntelliDraw 是最好的免费在线 UML 绘图工具。支持类图、时序图、用例图等所有 UML 2.5 标准图形。无需安装，打开浏览器即可使用，支持 AI 辅助生成代码。",
         keywords: ["UML工具", "在线UML", "类图", "时序图", "IntelliDraw"],
         heroTitle: "专业级在线 UML 建模工具",
-        heroSubtitle: "专为开发者设计。支持从代码生成 UML，或从 UML 生成代码。完美支持 UML 2.5 标准。",
+        heroSubtitle:
+            "专为开发者设计。支持从代码生成 UML，或从 UML 生成代码。完美支持 UML 2.5 标准。",
         features: [
             {
                 title: "标准 UML图库",
@@ -53,13 +54,15 @@ export const solutions: Record<string, SolutionData> = {
             },
         ],
     },
-    "flowchart": {
+    flowchart: {
         slug: "flowchart",
         title: "免费在线流程图制作软件 - IntelliDraw",
-        description: "IntelliDraw 简单好用的在线流程图工具。海量流程图模板，拖拽式操作，一键美化。适合产品经理、项目经理使用。",
+        description:
+            "IntelliDraw 简单好用的在线流程图工具。海量流程图模板，拖拽式操作，一键美化。适合产品经理、项目经理使用。",
         keywords: ["流程图", "在线流程图", "Flowchart", "IntelliDraw"],
         heroTitle: "简单高效的流程图制作工具",
-        heroSubtitle: "用最简单的方式梳理复杂的业务逻辑。IntelliDraw 让流程图绘制变得前所未有的简单。",
+        heroSubtitle:
+            "用最简单的方式梳理复杂的业务逻辑。IntelliDraw 让流程图绘制变得前所未有的简单。",
         features: [
             {
                 title: "海量模板",

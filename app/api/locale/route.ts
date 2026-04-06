@@ -9,7 +9,7 @@ export async function POST(request: Request) {
         if (!locale || !["zh", "en"].includes(locale)) {
             return NextResponse.json(
                 { error: "Invalid locale" },
-                { status: 400 }
+                { status: 400 },
             )
         }
 
@@ -21,10 +21,10 @@ export async function POST(request: Request) {
         })
 
         return NextResponse.json({ success: true, locale })
-    } catch (error) {
+    } catch (_error) {
         return NextResponse.json(
             { error: "Failed to set locale" },
-            { status: 500 }
+            { status: 500 },
         )
     }
 }

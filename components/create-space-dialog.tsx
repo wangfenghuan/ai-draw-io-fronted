@@ -27,7 +27,7 @@ export function CreateSpaceDialog({
     const [form] = Form.useForm()
     const [loading, setLoading] = useState(false)
     const [spaceLevels, setSpaceLevels] = useState<API.SpaceLevel[]>([])
-    const [spaceType, setSpaceType] = useState<SpaceType>(SpaceType.PERSONAL)
+    const [_spaceType, setSpaceType] = useState<SpaceType>(SpaceType.PERSONAL)
 
     useEffect(() => {
         if (open) {

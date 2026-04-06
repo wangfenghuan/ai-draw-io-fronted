@@ -64,7 +64,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
             if (json.code === 0 && json.data?.records) {
                 templateRoutes = json.data.records.map((item) => ({
                     url: `${appUrl}/templates/${item.id}`,
-                    lastModified: item.updateTime ? new Date(item.updateTime) : new Date(),
+                    lastModified: item.updateTime
+                        ? new Date(item.updateTime)
+                        : new Date(),
                     changeFrequency: "weekly" as const,
                     priority: 0.7,
                 }))

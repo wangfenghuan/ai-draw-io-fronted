@@ -14,7 +14,16 @@
 
 "use client"
 
-import { Check, Circle, Copy, Lock, Unlock, Users, Wifi, WifiOff } from "lucide-react"
+import {
+    Check,
+    Circle,
+    Copy,
+    Lock,
+    Unlock,
+    Users,
+    Wifi,
+    WifiOff,
+} from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
 import { useCallback, useEffect, useRef, useState } from "react"
 import { createPortal } from "react-dom"
@@ -87,11 +96,7 @@ export function CollaborationPanel({ spaceId }: { spaceId?: number | string }) {
             window.addEventListener("scroll", updatePanelPosition, true)
             return () => {
                 window.removeEventListener("resize", updatePanelPosition)
-                window.removeEventListener(
-                    "scroll",
-                    updatePanelPosition,
-                    true,
-                )
+                window.removeEventListener("scroll", updatePanelPosition, true)
             }
         }
     }, [showSettings, updatePanelPosition])
@@ -278,13 +283,16 @@ export function CollaborationPanel({ spaceId }: { spaceId?: number | string }) {
                     <button
                         onClick={() => {
                             const url = window.location.href
-                            navigator.clipboard.writeText(url).then(() => {
-                                setLinkCopied(true)
-                                toast.success("房间链接已复制到剪贴板")
-                                setTimeout(() => setLinkCopied(false), 2000)
-                            }).catch(() => {
-                                toast.error("复制失败，请手动复制")
-                            })
+                            navigator.clipboard
+                                .writeText(url)
+                                .then(() => {
+                                    setLinkCopied(true)
+                                    toast.success("房间链接已复制到剪贴板")
+                                    setTimeout(() => setLinkCopied(false), 2000)
+                                })
+                                .catch(() => {
+                                    toast.error("复制失败，请手动复制")
+                                })
                         }}
                         className="w-full flex items-center justify-center gap-2 px-3 py-2 bg-blue-500/20 hover:bg-blue-500/30 border border-blue-500/30 rounded-lg text-blue-300 text-xs transition-all duration-200 hover:scale-[1.02] active:scale-95"
                     >
@@ -322,7 +330,9 @@ export function CollaborationPanel({ spaceId }: { spaceId?: number | string }) {
                                 >
                                     <div className="relative">
                                         <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 flex items-center justify-center text-[10px] font-bold text-white">
-                                            {user.userName.charAt(0).toUpperCase()}
+                                            {user.userName
+                                                .charAt(0)
+                                                .toUpperCase()}
                                         </div>
                                         <Circle className="absolute -bottom-0.5 -right-0.5 h-2.5 w-2.5 text-green-400 fill-green-400" />
                                     </div>

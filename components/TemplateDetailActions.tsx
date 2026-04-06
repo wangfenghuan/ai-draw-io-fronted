@@ -1,8 +1,8 @@
 "use client"
 
 import { Rocket } from "lucide-react"
-import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { useState } from "react"
 import { CreateDiagramDialog } from "@/components/create-diagram-dialog"
 
 interface TemplateDetailActionsProps {
@@ -13,7 +13,9 @@ interface TemplateDetailActionsProps {
     }
 }
 
-export function TemplateDetailActions({ material }: TemplateDetailActionsProps) {
+export function TemplateDetailActions({
+    material,
+}: TemplateDetailActionsProps) {
     const router = useRouter()
     const [createDialogVisible, setCreateDialogVisible] = useState(false)
 
@@ -35,7 +37,9 @@ export function TemplateDetailActions({ material }: TemplateDetailActionsProps) 
                 open={createDialogVisible}
                 onOpenChange={setCreateDialogVisible}
                 onSuccess={handleCreateSuccess}
-                initialName={material.name ? `使用模板-${material.name}` : undefined}
+                initialName={
+                    material.name ? `使用模板-${material.name}` : undefined
+                }
                 initialDiagramCode={material.diagramCode}
             />
         </>

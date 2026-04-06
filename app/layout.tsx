@@ -1,5 +1,5 @@
-import { Plus_Jakarta_Sans } from "next/font/google"
 import type { Metadata, Viewport } from "next"
+import { Plus_Jakarta_Sans } from "next/font/google"
 import { cookies } from "next/headers"
 import { IntlProvider } from "./providers"
 import "./globals.css"
@@ -101,7 +101,7 @@ export default async function RootLayout({
     // 从 cookie 获取语言设置
     const cookieStore = await cookies()
     const locale = cookieStore.get("locale")?.value || "zh"
-    
+
     // 加载对应语言的翻译文件
     const messages = (await import(`../messages/${locale}.json`)).default
 

@@ -1,9 +1,10 @@
+import type { Metadata } from "next"
 import TemplateSquare from "@/components/TemplateSquare"
-import { Metadata } from "next"
 
 export const metadata: Metadata = {
     title: "素材广场 | IntelliDraw",
-    description: "浏览和使用由社区创建的高质量图表模板，包括流程图、思维导图、UML等。",
+    description:
+        "浏览和使用由社区创建的高质量图表模板，包括流程图、思维导图、UML等。",
 }
 
 // Define the API Response Type matching the backend
@@ -54,7 +55,8 @@ async function getMaterials(page = 1, pageSize = 12) {
                 if (records.length > serverSize) {
                     serverTotal = records.length
                 } else {
-                    serverTotal = (serverCurrent - 1) * serverSize + records.length
+                    serverTotal =
+                        (serverCurrent - 1) * serverSize + records.length
                 }
             }
 
@@ -77,7 +79,7 @@ type Props = {
 }
 
 export default async function Page({ searchParams }: Props) {
-    const params = await searchParams;
+    const params = await searchParams
     const page = Number(params?.page) || 1
     const { records, total, current, size } = await getMaterials(page)
 

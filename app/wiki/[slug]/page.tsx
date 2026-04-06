@@ -1,10 +1,10 @@
-import { Metadata } from "next"
-import { notFound } from "next/navigation"
-import { getWikiBySlug, wikiArticles } from "@/lib/wiki-data"
+import { ArrowRight, Calendar, Tag, User } from "lucide-react"
+import type { Metadata } from "next"
 import Link from "next/link"
+import { notFound } from "next/navigation"
 import ReactMarkdown from "react-markdown"
 import remarkGfm from "remark-gfm"
-import { Calendar, User, Tag, ArrowRight } from "lucide-react"
+import { getWikiBySlug, wikiArticles } from "@/lib/wiki-data"
 
 type Props = {
     params: Promise<{
@@ -13,7 +13,7 @@ type Props = {
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-    const { slug } = await params;
+    const { slug } = await params
     const article = getWikiBySlug(slug)
 
     if (!article) {
@@ -41,7 +41,7 @@ export async function generateStaticParams() {
 }
 
 export default async function WikiPage({ params }: Props) {
-    const { slug } = await params;
+    const { slug } = await params
     const article = getWikiBySlug(slug)
 
     if (!article) {
@@ -108,7 +108,8 @@ export default async function WikiPage({ params }: Props) {
                         准备好实践了吗？
                     </h3>
                     <p className="text-slate-600 mb-8 max-w-2xl mx-auto">
-                        IntelliDraw 提供了文中提到的所有图表工具。现在就开始，释放你的创意。
+                        IntelliDraw
+                        提供了文中提到的所有图表工具。现在就开始，释放你的创意。
                     </p>
                     <Link href="/diagram/new">
                         <button className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-8 rounded-lg transition-all shadow-md hover:shadow-lg">

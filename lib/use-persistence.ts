@@ -18,7 +18,7 @@
  * - 冷却期内其他客户端无法抢锁
  */
 
-import { useEffect, useRef, useState } from "react"
+import { useEffect, useRef } from "react"
 import { checkLock, uploadSnapshot } from "@/api/diagramController"
 import { encryptData } from "./cryptoUtils"
 

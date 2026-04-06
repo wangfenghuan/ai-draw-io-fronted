@@ -15,7 +15,10 @@ import { useSelector } from "react-redux"
 import { toast } from "sonner"
 import { editDiagramRoom, getRoomDiagramVo } from "@/api/roomController"
 import { CollaborationPanel } from "@/components/collaboration-panel"
-import { DownloadDialog, type DownloadFormat } from "@/components/download-dialog"
+import {
+    DownloadDialog,
+    type DownloadFormat,
+} from "@/components/download-dialog"
 import { RoomMemberManagement } from "@/components/room/RoomMemberManagement"
 import { STORAGE_CLOSE_PROTECTION_KEY } from "@/components/settings-dialog"
 import { ResizablePanel, ResizablePanelGroup } from "@/components/ui/resizable"
@@ -335,7 +338,7 @@ export default function DrawioHome() {
     }
 
     // 保存图表
-    const handleSave = async () => {
+    const _handleSave = async () => {
         if (!chartXML) {
             console.error("没有可保存的图表内容")
             return false

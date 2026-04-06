@@ -5,7 +5,6 @@ import Image from "next/image"
 import { useEffect, useRef, useState } from "react"
 import { isPdfFile, isTextFile } from "@/lib/pdf-utils"
 
-
 function formatCharCount(count: number): string {
     if (count >= 1000) {
         return `${(count / 1000).toFixed(1)}k`
@@ -111,7 +110,6 @@ export function FilePreviewList({
                                         className="object-cover w-full h-full"
                                         unoptimized
                                     />
-
                                 ) : isPdfFile(file) || isTextFile(file) ? (
                                     <div className="flex flex-col items-center justify-center h-full p-1">
                                         {pdfInfo?.isExtracting ? (

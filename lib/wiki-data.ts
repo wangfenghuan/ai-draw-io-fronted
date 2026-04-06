@@ -11,7 +11,8 @@ export const wikiArticles: Record<string, WikiArticle> = {
     "what-is-uml-diagram": {
         slug: "what-is-uml-diagram",
         title: "什么是 UML 图？UML 建模入门指南",
-        description: "本文详细介绍了什么是统一建模语言 (UML)，UML 图的 14 种类型，以及如何使用 IntelliDraw 快速绘制标准的 UML 图。",
+        description:
+            "本文详细介绍了什么是统一建模语言 (UML)，UML 图的 14 种类型，以及如何使用 IntelliDraw 快速绘制标准的 UML 图。",
         category: "UML",
         relatedTemplates: ["uml-class", "uml-sequence"],
         content: `
@@ -58,7 +59,8 @@ IntelliDraw 提供了完整的 UML 符号库和 AI 辅助功能：
     "how-to-draw-flowchart": {
         slug: "how-to-draw-flowchart",
         title: "流程图绘制最佳实践：从入门到精通",
-        description: "学习如何绘制清晰、专业的流程图。包含标准符号说明、布局技巧以及常见错误规避。",
+        description:
+            "学习如何绘制清晰、专业的流程图。包含标准符号说明、布局技巧以及常见错误规避。",
         category: "Flowchart",
         relatedTemplates: ["flow-swimlane", "flow-basic"],
         content: `

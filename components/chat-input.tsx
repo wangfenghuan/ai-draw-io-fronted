@@ -1,12 +1,11 @@
 "use client"
 
 import {
-
+    Database,
     Download,
+    FileCode,
     History,
     Image as ImageIcon,
-    FileCode,
-    Database,
     Loader2,
     Send,
     Square,
@@ -256,7 +255,7 @@ export function ChatInput({
         }
     }
 
-    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const _handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newFiles = Array.from(e.target.files || [])
         const { validFiles, errors } = validateFiles(newFiles, files.length)
         showValidationErrors(errors)
@@ -483,8 +482,6 @@ export function ChatInput({
                         >
                             <Database className="h-4 w-4" />
                         </ButtonWithTooltip>
-
-
 
                         <div className="w-px h-5 bg-border mx-1" />
 

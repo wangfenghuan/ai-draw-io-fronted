@@ -6,7 +6,6 @@ import { addDiagram } from "@/api/diagramController"
 import { listMySpaceVoByPage, listSpaceLevel } from "@/api/spaceController"
 
 const { Option } = Select
-const { TextArea } = Input
 
 interface CreateDiagramDialogProps {
     open: boolean

@@ -2,20 +2,10 @@
 
 import {
     ClockCircleOutlined,
-    GlobalOutlined,
     SearchOutlined,
     UserOutlined,
 } from "@ant-design/icons"
-import {
-    App,
-    Button,
-    Card,
-    Empty,
-    Input,
-    Modal,
-    Pagination,
-    Tooltip,
-} from "antd"
+import { App, Button, Card, Empty, Input, Modal, Pagination } from "antd"
 import { useRouter } from "next/navigation"
 import { useEffect, useRef, useState } from "react"
 import { getByPage } from "@/api/diagramController"
@@ -25,7 +15,7 @@ const { Search } = Input
 
 export default function DiagramMarketplacePage() {
     const { message } = App.useApp()
-    const router = useRouter()
+    const _router = useRouter()
 
     const [diagrams, setDiagrams] = useState<API.DiagramVO[]>([])
     const [loading, setLoading] = useState(false)

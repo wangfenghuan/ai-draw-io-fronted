@@ -104,8 +104,16 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                     label={
                         <span>
                             公告内容
-                            <span style={{ color: "#999", fontWeight: "normal", fontSize: "12px", marginLeft: "8px" }}>
-                                (支持 Markdown 格式，如 [链接文字](https://example.com))
+                            <span
+                                style={{
+                                    color: "#999",
+                                    fontWeight: "normal",
+                                    fontSize: "12px",
+                                    marginLeft: "8px",
+                                }}
+                            >
+                                (支持 Markdown 格式，如
+                                [链接文字](https://example.com))
                             </span>
                         </span>
                     }
@@ -117,8 +125,16 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                 <div style={{ marginBottom: 24 }}>
                     <div style={{ marginBottom: 8, fontWeight: 500 }}>
                         公告内容
-                        <span style={{ color: "#999", fontWeight: "normal", fontSize: "12px", marginLeft: "8px" }}>
-                            (支持 Markdown 格式，如 [链接文字](https://example.com))
+                        <span
+                            style={{
+                                color: "#999",
+                                fontWeight: "normal",
+                                fontSize: "12px",
+                                marginLeft: "8px",
+                            }}
+                        >
+                            (支持 Markdown 格式，如
+                            [链接文字](https://example.com))
                         </span>
                     </div>
                     <Tabs
@@ -145,7 +161,9 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                                 key: "preview",
                                 label: (
                                     <span>
-                                        <EyeOutlined style={{ marginRight: 4 }} />
+                                        <EyeOutlined
+                                            style={{ marginRight: 4 }}
+                                        />
                                         预览
                                     </span>
                                 ),
@@ -171,21 +189,31 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                                                             rel="noopener noreferrer"
                                                             style={{
                                                                 color: "#1677ff",
-                                                                textDecoration: "underline",
+                                                                textDecoration:
+                                                                    "underline",
                                                             }}
                                                         >
                                                             {children}
                                                         </a>
                                                     ),
                                                     p: ({ children }) => (
-                                                        <p style={{ marginBottom: "8px" }}>{children}</p>
+                                                        <p
+                                                            style={{
+                                                                marginBottom:
+                                                                    "8px",
+                                                            }}
+                                                        >
+                                                            {children}
+                                                        </p>
                                                     ),
                                                 }}
                                             >
                                                 {content}
                                             </ReactMarkdown>
                                         ) : (
-                                            <span style={{ color: "#999" }}>暂无内容，请先编辑</span>
+                                            <span style={{ color: "#999" }}>
+                                                暂无内容，请先编辑
+                                            </span>
                                         )}
                                     </div>
                                 ),
@@ -193,7 +221,15 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                         ]}
                     />
                     {!content && (
-                        <div style={{ color: "#ff4d4f", fontSize: 12, marginTop: 4 }}>请输入公告内容</div>
+                        <div
+                            style={{
+                                color: "#ff4d4f",
+                                fontSize: 12,
+                                marginTop: 4,
+                            }}
+                        >
+                            请输入公告内容
+                        </div>
                     )}
                 </div>
                 <Form.Item

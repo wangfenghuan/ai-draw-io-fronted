@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useRef, useState, memo } from "react"
+import { memo, useEffect, useRef, useState } from "react"
 import MaterialViewer from "./MaterialViewer"
 
 interface LazyMaterialViewerProps {
@@ -73,7 +73,7 @@ function LazyMaterialViewer({
             {
                 rootMargin,
                 threshold: 0.01,
-            }
+            },
         )
 
         observer.observe(element)
@@ -98,7 +98,7 @@ function LazyMaterialViewer({
     }
 
     // MaterialViewer 加载完成回调
-    const handleViewerLoad = () => {
+    const _handleViewerLoad = () => {
         setHasLoaded(true)
     }
 
@@ -158,7 +158,9 @@ function LazyMaterialViewer({
                                 src={imageUrl}
                                 alt="素材预览"
                                 className={`w-full h-full object-contain transition-opacity duration-300 ${
-                                    hasLoaded ? "opacity-100" : "opacity-0 absolute inset-0"
+                                    hasLoaded
+                                        ? "opacity-100"
+                                        : "opacity-0 absolute inset-0"
                                 }`}
                                 onLoad={handleImageLoad}
                                 onError={handleImageError}
@@ -168,15 +170,20 @@ function LazyMaterialViewer({
                     )}
 
                     {/* 图片加载失败或强制使用 viewer */}
-                    {((shouldUseImage && hasError) || !shouldUseImage) && xml && (
-                        <div className="w-full h-full">
-                            <MaterialViewer
-                                xml={xml}
-                                style={{ ...style, width: "100%", height: "100%" }}
-                                className={className}
-                            />
-                        </div>
-                    )}
+                    {((shouldUseImage && hasError) || !shouldUseImage) &&
+                        xml && (
+                            <div className="w-full h-full">
+                                <MaterialViewer
+                                    xml={xml}
+                                    style={{
+                                        ...style,
+                                        width: "100%",
+                                        height: "100%",
+                                    }}
+                                    className={className}
+                                />
+                            </div>
+                        )}
 
                     {/* 既没有图片也没有图表代码 */}
                     {!imageUrl && !xml && renderEmpty()}
