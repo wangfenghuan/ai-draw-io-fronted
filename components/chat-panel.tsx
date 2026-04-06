@@ -1,7 +1,5 @@
 "use client"
 
-import { useChat } from "@ai-sdk/react"
-import { DefaultChatTransport } from "ai"
 import {
     AlertTriangle,
     MessageSquarePlus,
@@ -18,15 +16,12 @@ import { FaGithub } from "react-icons/fa"
 import { useSelector } from "react-redux"
 import { Toaster, toast } from "sonner"
 import { listDiagramChatHistory } from "@/api/conversionController"
-import { uploadAndAnalyzeSimple, parseSql } from "@/api/codeparseController"
+import { uploadAndAnalyzeSimple, parseSql } from "@/api/codeParser"
 import { ButtonWithTooltip } from "@/components/button-with-tooltip"
 import { ChatInput } from "@/components/chat-input"
 import { ResetWarningModal } from "@/components/reset-warning-modal"
-import { SettingsDialog } from "@/components/settings-dialog"
-import { BACKEND_API_URL } from "@/config/api"
+import { SettingsDialog, STORAGE_CLOSE_PROTECTION_KEY } from "@/components/settings-dialog"
 import { useDiagram } from "@/contexts/diagram-context"
-import { getAIConfig } from "@/lib/ai-config"
-import { findCachedResponse } from "@/lib/cached-responses"
 import { isPdfFile, isTextFile } from "@/lib/pdf-utils"
 import { type FileData, useFileProcessor } from "@/lib/use-file-processor"
 import { useQuotaManager } from "@/lib/use-quota-manager"
@@ -35,10 +30,12 @@ import {
     formatXML,
     isMxCellXmlComplete,
     wrapWithMxFile,
+    parseXmlAndLoadDiagram,
 } from "@/lib/utils"
 
 import type { RootState } from "@/stores"
 import { ChatMessageDisplay } from "./chat-message-display"
+import { type Message, useBackendChat } from "@/lib/use-backend-chat"
 
 // localStorage keys for persistence
 const STORAGE_MESSAGES_KEY = "next-ai-draw-io-messages"
@@ -46,19 +43,24 @@ const STORAGE_XML_SNAPSHOTS_KEY = "next-ai-draw-io-xml-snapshots"
 const STORAGE_SESSION_ID_KEY = "next-ai-draw-io-session-id"
 export const STORAGE_DIAGRAM_XML_KEY = "next-ai-draw-io-diagram-xml"
 
-// Type for message parts (tool calls and their states)
+// Type for message parts
 interface MessagePart {
     type: string
+    text?: string
     state?: string
     toolName?: string
-    input?: { xml?: string; [key: string]: unknown }
+    input?: { xml?: string; operations?: any[]; [key: string]: unknown }
+    output?: string
+    toolCallId?: string
     [key: string]: unknown
 }
 
-interface ChatMessage {
-    role: string
+interface UIMessage {
+    id: string
+    role: "user" | "assistant" | "system"
     parts?: MessagePart[]
-    [key: string]: unknown
+    content?: string
+    createTime?: string
 }
 
 interface ChatPanelProps {
@@ -73,58 +75,7 @@ interface ChatPanelProps {
     diagramId?: string
 }
 
-// Constants for tool states
-const TOOL_ERROR_STATE = "output-error" as const
 const DEBUG = process.env.NODE_ENV === "development"
-const MAX_AUTO_RETRY_COUNT = 3
-
-// Determine if auto-resubmit should happen based on tool errors.
-// Only checks the LAST tool part (most recent tool call), not all tool parts.
-function hasToolErrors(messages: ChatMessage[]): boolean {
-    const lastMessage = messages[messages.length - 1]
-    if (!lastMessage || lastMessage.role !== "assistant") {
-        return false
-    }
-
-    const toolParts =
-        (lastMessage.parts as MessagePart[] | undefined)?.filter((part) =>
-            part.type?.startsWith("tool-"),
-        ) || []
-
-    if (toolParts.length === 0) {
-        return false
-    }
-
-    const lastToolPart = toolParts[toolParts.length - 1]
-
-    // Special handling for edit_diagram failures - be more lenient for user-friendly edits
-    if (
-        lastToolPart.toolName === "edit_diagram" &&
-        lastToolPart.state === TOOL_ERROR_STATE
-    ) {
-        // Allow retries for cell ID mismatches but limit to prevent infinite loops
-        const errorText = (lastToolPart.errorText as string) || ""
-        if (
-            errorText.includes("not found") ||
-            errorText.includes("ID mismatch")
-        ) {
-            console.log(
-                "[hasToolErrors] edit_diagram cell ID error, allowing retry",
-            )
-            return true
-        }
-        // For XML validation errors, be more restrictive
-        if (
-            errorText.includes("invalid XML") ||
-            errorText.includes("parse error")
-        ) {
-            console.log("[hasToolErrors] edit_diagram XML error, not retrying")
-            return false
-        }
-    }
-
-    return lastToolPart?.state === TOOL_ERROR_STATE
-}
 
 export default function ChatPanel({
     isVisible,
@@ -159,11 +110,8 @@ export default function ChatPanel({
         try {
             const res = await uploadAndAnalyzeSimple({}, file)
             if (res.code === 0 && res.data) {
-                // Construct prompt with analysis result
                 const prompt = `I have uploaded a Spring Boot project. Here is the simplified architecture analysis in JSON format:\n\n\`\`\`json\n${JSON.stringify(res.data, null, 2)}\n\`\`\`\n\nPlease analyze this architecture and generate **Draw.io compatible XML code** for an architecture diagram or class diagram. Ensure the XML code can be directly loaded and displayed by Draw.io. Focus on the Controller, Service, and Repository layers. Please wrap the XML code in \`\`\`xml and \`\`\` code blocks.`
-                
-                // Send message to AI
-                await sendMessage({ role: "user", content: prompt })
+                await sendMessage(prompt)
                 toast.success("Analysis complete, generating diagram...", { id: toastId })
             } else {
                 toast.error(res.message || "Analysis failed", { id: toastId })
@@ -172,7 +120,6 @@ export default function ChatPanel({
             console.error("Code upload error:", error)
             toast.error("Failed to upload project", { id: toastId })
         } finally {
-            // Reset input
             if (fileInputCodeRef.current) fileInputCodeRef.current.value = ""
         }
     }
@@ -185,11 +132,8 @@ export default function ChatPanel({
         try {
             const res = await parseSql({}, file)
             if (res.code === 0 && res.data) {
-                // Construct prompt with analysis result
                 const prompt = `I have uploaded a SQL DDL file. Here is the parsed schema structure in JSON format:\n\n\`\`\`json\n${JSON.stringify(res.data, null, 2)}\n\`\`\`\n\nPlease analyze this schema and generate **Draw.io compatible XML code** for an Entity Relationship (ER) diagram. Include all tables, columns, primary keys, and inferred relationships. Please wrap the XML code in \`\`\`xml and \`\`\` code blocks.`
-                
-                // Send message to AI
-                await sendMessage({ role: "user", content: prompt })
+                await sendMessage(prompt)
                 toast.success("Parsing complete, generating ER diagram...", { id: toastId })
             } else {
                 toast.error(res.message || "Parsing failed", { id: toastId })
@@ -198,7 +142,6 @@ export default function ChatPanel({
             console.error("SQL upload error:", error)
             toast.error("Failed to upload SQL file", { id: toastId })
         } finally {
-            // Reset input
             if (fileInputSqlRef.current) fileInputSqlRef.current.value = ""
         }
     }
@@ -238,25 +181,23 @@ export default function ChatPanel({
 
     const [showHistory, setShowHistory] = useState(false)
     const [showSettingsDialog, setShowSettingsDialog] = useState(false)
-    const [, setAccessCodeRequired] = useState(false)
-    const [input, setInput] = useState("")
     const [dailyRequestLimit, setDailyRequestLimit] = useState(0)
     const [dailyTokenLimit, setDailyTokenLimit] = useState(0)
     const [tpmLimit, setTpmLimit] = useState(0)
     const [showNewChatDialog, setShowNewChatDialog] = useState(false)
     const [minimalStyle, setMinimalStyle] = useState(false)
+    const [input, setInput] = useState("")
 
     // Check config on mount
     useEffect(() => {
         fetch("/api/config")
             .then((res) => res.json())
             .then((data) => {
-                setAccessCodeRequired(data.accessCodeRequired)
                 setDailyRequestLimit(data.dailyRequestLimit || 0)
                 setDailyTokenLimit(data.dailyTokenLimit || 0)
                 setTpmLimit(data.tpmLimit || 0)
             })
-            .catch(() => setAccessCodeRequired(false))
+            .catch(() => {})
     }, [])
 
     // Quota management using extracted hook
@@ -266,7 +207,7 @@ export default function ChatPanel({
         tpmLimit,
     })
 
-    // Generate a unique session ID for Langfuse tracing (restore from localStorage if available)
+    // Generate a unique session ID
     const [sessionId, setSessionId] = useState(() => {
         if (typeof window !== "undefined") {
             const saved = localStorage.getItem(STORAGE_SESSION_ID_KEY)
@@ -275,496 +216,96 @@ export default function ChatPanel({
         return `session-${Date.now()}-${Math.random().toString(36).slice(2, 9)}`
     })
 
-    // Store XML snapshots for each user message (keyed by message index)
+    // Store XML snapshots for each user message
     const xmlSnapshotsRef = useRef<Map<number, string>>(new Map())
 
     // Flag to track if we've restored from localStorage
     const hasRestoredRef = useRef(false)
 
-    // Ref to track latest chartXML for use in callbacks (avoids stale closure)
+    // Ref to track latest chartXML for use in callbacks
     const chartXMLRef = useRef(chartXML)
     useEffect(() => {
         chartXMLRef.current = chartXML
     }, [chartXML])
 
-    // Ref to hold stop function for use in onToolCall (avoids stale closure)
-    const stopRef = useRef<(() => void) | null>(null)
-
-    // Ref to track consecutive auto-retry count (reset on user action)
-    const autoRetryCountRef = useRef(0)
-
-    // Ref to accumulate partial XML when output is truncated due to maxOutputTokens
-    // When partialXmlRef.current.length > 0, we're in continuation mode
-    const partialXmlRef = useRef<string>("")
-
-    // Persist processed tool call IDs so collapsing the chat doesn't replay old tool outputs
-    const processedToolCallsRef = useRef<Set<string>>(new Set())
-
-    // Debounce timeout for localStorage writes (prevents blocking during streaming)
+    // Debounce timeout for localStorage writes
     const localStorageDebounceRef = useRef<ReturnType<
         typeof setTimeout
     > | null>(null)
     const xmlStorageDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
         null,
     )
-    const LOCAL_STORAGE_DEBOUNCE_MS = 1000 // Save at most once per second
+    const LOCAL_STORAGE_DEBOUNCE_MS = 1000
 
+    // Convert Message[] to UIMessage[] for display
+    const convertToUIMessages = (messages: Message[]): UIMessage[] => {
+        return messages.map((msg) => ({
+            id: msg.id,
+            role: msg.role,
+            parts: [{ type: "text", text: msg.content }],
+            content: msg.content,
+        }))
+    }
+
+    // Convert UIMessage[] to Message[] for storage
+    const convertFromUIMessages = (uiMessages: UIMessage[]): Message[] => {
+        return uiMessages.map((msg) => ({
+            id: msg.id,
+            role: msg.role,
+            content: msg.parts?.find((p) => p.type === "text")?.text || msg.content || "",
+            timestamp: Date.now(),
+        }))
+    }
+
+    // Use backend chat hook
     const {
-        messages,
-        sendMessage,
-        addToolOutput,
+        messages: backendMessages,
+        sendMessage: backendSendMessage,
         stop,
-        status,
+        isLoading,
         error,
-        setMessages,
-    } = useChat({
-        transport: new DefaultChatTransport({
-            api: `${BACKEND_API_URL}/chat/stream`,
-        }),
-        async onToolCall({ toolCall }) {
-            if (DEBUG) {
-                console.log(
-                    `[onToolCall] Tool: ${toolCall.toolName}, CallId: ${toolCall.toolCallId}`,
-                )
-            }
-
-            if (toolCall.toolName === "display_diagram") {
-                const { xml } = toolCall.input as { xml: string }
-
-                // DEBUG: Log raw input to diagnose false truncation detection
-                console.log(
-                    "[display_diagram] XML ending (last 100 chars):",
-                    xml.slice(-100),
-                )
-                console.log("[display_diagram] XML length:", xml.length)
-
-                // Check if XML is truncated (incomplete mxCell indicates truncated output)
-                const isTruncated = !isMxCellXmlComplete(xml)
-                console.log("[display_diagram] isTruncated:", isTruncated)
-
-                if (isTruncated) {
-                    // Store the partial XML for continuation via append_diagram
-                    partialXmlRef.current = xml
-
-                    // Tell LLM to use append_diagram to continue
-                    const partialEnding = partialXmlRef.current.slice(-500)
-                    addToolOutput({
-                        tool: "display_diagram",
-                        toolCallId: toolCall.toolCallId,
-                        state: "output-error",
-                        errorText: `Output was truncated due to length limits. Use the append_diagram tool to continue.
-
-Your output ended with:
-\`\`\`
-${partialEnding}
-\`\`\`
-
-NEXT STEP: Call append_diagram with the continuation XML.
-- Do NOT include wrapper tags or root cells (id="0", id="1")
-- Start from EXACTLY where you stopped
-- Complete all remaining mxCell elements`,
-                    })
-                    return
-                }
-
-                // Complete XML received - use it directly
-                // (continuation is now handled via append_diagram tool)
-                const finalXml = xml
-                partialXmlRef.current = "" // Reset any partial from previous truncation
-
-                // Wrap raw XML with full mxfile structure for draw.io
-                const fullXml = wrapWithMxFile(finalXml)
-
-                // loadDiagram validates and returns error if invalid
-                const validationError = onDisplayChart(fullXml)
-
-                if (validationError) {
-                    console.warn(
-                        "[display_diagram] Validation error:",
-                        validationError,
-                    )
-                    // Return error to model - sendAutomaticallyWhen will trigger retry
-                    if (DEBUG) {
-                        console.log(
-                            "[display_diagram] Adding tool output with state: output-error",
-                        )
-                    }
-                    addToolOutput({
-                        tool: "display_diagram",
-                        toolCallId: toolCall.toolCallId,
-                        state: "output-error",
-                        errorText: `${validationError}
-
-Please fix the XML issues and call display_diagram again with corrected XML.
-
-Your failed XML:
-\`\`\`xml
-${finalXml}
-\`\`\``,
-                    })
-                } else {
-                    // Success - diagram will be rendered by chat-message-display
-                    if (DEBUG) {
-                        console.log(
-                            "[display_diagram] Success! Adding tool output with state: output-available",
-                        )
-                    }
-                    addToolOutput({
-                        tool: "display_diagram",
-                        toolCallId: toolCall.toolCallId,
-                        output: "Successfully displayed the diagram.",
-                    })
-                    if (DEBUG) {
-                        console.log(
-                            "[display_diagram] Tool output added. Diagram should be visible now.",
-                        )
-                    }
-                }
-            } else if (toolCall.toolName === "edit_diagram") {
-                const { operations } = toolCall.input as {
-                    operations: Array<{
-                        type: "update" | "add" | "delete"
-                        cell_id: string
-                        new_xml?: string
-                    }>
-                }
-
-                let currentXml = ""
-                try {
-                    // Use chartXML from ref directly - more reliable than export
-                    const cachedXML = chartXMLRef.current
-                    if (cachedXML) {
-                        currentXml = cachedXML
-                    } else {
-                        // Fallback to export only if no cached XML
-                        currentXml = await onFetchChart(false)
-                    }
-
-                    const { result: editedXml, errors } =
-                        applyDiagramOperations(currentXml, operations)
-
-                    // Check for operation errors
-                    if (errors.length > 0) {
-                        const errorMessages = errors
-                            .map(
-                                (e) =>
-                                    `- ${e.type} on cell_id="${e.cellId}": ${e.message}`,
-                            )
-                            .join("\n")
-
-                        // Log detailed errors for debugging
-                        console.error(
-                            "[edit_diagram] Operation errors:",
-                            errorMessages,
-                            "Operations:",
-                            JSON.stringify(operations, null, 2),
-                        )
-
-                        // Provide more user-friendly error message
-                        const userFriendlyMessage =
-                            errors.length === 1 &&
-                            errors[0].message.includes("not found")
-                                ? `Cannot find cell with ID "${errors[0].cellId}" in the current diagram. The cell may have been deleted or the ID may be incorrect.`
-                                : `Failed to apply ${errors.length} edit operation(s). The diagram structure may have changed or some cell IDs may not exist.`
-
-                        addToolOutput({
-                            tool: "edit_diagram",
-                            toolCallId: toolCall.toolCallId,
-                            state: "output-error",
-                            errorText: `${userFriendlyMessage}
-
-**Attempted Operations:**
-${operations.map((op, i) => `${i + 1}. ${op.type.toUpperCase()} cell_id="${op.cell_id}"${op.new_xml ? ` with new content` : ""}`).join("\n")}
-
-Please try again with:
-1. A more specific edit request
-2. Or ask me to regenerate the diagram with your desired changes
-3. Or check if the elements you want to edit still exist in the diagram
-
-Current diagram contains ${currentXml.match(/mxCell/g)?.length || 0} cells.`,
-                        })
-                        return
-                    }
-
-                    // loadDiagram validates and returns error if invalid
-                    const validationError = onDisplayChart(editedXml)
-                    if (validationError) {
-                        console.warn(
-                            "[edit_diagram] Validation error:",
-                            validationError,
-                            "Edited XML:",
-                            editedXml.substring(0, 1000) + "...",
-                        )
-                        addToolOutput({
-                            tool: "edit_diagram",
-                            toolCallId: toolCall.toolCallId,
-                            state: "output-error",
-                            errorText: `Edit produced invalid XML: ${validationError}
-
-**Operations Attempted:**
-${operations.map((op, i) => `${i + 1}. ${op.type.toUpperCase()} cell_id="${op.cell_id}"`).join("\n")}
-
-**Invalid XML Preview:**
-\`\`\`xml
-${editedXml.substring(0, 500)}...
-\`\`\`
-
-Current diagram XML (for reference):
-\`\`\`xml
-${currentXml.substring(0, 1000)}...
-\`\`\`
-
-Please fix the operations to avoid structural issues or try regenerating the diagram.`,
-                        })
-                        return
-                    }
-                    onExport()
-                    addToolOutput({
-                        tool: "edit_diagram",
-                        toolCallId: toolCall.toolCallId,
-                        output: `Successfully applied ${operations.length} operation(s) to the diagram.`,
-                    })
-                } catch (error) {
-                    console.error("[edit_diagram] Failed:", error)
-
-                    const errorMessage =
-                        error instanceof Error ? error.message : String(error)
-
-                    addToolOutput({
-                        tool: "edit_diagram",
-                        toolCallId: toolCall.toolCallId,
-                        state: "output-error",
-                        errorText: `Edit failed: ${errorMessage}
-
-Current diagram XML:
-\`\`\`xml
-${currentXml || "No XML available"}
-\`\`\`
-
-Please check cell IDs and retry, or use display_diagram to regenerate.`,
-                    })
-                }
-            } else if (toolCall.toolName === "append_diagram") {
-                const { xml } = toolCall.input as { xml: string }
-
-                // Detect if LLM incorrectly started fresh instead of continuing
-                // LLM should only output bare mxCells now, so wrapper tags indicate error
-                const trimmed = xml.trim()
-                const isFreshStart =
-                    trimmed.startsWith("<mxGraphModel") ||
-                    trimmed.startsWith("<root") ||
-                    trimmed.startsWith("<mxfile") ||
-                    trimmed.startsWith('<mxCell id="0"') ||
-                    trimmed.startsWith('<mxCell id="1"')
-
-                if (isFreshStart) {
-                    addToolOutput({
-                        tool: "append_diagram",
-                        toolCallId: toolCall.toolCallId,
-                        state: "output-error",
-                        errorText: `ERROR: You started fresh with wrapper tags. Do NOT include wrapper tags or root cells (id="0", id="1").
-
-Continue from EXACTLY where the partial ended:
-\`\`\`
-${partialXmlRef.current.slice(-500)}
-\`\`\`
-
-Start your continuation with the NEXT character after where it stopped.`,
-                    })
-                    return
-                }
-
-                // Append to accumulated XML
-                partialXmlRef.current += xml
-
-                // Check if XML is now complete (last mxCell is complete)
-                const isComplete = isMxCellXmlComplete(partialXmlRef.current)
-
-                if (isComplete) {
-                    // Wrap and display the complete diagram
-                    const finalXml = partialXmlRef.current
-                    partialXmlRef.current = "" // Reset
-
-                    const fullXml = wrapWithMxFile(finalXml)
-                    const validationError = onDisplayChart(fullXml)
-
-                    if (validationError) {
-                        addToolOutput({
-                            tool: "append_diagram",
-                            toolCallId: toolCall.toolCallId,
-                            state: "output-error",
-                            errorText: `Validation error after assembly: ${validationError}
-
-Assembled XML:
-\`\`\`xml
-${finalXml.substring(0, 2000)}...
-\`\`\`
-
-Please use display_diagram with corrected XML.`,
-                        })
-                    } else {
-                        addToolOutput({
-                            tool: "append_diagram",
-                            toolCallId: toolCall.toolCallId,
-                            output: "Diagram assembly complete and displayed successfully.",
-                        })
-                    }
-                } else {
-                    // Still incomplete - signal to continue
-                    addToolOutput({
-                        tool: "append_diagram",
-                        toolCallId: toolCall.toolCallId,
-                        state: "output-error",
-                        errorText: `XML still incomplete (mxCell not closed). Call append_diagram again to continue.
-
-Current ending:
-\`\`\`
-${partialXmlRef.current.slice(-500)}
-\`\`\`
-
-Continue from EXACTLY where you stopped.`,
-                    })
-                }
+        setMessages: setBackendMessages,
+    } = useBackendChat({
+        diagramId: diagramId || "default",
+        onMessageComplete: (fullContent) => {
+            try {
+                parseXmlAndLoadDiagram(fullContent, onDisplayChart)
+            } catch (err) {
+                console.error("Failed to parse diagram XML:", err)
             }
         },
-        onError: (error) => {
-            // Silence access code error in console since it's handled by UI
-            if (!error.message.includes("Invalid or missing access code")) {
-                console.error("Chat error:", error)
-            }
-
-            // Translate technical errors into user-friendly messages
-            // The server now handles detailed error messages, so we can display them directly.
-            // But we still handle connection/network errors that happen before reaching the server.
-            let friendlyMessage = error.message
-
-            // Simple check for network errors if message is generic
-            if (friendlyMessage === "Failed to fetch") {
-                friendlyMessage = "Network error. Please check your connection."
-            }
-
-            // Truncated tool input error (model output limit too low)
-            if (friendlyMessage.includes("toolUse.input is invalid")) {
-                friendlyMessage =
-                    "Output was truncated before the diagram could be generated. Try a simpler request or increase the maxOutputLength."
-            }
-
-            // Translate image not supported error
-            if (friendlyMessage.includes("image content block")) {
-                friendlyMessage = "This model doesn't support image input."
-            }
-
-            // Add system message for error so it can be cleared
-            setMessages((currentMessages) => {
-                const errorMessage = {
-                    id: `error-${Date.now()}`,
-                    role: "system" as const,
-                    content: friendlyMessage,
-                    parts: [{ type: "text" as const, text: friendlyMessage }],
-                }
-                return [...currentMessages, errorMessage]
-            })
-
-            // Show toast for immediate visibility
-            toast.error(friendlyMessage)
-
-            if (error.message.includes("Invalid or missing access code")) {
-                // Show settings button and open dialog to help user fix it
-                setAccessCodeRequired(true)
-                setShowSettingsDialog(true)
-            }
-        },
-        onFinish: ({ message }) => {
-            // Track actual token usage from server metadata
-            const metadata = message?.metadata as
-                | Record<string, unknown>
-                | undefined
-
-            // DEBUG: Log finish reason to diagnose truncation
-            console.log("[onFinish] finishReason:", metadata?.finishReason)
-            console.log("[onFinish] metadata:", metadata)
-
-            if (metadata) {
-                // Use Number.isFinite to guard against NaN (typeof NaN === 'number' is true)
-                const inputTokens = Number.isFinite(metadata.inputTokens)
-                    ? (metadata.inputTokens as number)
-                    : 0
-                const outputTokens = Number.isFinite(metadata.outputTokens)
-                    ? (metadata.outputTokens as number)
-                    : 0
-                const actualTokens = inputTokens + outputTokens
-                if (actualTokens > 0) {
-                    quotaManager.incrementTokenCount(actualTokens)
-                    quotaManager.incrementTPMCount(actualTokens)
-                }
-            }
-        },
-        sendAutomaticallyWhen: ({ messages }) => {
-            const isInContinuationMode = partialXmlRef.current.length > 0
-
-            const shouldRetry = hasToolErrors(
-                messages as unknown as ChatMessage[],
-            )
-
-            if (!shouldRetry) {
-                // No error, reset retry count and clear state
-                autoRetryCountRef.current = 0
-                partialXmlRef.current = ""
-                return false
-            }
-
-            // Continuation mode: unlimited retries (truncation continuation, not real errors)
-            // Server limits to 5 steps via stepCountIs(5)
-            if (isInContinuationMode) {
-                // Don't count against retry limit for continuation
-                // Quota checks still apply below
-            } else {
-                // Regular error: check retry count limit
-                if (autoRetryCountRef.current >= MAX_AUTO_RETRY_COUNT) {
-                    console.error(
-                        `[sendAutomaticallyWhen] Auto-retry limit reached (${MAX_AUTO_RETRY_COUNT}). Last error was in message:`,
-                        messages[messages.length - 1],
-                    )
-                    toast.error(
-                        `Auto-retry limit reached (${MAX_AUTO_RETRY_COUNT}). Please try again manually.`,
-                    )
-                    autoRetryCountRef.current = 0
-                    partialXmlRef.current = ""
-                    return false
-                }
-                // Increment retry count for actual errors
-                autoRetryCountRef.current++
-            }
-
-            // Check quota limits before auto-retry
-            const tokenLimitCheck = quotaManager.checkTokenLimit()
-            if (!tokenLimitCheck.allowed) {
-                quotaManager.showTokenLimitToast(tokenLimitCheck.used)
-                autoRetryCountRef.current = 0
-                partialXmlRef.current = ""
-                return false
-            }
-
-            const tpmCheck = quotaManager.checkTPMLimit()
-            if (!tpmCheck.allowed) {
-                quotaManager.showTPMLimitToast()
-                autoRetryCountRef.current = 0
-                partialXmlRef.current = ""
-                return false
-            }
-
-            return true
+        onError: (err) => {
+            console.error("Chat error:", err)
         },
     })
 
-    // Update stopRef so onToolCall can access it
-    stopRef.current = stop
+    // Convert messages for display
+    const messages = convertToUIMessages(backendMessages)
+    const status = isLoading ? "streaming" : "ready"
 
-    // Ref to track latest messages for unload persistence
-    const messagesRef = useRef(messages)
-    useEffect(() => {
-        messagesRef.current = messages
-    }, [messages])
+    // Simple sendMessage wrapper
+    const sendMessage = async (content: string) => {
+        if (!content.trim() || isLoading) return
+
+        // Check quota
+        if (!checkAllQuotaLimits()) return
+
+        // Process files if any
+        let messageContent = content.trim()
+        if (files.length > 0) {
+            for (const file of files) {
+                const data = pdfData.get(file)
+                if (data && !data.isExtracting && data.text) {
+                    messageContent += `\n\n[File: ${file.name}]\n${data.text}`
+                }
+            }
+            setFiles([])
+        }
+
+        setInput("")
+        await backendSendMessage(messageContent)
+        quotaManager.incrementRequestCount()
+    }
 
     const messagesEndRef = useRef<HTMLDivElement>(null)
 
@@ -773,110 +314,64 @@ Continue from EXACTLY where you stopped.`,
         if (hasRestoredRef.current) return
         hasRestoredRef.current = true
 
-        // If diagramId is provided, load from backend
         if (diagramId) {
             loadHistoryFromBackend(diagramId)
         } else {
-            // Fallback to localStorage for backward compatibility
             restoreFromLocalStorage()
         }
-    }, [diagramId, setMessages])
+    }, [diagramId])
 
     // Load chat history from backend API
     const loadHistoryFromBackend = async (id: string) => {
         try {
-            console.log(
-                "[ChatPanel] Loading history from backend for diagram:",
-                id,
-            )
             const response = await listDiagramChatHistory({
                 diagramId: id,
-                pageSize: 100, // Load more history
+                pageSize: 100,
             })
 
             if (response?.code === 0 && response?.data?.records) {
                 const conversions = response.data.records
-                console.log(
-                    "[ChatPanel] Loaded",
-                    conversions.length,
-                    "history records",
-                )
-
-                // Convert backend Conversion format to frontend messages format
-                const messages = conversions
+                const historyMessages: Message[] = conversions
                     .filter((conv: API.Conversion) => !conv.isDelete)
                     .sort(
                         (a: API.Conversion, b: API.Conversion) =>
                             new Date(a.createTime || 0).getTime() -
                             new Date(b.createTime || 0).getTime(),
                     )
-                    .map((conv: API.Conversion) => {
-                        const role =
-                            conv.messageType === "user" ? "user" : "assistant"
-                        let parts: any[] = []
+                    .map((conv: API.Conversion) => ({
+                        id: `msg-${conv.id}`,
+                        role: conv.messageType === "user" ? "user" : "assistant",
+                        content: conv.message || "",
+                        timestamp: new Date(conv.createTime || 0).getTime(),
+                    }))
 
-                        if (role === "user") {
-                            // User message
-                            parts = [{ type: "text", text: conv.message || "" }]
-                        } else {
-                            // AI assistant message
-                            parts = [{ type: "text", text: conv.message || "" }]
-                        }
-
-                        return {
-                            id: `msg-${conv.id}`,
-                            role,
-                            parts,
-                            createTime: conv.createTime,
-                        }
-                    })
-
-                if (messages.length > 0) {
-                    setMessages(messages as any)
-                    console.log(
-                        "[ChatPanel] Restored",
-                        messages.length,
-                        "messages from backend",
-                    )
-                } else {
-                    console.log("[ChatPanel] No history found for diagram:", id)
+                if (historyMessages.length > 0) {
+                    setBackendMessages(historyMessages)
                 }
             }
         } catch (error) {
-            console.error(
-                "[ChatPanel] Failed to load history from backend:",
-                error,
-            )
-            toast.error("加载历史记录失败")
+            console.error("Failed to load history from backend:", error)
         }
     }
 
-    // Fallback: Restore from localStorage (for backward compatibility)
+    // Fallback: Restore from localStorage
     const restoreFromLocalStorage = () => {
         try {
-            // Restore messages
             const savedMessages = localStorage.getItem(STORAGE_MESSAGES_KEY)
             if (savedMessages) {
                 const parsed = JSON.parse(savedMessages)
                 if (Array.isArray(parsed) && parsed.length > 0) {
-                    setMessages(parsed)
+                    setBackendMessages(parsed)
                 }
             }
 
-            // Restore XML snapshots
-            const savedSnapshots = localStorage.getItem(
-                STORAGE_XML_SNAPSHOTS_KEY,
-            )
+            const savedSnapshots = localStorage.getItem(STORAGE_XML_SNAPSHOTS_KEY)
             if (savedSnapshots) {
                 const parsed = JSON.parse(savedSnapshots)
                 xmlSnapshotsRef.current = new Map(parsed)
             }
         } catch (error) {
             console.error("Failed to restore from localStorage:", error)
-            // On complete failure, clear storage to allow recovery
-            localStorage.removeItem(STORAGE_MESSAGES_KEY)
-            localStorage.removeItem(STORAGE_XML_SNAPSHOTS_KEY)
-            toast.error("Session data was corrupted. Starting fresh.")
         }
     }
 
@@ -884,7 +379,6 @@ Continue from EXACTLY where you stopped.`,
     const hasDiagramRestoredRef = useRef(false)
     const [canSaveDiagram, setCanSaveDiagram] = useState(false)
     useEffect(() => {
-        // Reset restore flag when DrawIO is not ready (e.g., theme/UI change remounts it)
         if (!isDrawioReady) {
             hasDiagramRestoredRef.current = false
             setCanSaveDiagram(false)
@@ -894,19 +388,8 @@ Continue from EXACTLY where you stopped.`,
         hasDiagramRestoredRef.current = true
 
         try {
-            const savedDiagramXml = localStorage.getItem(
-                STORAGE_DIAGRAM_XML_KEY,
-            )
-            console.log(
-                "[ChatPanel] Restoring diagram, has saved XML:",
-                !!savedDiagramXml,
-            )
+            const savedDiagramXml = localStorage.getItem(STORAGE_DIAGRAM_XML_KEY)
             if (savedDiagramXml) {
-                console.log(
-                    "[ChatPanel] Loading saved diagram XML, length:",
-                    savedDiagramXml.length,
-                )
-                // Skip validation for trusted saved diagrams
                 onDisplayChart(savedDiagramXml, true)
                 chartXMLRef.current = savedDiagramXml
             }
@@ -914,59 +397,48 @@ Continue from EXACTLY where you stopped.`,
             console.error("Failed to restore diagram from localStorage:", error)
         }
 
-        // Allow saving after restore is complete
         setTimeout(() => {
-            console.log("[ChatPanel] Enabling diagram save")
             setCanSaveDiagram(true)
         }, 500)
     }, [isDrawioReady, onDisplayChart])
 
-    // Save messages to localStorage whenever they change (debounced to prevent blocking during streaming)
+    // Save messages to localStorage
     useEffect(() => {
         if (!hasRestoredRef.current) return
 
-        // Clear any pending save
         if (localStorageDebounceRef.current) {
             clearTimeout(localStorageDebounceRef.current)
         }
 
-        // Debounce: save after 1 second of no changes
         localStorageDebounceRef.current = setTimeout(() => {
             try {
-                console.time("perf:localStorage-messages")
                 localStorage.setItem(
                     STORAGE_MESSAGES_KEY,
-                    JSON.stringify(messages),
+                    JSON.stringify(backendMessages),
                 )
-                console.timeEnd("perf:localStorage-messages")
             } catch (error) {
                 console.error("Failed to save messages to localStorage:", error)
             }
         }, LOCAL_STORAGE_DEBOUNCE_MS)
 
-        // Cleanup on unmount
         return () => {
             if (localStorageDebounceRef.current) {
                 clearTimeout(localStorageDebounceRef.current)
             }
         }
-    }, [messages])
+    }, [backendMessages])
 
-    // Save diagram XML to localStorage whenever it changes (debounced)
+    // Save diagram XML to localStorage
     useEffect(() => {
         if (!canSaveDiagram) return
         if (!chartXML || chartXML.length <= 300) return
 
-        // Clear any pending save
         if (xmlStorageDebounceRef.current) {
             clearTimeout(xmlStorageDebounceRef.current)
         }
 
-        // Debounce: save after 1 second of no changes
         xmlStorageDebounceRef.current = setTimeout(() => {
-            console.time("perf:localStorage-xml")
             localStorage.setItem(STORAGE_DIAGRAM_XML_KEY, chartXML)
-            console.timeEnd("perf:localStorage-xml")
         }, LOCAL_STORAGE_DEBOUNCE_MS)
 
         return () => {
@@ -975,24 +447,6 @@ Continue from EXACTLY where you stopped.`,
             }
         }
     }, [chartXML, canSaveDiagram])
-
-    // Save XML snapshots to localStorage whenever they change
-    const saveXmlSnapshots = useCallback(() => {
-        try {
-            console.time("perf:localStorage-snapshots")
-            const snapshotsArray = Array.from(xmlSnapshotsRef.current.entries())
-            localStorage.setItem(
-                STORAGE_XML_SNAPSHOTS_KEY,
-                JSON.stringify(snapshotsArray),
-            )
-            console.timeEnd("perf:localStorage-snapshots")
-        } catch (error) {
-            console.error(
-                "Failed to save XML snapshots to localStorage:",
-                error,
-            )
-        }
-    }, [])
 
     // Save session ID to localStorage
     useEffect(() => {
@@ -1005,19 +459,13 @@ Continue from EXACTLY where you stopped.`,
         }
     }, [messages])
 
-    // Save state right before page unload (refresh/close)
+    // Save state right before page unload
     useEffect(() => {
         const handleBeforeUnload = () => {
             try {
                 localStorage.setItem(
                     STORAGE_MESSAGES_KEY,
-                    JSON.stringify(messagesRef.current),
-                )
-                localStorage.setItem(
-                    STORAGE_XML_SNAPSHOTS_KEY,
-                    JSON.stringify(
-                        Array.from(xmlSnapshotsRef.current.entries()),
-                    ),
+                    JSON.stringify(backendMessages),
                 )
                 const xml = chartXMLRef.current
                 if (xml && xml.length > 300) {
@@ -1032,115 +480,39 @@ Continue from EXACTLY where you stopped.`,
         window.addEventListener("beforeunload", handleBeforeUnload)
         return () =>
             window.removeEventListener("beforeunload", handleBeforeUnload)
-    }, [sessionId])
+    }, [sessionId, backendMessages])
 
     const onFormSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
-        const isProcessing = status === "streaming" || status === "submitted"
+        const isProcessing = isLoading
         if (input.trim() && !isProcessing) {
-            // Check if input matches a cached example (only when no messages yet)
-            if (messages.length === 0) {
-                const cached = findCachedResponse(
-                    input.trim(),
-                    files.length > 0,
-                )
-                if (cached) {
-                    // Add user message and fake assistant response to messages
-                    // The chat-message-display useEffect will handle displaying the diagram
-                    const toolCallId = `cached-${Date.now()}`
+            let messageContent = input.trim()
 
-                    // Build user message text including any file content
-                    const userText = await processFilesAndAppendContent(
-                        input,
-                        files,
-                        pdfData,
-                    )
-
-                    setMessages([
-                        {
-                            id: `user-${Date.now()}`,
-                            role: "user" as const,
-                            parts: [{ type: "text" as const, text: userText }],
-                        },
-                        {
-                            id: `assistant-${Date.now()}`,
-                            role: "assistant" as const,
-                            parts: [
-                                {
-                                    type: "tool-display_diagram" as const,
-                                    toolCallId,
-                                    state: "output-available" as const,
-                                    input: { xml: cached.xml },
-                                    output: "Successfully displayed the diagram.",
-                                },
-                            ],
-                        },
-                    ] as any)
-                    setInput("")
-                    setFiles([])
-                    return
+            // Process files if any
+            if (files.length > 0) {
+                for (const file of files) {
+                    const data = pdfData.get(file)
+                    if (data && !data.isExtracting && data.text) {
+                        messageContent += `\n\n[File: ${file.name}]\n${data.text}`
+                    }
                 }
-            }
-
-            try {
-                let chartXml = await onFetchChart()
-                chartXml = formatXML(chartXml)
-
-                // Update ref directly to avoid race condition with React's async state update
-                // This ensures edit_diagram has the correct XML before AI responds
-                chartXMLRef.current = chartXml
-
-                // Build user text by concatenating input with pre-extracted text
-                // (Backend only reads first text part, so we must combine them)
-                const parts: any[] = []
-                const userText = await processFilesAndAppendContent(
-                    input,
-                    files,
-                    pdfData,
-                    parts,
-                )
-
-                // Add the combined text as the first part
-                parts.unshift({ type: "text", text: userText })
-
-                // Get previous XML from the last snapshot (before this message)
-                const snapshotKeys = Array.from(
-                    xmlSnapshotsRef.current.keys(),
-                ).sort((a, b) => b - a)
-                const previousXml =
-                    snapshotKeys.length > 0
-                        ? xmlSnapshotsRef.current.get(snapshotKeys[0]) || ""
-                        : ""
-
-                // Save XML snapshot for this message (will be at index = current messages.length)
-                const messageIndex = messages.length
-                xmlSnapshotsRef.current.set(messageIndex, chartXml)
-                saveXmlSnapshots()
-
-                // Check all quota limits
-                if (!checkAllQuotaLimits()) return
-
-                sendChatMessage(parts, chartXml, previousXml, sessionId)
-
-                // Token count is tracked in onFinish with actual server usage
-                setInput("")
                 setFiles([])
-            } catch (error) {
-                console.error("Error fetching chart data:", error)
             }
+
+            setInput("")
+            await sendMessage(messageContent)
         }
     }
 
     const handleNewChat = useCallback(() => {
-        setMessages([])
+        setBackendMessages([])
         clearDiagram()
-        handleFileChange([]) // Use handleFileChange to also clear pdfData
+        handleFileChange([])
         const newSessionId = `session-${Date.now()}-${Math.random()
             .toString(36)
             .slice(2, 9)}`
         setSessionId(newSessionId)
         xmlSnapshotsRef.current.clear()
-        // Clear localStorage with error handling
         try {
             localStorage.removeItem(STORAGE_MESSAGES_KEY)
             localStorage.removeItem(STORAGE_XML_SNAPSHOTS_KEY)
@@ -1149,13 +521,10 @@ Continue from EXACTLY where you stopped.`,
             toast.success("Started a fresh chat")
         } catch (error) {
             console.error("Failed to clear localStorage:", error)
-            toast.warning(
-                "Chat cleared but browser storage could not be updated",
-            )
         }
 
         setShowNewChatDialog(false)
-    }, [clearDiagram, handleFileChange, setMessages, setSessionId])
+    }, [clearDiagram, handleFileChange])
 
     const handleInputChange = (
         e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
@@ -1163,34 +532,7 @@ Continue from EXACTLY where you stopped.`,
         setInput(e.target.value)
     }
 
-    // Helper functions for message actions (regenerate/edit)
-    // Extract previous XML snapshot before a given message index
-    const getPreviousXml = (beforeIndex: number): string => {
-        const snapshotKeys = Array.from(xmlSnapshotsRef.current.keys())
-            .filter((k) => k < beforeIndex)
-            .sort((a, b) => b - a)
-        return snapshotKeys.length > 0
-            ? xmlSnapshotsRef.current.get(snapshotKeys[0]) || ""
-            : ""
-    }
-
-    // Restore diagram from snapshot and update ref
-    const restoreDiagramFromSnapshot = (savedXml: string) => {
-        onDisplayChart(savedXml, true) // Skip validation for trusted snapshots
-        chartXMLRef.current = savedXml
-    }
-
-    // Clean up snapshots after a given message index
-    const cleanupSnapshotsAfter = (messageIndex: number) => {
-        for (const key of xmlSnapshotsRef.current.keys()) {
-            if (key > messageIndex) {
-                xmlSnapshotsRef.current.delete(key)
-            }
-        }
-        saveXmlSnapshots()
-    }
-
-    // Check all quota limits (daily requests, tokens, TPM)
+    // Check all quota limits
     const checkAllQuotaLimits = (): boolean => {
         const limitCheck = quotaManager.checkDailyLimit()
         if (!limitCheck.allowed) {
@@ -1200,7 +542,7 @@ Continue from EXACTLY where you stopped.`,
 
         const tokenLimitCheck = quotaManager.checkTokenLimit()
         if (!tokenLimitCheck.allowed) {
-            quotaManager.showTokenLimitToast(tokenLimitCheck.used)
+            quotaManager.showQuotaLimitToast(tokenLimitCheck.used)
             return false
         }
 
@@ -1213,89 +555,10 @@ Continue from EXACTLY where you stopped.`,
         return true
     }
 
-    // Send chat message with headers and increment quota
-    const sendChatMessage = (
-        parts: any,
-        xml: string,
-        previousXml: string,
-        sessionId: string,
-    ) => {
-        // Reset all retry/continuation state on user-initiated message
-        autoRetryCountRef.current = 0
-        partialXmlRef.current = ""
-
-        const config = getAIConfig()
-
-        sendMessage(
-            { parts },
-            {
-                body: { xml, previousXml, sessionId },
-                headers: {
-                    "x-access-code": config.accessCode,
-                    ...(config.aiProvider && {
-                        "x-ai-provider": config.aiProvider,
-                        ...(config.aiBaseUrl && {
-                            "x-ai-base-url": config.aiBaseUrl,
-                        }),
-                        ...(config.aiApiKey && {
-                            "x-ai-api-key": config.aiApiKey,
-                        }),
-                        ...(config.aiModel && { "x-ai-model": config.aiModel }),
-                    }),
-                    ...(minimalStyle && {
-                        "x-minimal-style": "true",
-                    }),
-                },
-            },
-        )
-        quotaManager.incrementRequestCount()
-    }
-
-    // Process files and append content to user text (handles PDF, text, and optionally images)
-    const processFilesAndAppendContent = async (
-        baseText: string,
-        files: File[],
-        pdfData: Map<File, FileData>,
-        imageParts?: any[],
-    ): Promise<string> => {
-        let userText = baseText
-
-        for (const file of files) {
-            if (isPdfFile(file)) {
-                const extracted = pdfData.get(file)
-                if (extracted?.text) {
-                    userText += `\n\n[PDF: ${file.name}]\n${extracted.text}`
-                }
-            } else if (isTextFile(file)) {
-                const extracted = pdfData.get(file)
-                if (extracted?.text) {
-                    userText += `\n\n[File: ${file.name}]\n${extracted.text}`
-                }
-
-            } else if (imageParts) {
-                // Handle as image (only if imageParts array provided)
-                const reader = new FileReader()
-                const dataUrl = await new Promise<string>((resolve) => {
-                    reader.onload = () => resolve(reader.result as string)
-                    reader.readAsDataURL(file)
-                })
-
-                imageParts.push({
-                    type: "file",
-                    url: dataUrl,
-                    mediaType: file.type,
-                })
-            }
-        }
-
-        return userText
-    }
-
+    // Regenerate handler (simplified)
     const handleRegenerate = async (messageIndex: number) => {
-        const isProcessing = status === "streaming" || status === "submitted"
-        if (isProcessing) return
+        if (isLoading) return
 
-        // Find the user message before this assistant message
         let userMessageIndex = messageIndex - 1
         while (
             userMessageIndex >= 0 &&
@@ -1307,91 +570,35 @@ Continue from EXACTLY where you stopped.`,
         if (userMessageIndex < 0) return
 
         const userMessage = messages[userMessageIndex]
-        const userParts = userMessage.parts
+        const userText = userMessage.parts?.find((p) => p.type === "text")?.text
+        if (!userText) return
 
-        // Get the text from the user message
-        const textPart = userParts?.find((p: any) => p.type === "text")
-        if (!textPart) return
+        // Remove messages after user message
+        const newMessages = backendMessages.slice(0, userMessageIndex)
+        setBackendMessages(newMessages)
 
-        // Get the saved XML snapshot for this user message
-        const savedXml = xmlSnapshotsRef.current.get(userMessageIndex)
-        if (!savedXml) {
-            console.error(
-                "No saved XML snapshot for message index:",
-                userMessageIndex,
-            )
-            return
-        }
-
-        // Get previous XML and restore diagram state
-        const previousXml = getPreviousXml(userMessageIndex)
-        restoreDiagramFromSnapshot(savedXml)
-
-        // Clean up snapshots for messages after the user message (they will be removed)
-        cleanupSnapshotsAfter(userMessageIndex)
-
-        // Remove the user message AND assistant message onwards (sendMessage will re-add the user message)
-        // Use flushSync to ensure state update is processed synchronously before sending
-        const newMessages = messages.slice(0, userMessageIndex)
-        flushSync(() => {
-            setMessages(newMessages)
-        })
-
-        // Check all quota limits
+        // Resend
         if (!checkAllQuotaLimits()) return
-
-        // Now send the message after state is guaranteed to be updated
-        sendChatMessage(userParts, savedXml, previousXml, sessionId)
-
-        // Token count is tracked in onFinish with actual server usage
+        await backendSendMessage(userText)
     }
 
+    // Edit message handler
     const handleEditMessage = async (messageIndex: number, newText: string) => {
-        const isProcessing = status === "streaming" || status === "submitted"
-        if (isProcessing) return
+        if (isLoading) return
 
         const message = messages[messageIndex]
         if (!message || message.role !== "user") return
 
-        // Get the saved XML snapshot for this user message
-        const savedXml = xmlSnapshotsRef.current.get(messageIndex)
-        if (!savedXml) {
-            console.error(
-                "No saved XML snapshot for message index:",
-                messageIndex,
-            )
-            return
-        }
+        // Remove messages from this point
+        const newMessages = backendMessages.slice(0, messageIndex)
+        setBackendMessages(newMessages)
 
-        // Get previous XML and restore diagram state
-        const previousXml = getPreviousXml(messageIndex)
-        restoreDiagramFromSnapshot(savedXml)
-
-        // Clean up snapshots for messages after the user message (they will be removed)
-        cleanupSnapshotsAfter(messageIndex)
-
-        // Create new parts with updated text
-        const newParts = message.parts?.map((part: any) => {
-            if (part.type === "text") {
-                return { ...part, text: newText }
-            }
-            return part
-        }) || [{ type: "text", text: newText }]
-
-        // Remove the user message AND assistant message onwards (sendMessage will re-add the user message)
-        // Use flushSync to ensure state update is processed synchronously before sending
-        const newMessages = messages.slice(0, messageIndex)
-        flushSync(() => {
-            setMessages(newMessages)
-        })
-
-        // Check all quota limits
         if (!checkAllQuotaLimits()) return
-
-        // Now send the edited message after state is guaranteed to be updated
-        sendChatMessage(newParts, savedXml, previousXml, sessionId)
-        // Token count is tracked in onFinish with actual server usage
+        await backendSendMessage(newText)
     }
+
+    // Processed tool calls ref for ChatMessageDisplay
+    const processedToolCallsRef = useRef<Set<string>>(new Set())
 
     // Collapsed view (desktop only)
     if (!isVisible && !isMobile) {
@@ -1555,9 +762,7 @@ Continue from EXACTLY where you stopped.`,
                     onChange={handleInputChange}
                     onClearChat={handleNewChat}
                     onStop={stop}
-                    isManuallyStopped={
-                        status === "ready" && stopRef.current !== null
-                    }
+                    isManuallyStopped={false}
                     files={files}
                     onFileChange={handleFileChange}
                     pdfData={pdfData}

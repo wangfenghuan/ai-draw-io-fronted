@@ -13,7 +13,7 @@ import { App, Button, Card, Typography } from "antd"
 import { useRouter } from "next/navigation"
 import React, { useState, useEffect } from "react"
 import { useDispatch } from "react-redux"
-import { getLoginUser, sendRegisterCode, updateUserAccount, userLogout } from "@/api/userController"
+import { getLoginUser, sendRegisterCode, updateAccount, userLogout } from "@/api/userController"
 import { setLoginUser } from "@/stores/loginUser"
 
 const UserSettings: React.FC = () => {
@@ -93,7 +93,7 @@ const UserSettings: React.FC = () => {
         if (!userAccount) return
 
         try {
-            const res = await updateUserAccount({
+            const res = await updateAccount({
                 userAccount,
                 emailCode,
                 newPassword,

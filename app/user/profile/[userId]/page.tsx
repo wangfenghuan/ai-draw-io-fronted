@@ -2,13 +2,17 @@
 
 import {
     ClockCircleOutlined,
+    CopyOutlined,
     EditOutlined,
+    GiftOutlined,
     IdcardOutlined,
+    LinkOutlined,
     LoadingOutlined,
     MailOutlined,
     PlusOutlined,
     SafetyCertificateOutlined,
     SafetyOutlined,
+    ThunderboltOutlined,
     UserOutlined,
 } from "@ant-design/icons"
 import {
@@ -27,8 +31,12 @@ import {
     Typography,
     Upload,
     Tabs,
+    Statistic,
+    Row,
+    Col,
+    Tooltip,
 } from "antd"
-import { sendRegisterCode, updateUserAccount } from "@/api/userController"
+import { sendRegisterCode, updateAccount, getUserAiQuota } from "@/api/userController"
 import type { UploadChangeParam } from "antd/es/upload"
 import type { RcFile, UploadFile, UploadProps } from "antd/es/upload/interface"
 import { useParams } from "next/navigation"
@@ -52,6 +60,9 @@ export default function UserProfilePage() {
 
     const [user, setUser] = useState<API.UserVO | null>(null)
     const [loading, setLoading] = useState(false)
+    // AI 额度状态
+    const [aiQuota, setAiQuota] = useState<Record<string, number>>({})
+    const [quotaLoading, setQuotaLoading] = useState(false)
 
     // 编辑相关状态
     const [editModalVisible, setEditModalVisible] = useState(false)
@@ -92,6 +103,43 @@ export default function UserProfilePage() {
     useEffect(() => {
         loadUserInfo()
     }, [userId])
+
+    // 加载 AI 额度（仅本人可见）
+    const loadAiQuota = async () => {
+        if (!isOwner) return
+        setQuotaLoading(true)
+        try {
+            const res = await getUserAiQuota()
+            if (res.code === 0 && res.data) {
+                setAiQuota(res.data as Record<string, number>)
+            }
+        } catch (error) {
+            console.error("获取AI额度失败:", error)
+        } finally {
+            setQuotaLoading(false)
+        }
+    }
+
+    useEffect(() => {
+        if (isOwner) {
+            loadAiQuota()
+        }
+    }, [isOwner])
+
+    // 复制邀请链接
+    const copyInviteLink = () => {
+        if (!user?.inviteCode) return
+        const inviteLink = `${window.location.origin}/user/register?inviteCode=${user.inviteCode}`
+        navigator.clipboard.writeText(inviteLink)
+        message.success("邀请链接已复制到剪贴板！")
+    }
+
+    // 复制邀请码
+    const copyInviteCode = () => {
+        if (!user?.inviteCode) return
+        navigator.clipboard.writeText(user.inviteCode)
+        message.success("邀请码已复制到剪贴板！")
+    }
 
     // 打开编辑模态框
     const handleEdit = () => {
@@ -458,6 +506,94 @@ export default function UserProfilePage() {
                         )
                     )}
                 </Card>
+
+                {/* AI 额度与邀请链接卡片（仅本人可见） */}
+                {isOwner && (
+                    <Card
+                        bordered={false}
+                        style={{
+                            borderRadius: "12px",
+                            boxShadow: "0 4px 20px rgba(0,0,0,0.05)",
+                            marginTop: "24px",
+                        }}
+                        bodyStyle={{ padding: "24px" }}
+                    >
+                        <Row gutter={24}>
+                            {/* AI 额度 */}
+                            <Col span={12}>
+                                <div style={{ marginBottom: 16 }}>
+                                    <Title level={5} style={{ marginBottom: 8 }}>
+                                        <ThunderboltOutlined style={{ marginRight: 8, color: "#faad14" }} />
+                                        AI 额度
+                                    </Title>
+                                </div>
+                                <Row gutter={16}>
+                                    <Col span={12}>
+                                        <Statistic
+                                            title="剩余永久额度"
+                                            value={aiQuota["permanent"] || 0}
+                            suffix="次"
+                                            valueStyle={{ color: "#52c41a" }}
+                                            loading={quotaLoading}
+                                        />
+                                    </Col>
+                                    <Col span={12}>
+                                        <Statistic
+                                            title="剩余临时额度"
+                                            value={aiQuota["temporary"] || 0}
+                                            suffix="次"
+                                            valueStyle={{ color: "#1677ff" }}
+                                            loading={quotaLoading}
+                                        />
+                                    </Col>
+                                </Row>
+                                <div style={{ marginTop: 12, color: "#8c8c8c", fontSize: 12 }}>
+                                    邀请好友注册，双方各得 5 次永久 AI 额度！
+                                </div>
+                            </Col>
+                            
+                            {/* 邀请链接 */}
+                            <Col span={12}>
+                                <div style={{ marginBottom: 16 }}>
+                                    <Title level={5} style={{ marginBottom: 8 }}>
+                                        <GiftOutlined style={{ marginRight: 8, color: "#eb2f96" }} />
+                                        邀请好友
+                                    </Title>
+                                </div>
+                                <div style={{ marginBottom: 12 }}>
+                                    <span style={{ color: "#8c8c8c", marginRight: 8 }}>专属邀请码：</span>
+                                    <Tag color="purple" style={{ fontSize: 14, padding: "2px 8px" }}>
+                                        {user?.inviteCode || "-"}
+                                    </Tag>
+                                    <Tooltip title="复制邀请码">
+                                        <Button
+                                            type="text"
+                                            size="small"
+                                            icon={<CopyOutlined />}
+                                            onClick={copyInviteCode}
+                                        />
+                                    </Tooltip>
+                                </div>
+                                <div style={{ marginBottom: 12 }}>
+                                    <span style={{ color: "#8c8c8c", marginRight: 8 }}>邀请链接：</span>
+                                    <Tooltip title="复制邀请链接">
+                                        <Button
+                                            type="primary"
+                                            size="small"
+                                            icon={<LinkOutlined />}
+                                            onClick={copyInviteLink}
+                                        >
+                                            复制链接
+                                        </Button>
+                                    </Tooltip>
+                                </div>
+                                <div style={{ color: "#8c8c8c", fontSize: 12 }}>
+                                    分享邀请链接给好友，好友注册成功后双方各获得 5 次永久 AI 额度！
+                                </div>
+                            </Col>
+                        </Row>
+                    </Card>
+                )}
             </div>
 
             {/* 编辑用户信息模态框 */}
@@ -602,7 +738,7 @@ const SecuritySettingsModal = ({ open, onCancel, currentUser }: { open: boolean;
         try {
             const values = await passwordForm.validateFields()
             setLoading(true)
-            const res = await updateUserAccount({
+            const res = await updateAccount({
                userAccount: currentUser?.userAccount, // 使用当前账号
                ...values
             })
@@ -626,7 +762,7 @@ const SecuritySettingsModal = ({ open, onCancel, currentUser }: { open: boolean;
             const values = await emailForm.validateFields()
             setLoading(true)
             // 绑定新邮箱：传入 userAccount 为新邮箱
-            const res = await updateUserAccount({
+            const res = await updateAccount({
                ...values
             })
             if (res.code === 0) {

@@ -3,10 +3,12 @@
  *
  * Uses cl100k_base encoding (GPT-4) which is close to Claude's tokenization.
  * This is a pure JavaScript implementation, no WASM required.
+ *
+ * Note: System prompts are now handled by the backend, so this file only
+ * provides basic token counting for client-side use.
  */
 
 import { encodingForModel } from "js-tiktoken"
-import { DEFAULT_SYSTEM_PROMPT, EXTENDED_SYSTEM_PROMPT } from "./system-prompts"
 
 const encoder = encodingForModel("gpt-4o")
 
@@ -20,20 +22,11 @@ export function countTextTokens(text: string): number {
 }
 
 /**
- * Get token counts for the system prompts
- * Useful for debugging and optimizing prompt sizes
- * @returns Object with token counts for default and extended prompts
+ * Estimate token count for a message (approximate)
+ * @param content - The message content
+ * @returns Estimated token count
  */
-export function getSystemPromptTokenCounts(): {
-    default: number
-    extended: number
-    additions: number
-} {
-    const defaultTokens = countTextTokens(DEFAULT_SYSTEM_PROMPT)
-    const extendedTokens = countTextTokens(EXTENDED_SYSTEM_PROMPT)
-    return {
-        default: defaultTokens,
-        extended: extendedTokens,
-        additions: extendedTokens - defaultTokens,
-    }
+export function estimateMessageTokens(content: string): number {
+    // Add a small overhead for message formatting
+    return countTextTokens(content) + 4
 }

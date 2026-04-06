@@ -1,7 +1,5 @@
 "use client"
 
-import type { UIMessage } from "ai"
-
 // Debug constant
 const DEBUG = process.env.NODE_ENV === "development"
 
@@ -38,6 +36,26 @@ import {
 } from "@/lib/utils"
 import ExamplePanel from "./chat-example-panel"
 import { CodeBlock } from "./code-block"
+
+// Local UIMessage interface (previously from 'ai' package)
+interface MessagePart {
+    type: string
+    text?: string
+    state?: string
+    toolName?: string
+    input?: { xml?: string; operations?: any[]; [key: string]: unknown }
+    output?: string
+    toolCallId?: string
+    [key: string]: unknown
+}
+
+interface UIMessage {
+    id: string
+    role: "user" | "assistant" | "system"
+    parts?: MessagePart[]
+    content?: string
+    createTime?: string
+}
 
 interface DiagramOperation {
     type: "update" | "add" | "delete"

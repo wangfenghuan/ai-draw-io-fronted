@@ -1,5 +1,6 @@
 "use client"
 import {
+    GiftOutlined,
     GithubOutlined,
     LockOutlined,
     MailOutlined,
@@ -12,10 +13,10 @@ import {
     ProFormText,
 } from "@ant-design/pro-components"
 import { ProForm } from "@ant-design/pro-form/lib"
-import { App, Button } from "antd"
+import { App, Button, Tag } from "antd"
 import { useTranslations } from "next-intl"
 import Link from "next/link"
-import { useRouter } from "next/navigation"
+import { useRouter, useSearchParams } from "next/navigation"
 import React, { useState, useEffect } from "react"
 import { sendRegisterCode, userRegister } from "@/api/userController"
 
@@ -25,10 +26,22 @@ const UserRegister: React.FC = () => {
     const tApp = useTranslations("app")
     const [form] = ProForm.useForm()
     const router = useRouter()
+    const searchParams = useSearchParams()
     
     // Countdown state
     const [countdown, setCountdown] = useState(0)
     const [sending, setSending] = useState(false)
+    // Invite code from URL
+    const [inviteCode, setInviteCode] = useState<string>("")
+
+    // Read invite code from URL on mount
+    useEffect(() => {
+        const code = searchParams.get("inviteCode") || searchParams.get("code")
+        if (code) {
+            setInviteCode(code)
+            form.setFieldsValue({ inviteCode: code })
+        }
+    }, [searchParams, form])
 
     // Handle countdown timer
     useEffect(() => {
@@ -263,6 +276,22 @@ const UserRegister: React.FC = () => {
                             }
                         ]}
                     />
+                    
+                    {/* Invite code field */}
+                    <ProFormText
+                        name="inviteCode"
+                        fieldProps={{
+                            size: "large",
+                            prefix: <GiftOutlined className={"prefixIcon"} />,
+                        }}
+                        placeholder={t("inviteCodePlaceholder") || "邀请码（选填，填写后双方可获得AI额度奖励）"}
+                        tooltip={t("inviteCodeTooltip") || "填写好友的邀请码，注册成功后双方各获得5次AI额度奖励"}
+                    />
+                    {inviteCode && (
+                        <div style={{ marginTop: -16, marginBottom: 16 }}>
+                            <Tag color="green">{t("inviteCodeApplied") || "已应用邀请码，注册后双方各获得5次AI额度奖励！"}</Tag>
+                        </div>
+                    )}
                     
                     <div
                         style={{

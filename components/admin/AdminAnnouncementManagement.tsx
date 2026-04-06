@@ -110,7 +110,17 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                         </span>
                     }
                     rules={[{ required: true, message: "请输入公告内容" }]}
+                    hidden
                 >
+                    <Input />
+                </Form.Item>
+                <div style={{ marginBottom: 24 }}>
+                    <div style={{ marginBottom: 8, fontWeight: 500 }}>
+                        公告内容
+                        <span style={{ color: "#999", fontWeight: "normal", fontSize: "12px", marginLeft: "8px" }}>
+                            (支持 Markdown 格式，如 [链接文字](https://example.com))
+                        </span>
+                    </div>
                     <Tabs
                         activeKey={activeTab}
                         onChange={setActiveTab}
@@ -127,6 +137,7 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                                         showCount
                                         value={content}
                                         onChange={handleContentChange}
+                                        status={!content ? "error" : undefined}
                                     />
                                 ),
                             },
@@ -181,7 +192,10 @@ const AnnouncementModal: React.FC<AnnouncementModalProps> = ({
                             },
                         ]}
                     />
-                </Form.Item>
+                    {!content && (
+                        <div style={{ color: "#ff4d4f", fontSize: 12, marginTop: 4 }}>请输入公告内容</div>
+                    )}
+                </div>
                 <Form.Item
                     name="priority"
                     label="优先级"
