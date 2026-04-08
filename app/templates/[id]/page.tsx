@@ -160,7 +160,10 @@ export default async function TemplatePage({ params }: Props) {
                         </li>
                         <li>/</li>
                         <li>
-                            <Link href="/templates" className="hover:text-blue-600">
+                            <Link
+                                href="/templates"
+                                className="hover:text-blue-600"
+                            >
                                 模板广场
                             </Link>
                         </li>

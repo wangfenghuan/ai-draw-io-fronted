@@ -29,7 +29,7 @@ export const GlobalAnnouncementPopup = () => {
                     sortOrder: "descend",
                 })
 
-                if (res.code === 0 && res.data?.records?.length > 0) {
+                if (res.code === 0 && res.data?.records && res.data.records.length > 0) {
                     const topAnnouncement = res.data.records[0]
 
                     // Check if it's a high priority announcement (priority > 0)

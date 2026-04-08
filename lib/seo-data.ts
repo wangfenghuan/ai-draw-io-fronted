@@ -96,7 +96,13 @@ export const solutions: Record<string, SolutionData> = {
         title: "在线 ER 图设计工具 - 数据库建模神器 - IntelliDraw",
         description:
             "IntelliDraw 提供专业的 ER 图绘制工具，支持从 SQL 语句自动生成数据库关系图，帮助开发者快速进行数据库设计和文档化。",
-        keywords: ["ER图", "数据库设计", "实体关系图", "SQL转图表", "IntelliDraw"],
+        keywords: [
+            "ER图",
+            "数据库设计",
+            "实体关系图",
+            "SQL转图表",
+            "IntelliDraw",
+        ],
         heroTitle: "智能数据库设计工具",
         heroSubtitle:
             "输入 SQL 语句，AI 自动生成 ER 图。支持 MySQL、PostgreSQL、Oracle 等主流数据库。",
@@ -133,7 +139,13 @@ export const solutions: Record<string, SolutionData> = {
         title: "网络拓扑图绘制工具 - 架构图设计 - IntelliDraw",
         description:
             "IntelliDraw 提供丰富的网络拓扑图标库，支持绘制 AWS、Azure、GCP 云架构图，网络拓扑图，系统架构图等。",
-        keywords: ["网络拓扑图", "架构图", "AWS架构图", "云架构", "IntelliDraw"],
+        keywords: [
+            "网络拓扑图",
+            "架构图",
+            "AWS架构图",
+            "云架构",
+            "IntelliDraw",
+        ],
         heroTitle: "专业的网络拓扑图绘制工具",
         heroSubtitle:
             "内置 AWS、Azure、GCP、Kubernetes 等图标库，轻松绘制专业的云架构图和网络拓扑图。",
@@ -207,7 +219,13 @@ export const solutions: Record<string, SolutionData> = {
         title: "Spring Boot 架构图生成工具 - 代码可视化 - IntelliDraw",
         description:
             "上传 Spring Boot 项目源码，AI 自动分析并生成项目架构图、模块依赖图、类关系图。帮助开发者快速理解项目结构。",
-        keywords: ["Spring Boot", "架构图", "代码分析", "项目结构", "IntelliDraw"],
+        keywords: [
+            "Spring Boot",
+            "架构图",
+            "代码分析",
+            "项目结构",
+            "IntelliDraw",
+        ],
         heroTitle: "Spring Boot 项目架构可视化",
         heroSubtitle:
             "上传项目 ZIP 包，AI 自动分析 Controller、Service、Repository 层结构，生成清晰的架构图。",

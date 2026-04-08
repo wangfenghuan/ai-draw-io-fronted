@@ -97,7 +97,7 @@ export function AdminAiManagement() {
         }
         setUserLoading(true)
         try {
-            const res = await getUserAiStatus({ userId })
+            const res = await getUserAiStatus({ userId: String(userId) })
             if (res.data !== undefined) {
                 setUserAiStatus(res.data)
                 message.success(`用户 ${userId} 状态已获取`)
@@ -115,7 +115,7 @@ export function AdminAiManagement() {
         }
         setUserLoading(true)
         try {
-            await toggleUserAi({ userId, enable: checked })
+            await toggleUserAi({ userId: String(userId), enable: checked })
             message.success(
                 `用户 ${userId} 的AI服务已${checked ? "启用" : "禁用"}`,
             )

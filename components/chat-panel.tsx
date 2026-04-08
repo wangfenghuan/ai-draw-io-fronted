@@ -545,7 +545,7 @@ export default function ChatPanel({
 
         const tokenLimitCheck = quotaManager.checkTokenLimit()
         if (!tokenLimitCheck.allowed) {
-            quotaManager.showQuotaLimitToast(tokenLimitCheck.used)
+            quotaManager.showQuotaLimitToast()
             return false
         }
 

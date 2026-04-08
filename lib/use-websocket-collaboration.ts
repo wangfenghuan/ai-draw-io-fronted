@@ -77,7 +77,7 @@ export function useWebSocketCollaboration({
             userRole,
             userId,
             userName,
-            onRemoteChange: (data) => {
+            onRemoteChange: (data: string) => {
                 console.log(
                     "[useWebSocketCollaboration] onRemoteChange callback, data type:",
                     typeof data,
@@ -87,21 +87,21 @@ export function useWebSocketCollaboration({
                     onRemoteChange?.(data)
                 }
             },
-            onPointerMove: (pointer) => {
+            onPointerMove: (pointer: PointerData) => {
                 console.log(
                     "[useWebSocketCollaboration] onPointerMove callback:",
                     pointer.userName,
                 )
                 onPointerMove?.(pointer)
             },
-            onConnectionStatusChange: (status) => {
+            onConnectionStatusChange: (status: string) => {
                 console.log(
                     "[useWebSocketCollaboration] Connection status changed:",
                     status,
                 )
                 setIsConnected(status === "connected")
             },
-            onUserCountChange: (count) => {
+            onUserCountChange: (count: number) => {
                 console.log(
                     "[useWebSocketCollaboration] User count changed:",
                     count,
@@ -170,8 +170,13 @@ export function useWebSocketCollaboration({
      * 发送光标位置
      */
     const sendPointer = (x: number, y: number) => {
-        if (collabRef.current?.isConnected()) {
-            collabRef.current.sendPointer(x, y)
+        if (collabRef.current?.isConnected) {
+            collabRef.current.sendPointer({
+                type: "pointer",
+                x,
+                y,
+                userId,
+            })
         }
     }
 
@@ -179,7 +184,7 @@ export function useWebSocketCollaboration({
      * 请求全量同步
      */
     const requestFullSync = () => {
-        if (collabRef.current?.isConnected()) {
+        if (collabRef.current?.isConnected) {
             collabRef.current.requestFullSync()
         }
     }

@@ -1400,7 +1400,7 @@ export function ChatMessageDisplay({
                                                                                 <Image
                                                                                     src={
                                                                                         (
-                                                                                            part as {
+                                                                                            part as unknown as {
                                                                                                 url: string
                                                                                             }
                                                                                         )

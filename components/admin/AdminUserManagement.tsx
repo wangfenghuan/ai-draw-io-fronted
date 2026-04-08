@@ -132,7 +132,7 @@ export function AdminUserManagement() {
     }
 
     // 删除用户
-    const handleDeleteUser = async (id: number | undefined) => {
+    const handleDeleteUser = async (id: string | undefined) => {
         if (!id) return
 
         try {
@@ -202,9 +202,9 @@ export function AdminUserManagement() {
             } else {
                 message.error(response?.message || "保存失败")
             }
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("保存失败:", error)
-            if (!error.errorFields) {
+            if (!(error as any).errorFields) {
                 message.error("保存失败")
             }
         }
@@ -229,9 +229,9 @@ export function AdminUserManagement() {
             } else {
                 message.error(response?.message || "添加失败")
             }
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("添加失败:", error)
-            if (!error.errorFields) {
+            if (!(error as any).errorFields) {
                 message.error("添加失败")
             }
         }

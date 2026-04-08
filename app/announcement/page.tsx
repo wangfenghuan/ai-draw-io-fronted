@@ -29,9 +29,9 @@ export default function AnnouncementPage() {
             })
             if (res.code === 0 && res.data) {
                 setData(res.data.records || [])
-                setTotal(res.data.total || 0)
-                setCurrent(res.data.current || 1)
-                setPageSize(res.data.size || 10)
+                setTotal(Number(res.data.total) || 0)
+                setCurrent(Number(res.data.current) || 1)
+                setPageSize(Number(res.data.size) || 10)
             }
         } catch (error) {
             console.error("加载公告失败", error)

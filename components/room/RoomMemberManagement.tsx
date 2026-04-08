@@ -129,9 +129,9 @@ export function RoomMemberManagement({
             } else {
                 message.error(response?.message || "修改失败")
             }
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("保存失败:", error)
-            if (!error.errorFields) {
+            if (!(error as any).errorFields) {
                 message.error("保存失败")
             }
         }
@@ -169,9 +169,9 @@ export function RoomMemberManagement({
             } else {
                 message.error(response?.message || "添加失败")
             }
-        } catch (error) {
+        } catch (error: unknown) {
             console.error("添加失败:", error)
-            if (!error.errorFields) {
+            if (!(error as any).errorFields) {
                 message.error("添加失败")
             }
         }

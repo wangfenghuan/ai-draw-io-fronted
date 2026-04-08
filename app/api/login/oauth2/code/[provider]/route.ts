@@ -7,9 +7,9 @@ const BACKEND_URL =
 
 export async function GET(
     request: NextRequest,
-    { params }: { params: { provider: string } },
+    { params }: { params: Promise<{ provider: string }> },
 ) {
-    const { provider } = params
+    const { provider } = await params
 
     // 获取当前请求的原始 Host 和协议，以便传递给后端
     const host =

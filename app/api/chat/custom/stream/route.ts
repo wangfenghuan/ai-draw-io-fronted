@@ -57,10 +57,11 @@ export async function POST(request: NextRequest) {
             )
         }
 
+        const responseBody = backendResponse.body
         // 将后端的 SSE 流直接透传给前端，不缓冲
         const stream = new ReadableStream({
             async start(controller) {
-                const reader = backendResponse.body?.getReader()
+                const reader = responseBody.getReader()
                 try {
                     while (true) {
                         const { done, value } = await reader.read()

@@ -283,9 +283,9 @@ export const AdminAnnouncementManagement = () => {
             if (res.code === 0 && res.data) {
                 setAnnouncements(res.data.records || [])
                 setPagination({
-                    current: res.data.current || 1,
-                    pageSize: res.data.size || 10,
-                    total: res.data.total || 0,
+                    current: Number(res.data.current) || 1,
+                    pageSize: Number(res.data.size) || 10,
+                    total: Number(res.data.total) || 0,
                 })
             } else {
                 message.error("加载公告列表失败")

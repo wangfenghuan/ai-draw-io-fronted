@@ -463,9 +463,9 @@ export default function UserProfilePage() {
                                             color: "#1890ff",
                                         }}
                                     />
-                                    {user.updateTime
+                                    {(user as any).updateTime
                                         ? new Date(
-                                              user.updateTime,
+                                              (user as any).updateTime,
                                           ).toLocaleString()
                                         : "-"}
                                 </Descriptions.Item>

@@ -187,7 +187,7 @@ export function CreateSpaceDialog({
                                         }}
                                     >
                                         {level.maxCount}个图表 /{" "}
-                                        {formatBytes(level.maxSize!)}
+                                        {formatBytes(Number(level.maxSize) || 0)}
                                     </span>
                                 </Space>
                             </Option>

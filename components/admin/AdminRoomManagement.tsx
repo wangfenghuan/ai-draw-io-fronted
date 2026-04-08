@@ -170,7 +170,7 @@ export function AdminRoomManagement() {
                     roomName: roomData.roomName,
                     isPublic: roomData.isPublic,
                     isOpen: roomData.isOpen,
-                    accessKey: roomData.accessKey,
+                    accessKey: (roomData as any).accessKey,
                 })
                 setLoadingRoomDetail(false)
             } else {

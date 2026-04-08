@@ -21,7 +21,7 @@ export interface DownloadOptions {
     format: "PNG" | "SVG" | "XML"
 }
 
-export function useDiagramSave(drawioRef: React.Ref<DrawIoEmbedRef | null>) {
+export function useDiagramSave(drawioRef: React.RefObject<DrawIoEmbedRef | null>) {
     // 用于暂存导出操作的 Promise 控制器
     const exportPromiseRef = useRef<{
         resolve: (data: string) => void

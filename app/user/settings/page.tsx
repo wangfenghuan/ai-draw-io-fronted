@@ -62,7 +62,7 @@ const UserSettings: React.FC = () => {
     }, [router, message])
 
     const handleSendCode = async () => {
-        const targetEmail = newEmail || currentUser?.userAccount
+        const targetEmail = newEmail || (currentUser as any).userAccount
 
         if (!targetEmail) {
             message.error("无法获取目标邮箱")
@@ -94,7 +94,7 @@ const UserSettings: React.FC = () => {
         const { emailCode, newPassword, checkPassword } = values
 
         // Use new email if provided, otherwise use current email as the identifier
-        const userAccount = newEmail || currentUser?.userAccount
+        const userAccount = newEmail || (currentUser as any).userAccount
 
         if (!userAccount) return
 
@@ -138,7 +138,7 @@ const UserSettings: React.FC = () => {
                         type="secondary"
                         className="block mb-6 text-center"
                     >
-                        当前账号: {currentUser.userAccount}
+                        当前账号: {(currentUser as any).userAccount}
                     </Typography.Text>
 
                     <LoginForm
