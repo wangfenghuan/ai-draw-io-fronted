@@ -47,6 +47,8 @@ interface SimpleChatPanelProps {
     darkMode: boolean
     diagramTitle: string
     spaceId?: number | string
+    /** 免费试用模式：无需登录，不加载历史，不显示保存/协作等功能 */
+    freeTrial?: boolean
     onRequireLogin?: (featureName: string) => void
 }
 
@@ -57,6 +59,7 @@ export default function SimpleChatPanel({
     darkMode,
     diagramTitle,
     spaceId,
+    freeTrial = false,
     onRequireLogin,
 }: SimpleChatPanelProps) {
     const [input, setInput] = useState("")
@@ -115,6 +118,7 @@ export default function SimpleChatPanel({
     } = useBackendChat({
         diagramId,
         aiConfig,
+        freeTrial,
         onMessageComplete: (fullContent) => {
             try {
                 parseXmlAndLoadDiagram(fullContent, loadDiagram)
@@ -127,8 +131,14 @@ export default function SimpleChatPanel({
         },
     })
 
-    // Load history
+    // Load history (skip in free trial mode)
     useEffect(() => {
+        // 免费试用模式不加载历史
+        if (freeTrial) {
+            setHistoryLoaded(true)
+            return
+        }
+
         const loadHistory = async () => {
             if (!diagramId || historyLoaded) return
             try {
@@ -180,7 +190,7 @@ export default function SimpleChatPanel({
             }
         }
         loadHistory()
-    }, [diagramId, historyLoaded, setMessages, chartXML])
+    }, [diagramId, historyLoaded, setMessages, chartXML, freeTrial])
 
     // Auto scroll
     useEffect(() => {
@@ -266,7 +276,8 @@ export default function SimpleChatPanel({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
         if ((!input.trim() && files.length === 0) || isLoading) return
-        if (requireLogin("AI 对话")) return
+        // 免费试用模式不需要登录检查
+        if (!freeTrial && requireLogin("AI 对话")) return
 
         let messageContent = input.trim()
         if (files.length > 0) {
@@ -296,7 +307,8 @@ export default function SimpleChatPanel({
 
     // Clear chat
     const handleClearChat = () => {
-        if (requireLogin("清空对话")) return
+        // 免费试用模式不需要登录检查
+        if (!freeTrial && requireLogin("清空对话")) return
         clearMessages()
     }
 
@@ -377,36 +389,44 @@ export default function SimpleChatPanel({
                 </div>
 
                 <div className="flex items-center gap-1 flex-shrink-0">
-                    <CollaborationPanel spaceId={spaceId} />
+                    {/* 协作面板 - 免费试用模式隐藏 */}
+                    {!freeTrial && <CollaborationPanel spaceId={spaceId} />}
 
-                    <button
-                        onClick={() => { if (!requireLogin("保存图表")) handleSaveDiagram() }}
-                        disabled={isSaving || !chartXML}
-                        className={`p-1.5 rounded-lg transition-all duration-200 hover:scale-105 border flex-shrink-0
-                            ${isSaving || !chartXML
-                                ? "bg-gray-500/10 text-gray-500 border-transparent cursor-not-allowed opacity-50"
-                                : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 hover:text-blue-300 border-blue-500/30"}`}
-                        title={isSaving ? "正在保存..." : "保存图表"}
-                    >
-                        {isSaving ? (
-                            <span className="animate-spin h-4 w-4 block border-2 border-current border-t-transparent rounded-full text-blue-400" />
-                        ) : (
-                            <Save className="h-4 w-4" />
-                        )}
-                    </button>
+                    {/* 保存按钮 - 免费试用模式隐藏 */}
+                    {!freeTrial && (
+                        <button
+                            onClick={() => { if (!requireLogin("保存图表")) handleSaveDiagram() }}
+                            disabled={isSaving || !chartXML}
+                            className={`p-1.5 rounded-lg transition-all duration-200 hover:scale-105 border flex-shrink-0
+                                ${isSaving || !chartXML
+                                    ? "bg-gray-500/10 text-gray-500 border-transparent cursor-not-allowed opacity-50"
+                                    : "bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 hover:text-blue-300 border-blue-500/30"}`}
+                            title={isSaving ? "正在保存..." : "保存图表"}
+                        >
+                            {isSaving ? (
+                                <span className="animate-spin h-4 w-4 block border-2 border-current border-t-transparent rounded-full text-blue-400" />
+                            ) : (
+                                <Save className="h-4 w-4" />
+                            )}
+                        </button>
+                    )}
 
-                    <button
-                        onClick={() => { if (!requireLogin("AI 模型配置")) setConfigDialogOpen(true) }}
-                        className={`p-1.5 rounded-lg transition-all duration-200 hover:scale-105 flex-shrink-0 ${
-                            aiConfig.mode === "custom"
-                                ? "bg-green-500/20 text-green-400 border border-green-500/30"
-                                : "bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10"
-                        }`}
-                        title={aiConfig.mode === "custom" ? "自定义AI已配置" : "配置AI模型"}
-                    >
-                        <Settings className="h-4 w-4" />
-                    </button>
+                    {/* AI 配置按钮 - 免费试用模式隐藏 */}
+                    {!freeTrial && (
+                        <button
+                            onClick={() => { if (!requireLogin("AI 模型配置")) setConfigDialogOpen(true) }}
+                            className={`p-1.5 rounded-lg transition-all duration-200 hover:scale-105 flex-shrink-0 ${
+                                aiConfig.mode === "custom"
+                                    ? "bg-green-500/20 text-green-400 border border-green-500/30"
+                                    : "bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10"
+                            }`}
+                            title={aiConfig.mode === "custom" ? "自定义AI已配置" : "配置AI模型"}
+                        >
+                            <Settings className="h-4 w-4" />
+                        </button>
+                    )}
 
+                    {/* 下载按钮 - 免费试用模式显示但需要登录 */}
                     <button
                         onClick={() => { if (!requireLogin("下载图表")) setDownloadDialogOpen(true) }}
                         className="p-1.5 rounded-lg bg-white/5 text-white/60 hover:text-white hover:bg-white/10 border border-transparent hover:border-white/10 transition-all duration-200 hover:scale-105 flex-shrink-0"
@@ -415,6 +435,7 @@ export default function SimpleChatPanel({
                         <Download className="h-4 w-4" />
                     </button>
 
+                    {/* 清空对话按钮 */}
                     <button
                         onClick={handleClearChat}
                         disabled={messages.length === 0}
@@ -484,9 +505,6 @@ export default function SimpleChatPanel({
                                                 : "bg-white/10 backdrop-blur-sm text-white border border-white/10"
                                         }`}
                                     >
-                                        <div className="text-xs font-medium mb-1.5 opacity-70">
-                                            {message.role === "user" ? "你" : "AI 助手"}
-                                        </div>
                                         <MessageContent message={message} />
                                     </div>
                                 </div>
@@ -516,7 +534,11 @@ export default function SimpleChatPanel({
                             title="Spring Boot 架构图"
                             description="上传 .zip → 自动生成分层架构图"
                             disabled={isLoading}
-                            onClick={() => { if (!requireLogin("Spring Boot 架构图分析")) fileInputCodeRef.current?.click() }}
+                            onClick={() => {
+                                if (freeTrial || !requireLogin("Spring Boot 架构图分析")) {
+                                    fileInputCodeRef.current?.click()
+                                }
+                            }}
                             colorClass="emerald"
                         />
                         <SmartButton
@@ -524,7 +546,11 @@ export default function SimpleChatPanel({
                             title="SQL ER 图"
                             description="上传 .sql → 自动生成实体关系图"
                             disabled={isLoading}
-                            onClick={() => { if (!requireLogin("SQL ER 图分析")) fileInputSqlRef.current?.click() }}
+                            onClick={() => {
+                                if (freeTrial || !requireLogin("SQL ER 图分析")) {
+                                    fileInputSqlRef.current?.click()
+                                }
+                            }}
                             colorClass="violet"
                         />
                     </div>
@@ -546,8 +572,13 @@ export default function SimpleChatPanel({
                             type="text"
                             value={input}
                             onChange={(e) => setInput(e.target.value)}
-                            onFocus={() => { if (onRequireLogin) onRequireLogin("AI 对话") }}
-                            placeholder={onRequireLogin ? "登录后即可使用 AI 对话..." : "输入你的问题..."}
+                            onFocus={() => {
+                                // 免费试用模式不需要登录提示
+                                if (!freeTrial && onRequireLogin) {
+                                    onRequireLogin("AI 对话")
+                                }
+                            }}
+                            placeholder={freeTrial ? "输入你的问题，体验 AI 绘图..." : (onRequireLogin ? "登录后即可使用 AI 对话..." : "输入你的问题...")}
                             disabled={isLoading}
                             className="flex-1 px-4 py-3 rounded-xl border border-white/20 bg-white/5 text-white placeholder-white/40 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all disabled:opacity-50 text-sm"
                         />

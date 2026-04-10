@@ -24,6 +24,8 @@ export interface AIConfig {
 export interface UseBackendChatOptions {
     diagramId: string
     aiConfig?: AIConfig
+    /** 免费试用模式：无需登录，使用 /chat/free/stream 接口 */
+    freeTrial?: boolean
     onMessageComplete?: (message: string) => void
     onError?: (error: Error) => void
 }
@@ -31,6 +33,7 @@ export interface UseBackendChatOptions {
 export function useBackendChat({
     diagramId,
     aiConfig,
+    freeTrial = false,
     onMessageComplete,
     onError,
 }: UseBackendChatOptions) {
@@ -75,35 +78,48 @@ export function useBackendChat({
             let fullContent = ""
 
             try {
-                // 根据 aiConfig 选择 API 端点和请求体
+                // 根据 aiConfig 和 freeTrial 选择 API 端点和请求体
                 const isCustomMode = aiConfig?.mode === "custom"
-                const endpoint = isCustomMode
-                    ? `${API_BASE_URL}/chat/custom/stream`
-                    : `${API_BASE_URL}/chat/stream`
 
-                // 构建请求体
-                const requestBody: {
+                // 免费试用模式优先
+                let endpoint: string
+                let requestBody: {
                     message: string
-                    diagramId: string
+                    diagramId?: string
                     modelId?: string
                     baseUrl?: string
                     apiKey?: string
-                } = {
-                    message: content.trim(),
-                    diagramId: diagramId,
                 }
 
-                // 如果是自定义模式，添加自定义配置
-                if (isCustomMode && aiConfig) {
-                    requestBody.modelId = aiConfig.modelId
-                    requestBody.baseUrl = aiConfig.baseUrl
-                    requestBody.apiKey = aiConfig.apiKey
+                if (freeTrial) {
+                    // 免费试用模式：无需登录，使用 /chat/free/stream
+                    endpoint = `${API_BASE_URL}/chat/free/stream`
+                    requestBody = {
+                        message: content.trim(),
+                    }
+                    console.log("[useBackendChat] Using free trial mode")
+                } else if (isCustomMode) {
+                    // 自定义模式：使用用户自定义的 AI 配置
+                    endpoint = `${API_BASE_URL}/chat/custom/stream`
+                    requestBody = {
+                        message: content.trim(),
+                        diagramId: diagramId,
+                        modelId: aiConfig.modelId,
+                        baseUrl: aiConfig.baseUrl,
+                        apiKey: aiConfig.apiKey,
+                    }
+                    console.log("[useBackendChat] Using custom AI mode", {
+                        modelId: aiConfig?.modelId,
+                    })
+                } else {
+                    // 系统默认模式
+                    endpoint = `${API_BASE_URL}/chat/stream`
+                    requestBody = {
+                        message: content.trim(),
+                        diagramId: diagramId,
+                    }
+                    console.log("[useBackendChat] Using system AI mode")
                 }
-
-                console.log(
-                    `[useBackendChat] Using ${isCustomMode ? "custom" : "system"} AI mode`,
-                    isCustomMode ? { modelId: aiConfig?.modelId } : {},
-                )
 
                 // 使用原生 fetch API 调用后端 SSE 接口
                 const response = await fetch(endpoint, {
@@ -415,7 +431,7 @@ export function useBackendChat({
                 setIsLoading(false)
             }
         },
-        [diagramId, aiConfig, isLoading, onMessageComplete, onError],
+        [diagramId, aiConfig, freeTrial, isLoading, onMessageComplete, onError],
     )
 
     const stop = useCallback(() => {

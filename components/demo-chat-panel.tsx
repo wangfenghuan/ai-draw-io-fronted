@@ -52,7 +52,7 @@ export default function DemoChatPanel({
                 </div>
             )}
 
-            {/* SimpleChatPanel – same as the diagram editor panel */}
+            {/* SimpleChatPanel – same as the diagram editor panel, but in free trial mode */}
             <div className="flex-1 min-h-0">
                 <SimpleChatPanel
                     diagramId="demo"
@@ -60,6 +60,7 @@ export default function DemoChatPanel({
                     onToggleVisibility={onToggleVisibility}
                     darkMode={darkMode}
                     diagramTitle="免费体验 Demo"
+                    freeTrial={true}
                     onRequireLogin={onRequireLogin}
                 />
             </div>
