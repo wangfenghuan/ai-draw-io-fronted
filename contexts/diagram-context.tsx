@@ -11,7 +11,7 @@ import {
 } from "react"
 import type { DrawIoEmbedRef } from "react-drawio"
 import { useSelector } from "react-redux"
-import { STORAGE_DIAGRAM_XML_KEY } from "@/components/chat-panel"
+import { STORAGE_KEYS } from "@/lib/storage"
 import type { ExportFormat } from "@/components/save-dialog"
 import type { RootState } from "@/stores/index"
 import { UserRole } from "../lib/collab-protocol"
@@ -529,7 +529,7 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
                     extension = ".drawio"
 
                     // Save to localStorage when user manually saves
-                    localStorage.setItem(STORAGE_DIAGRAM_XML_KEY, xmlContent)
+                    localStorage.setItem(STORAGE_KEYS.diagramXml, xmlContent)
                 } else if (format === "png") {
                     // PNG data comes as base64 data URL
                     fileContent = exportData

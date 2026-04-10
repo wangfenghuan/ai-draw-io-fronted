@@ -15,6 +15,7 @@ import * as feedBackController from "./feedBackController";
 import * as diagramController from "./diagramController";
 import * as codeParser from "./codeParser";
 import * as aIClientController from "./aIClientController";
+import * as archAnalysisController from "./archAnalysisController";
 import * as announcementController from "./announcementController";
 import * as systemAdminController from "./systemAdminController";
 import * as conversionController from "./conversionController";
@@ -32,6 +33,7 @@ export default {
   diagramController,
   codeParser,
   aIClientController,
+  archAnalysisController,
   announcementController,
   systemAdminController,
   conversionController,

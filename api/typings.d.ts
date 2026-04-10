@@ -64,6 +64,15 @@ declare namespace API {
     updateTime?: string;
   };
 
+  type ArchAnalysisRequest = {
+    /** 图表ID */
+    diagramId: string;
+    /** AST抽象语法树数据，包含类名、注解、依赖关系等信息 */
+    astData: string;
+    /** 模型ID（可选，为空时使用系统默认模型） */
+    modelId?: string;
+  };
+
   type ArchNode = {
     id?: string;
     name?: string;
@@ -738,6 +747,8 @@ declare namespace API {
     githubAccount?: string;
     /** 用户昵称 */
     userName?: string;
+    /** 用户账号 */
+    userAccount?: string;
     /** 用户头像 */
     userAvatar?: string;
     /** 用户简介 */
@@ -1254,6 +1265,8 @@ declare namespace API {
     userVO?: UserVO;
     /** 空间id */
     spaceId?: string;
+    /** 访问密码 */
+    accessKey?: string;
   };
 
   type saveParams = {
@@ -1615,6 +1628,8 @@ declare namespace API {
     authorities?: SysAuthority[];
     /** 创建时间 */
     createTime?: string;
+    /** 更新时间 */
+    updateTime?: string;
   };
 
   type WeChatLoginStatusVO = {
