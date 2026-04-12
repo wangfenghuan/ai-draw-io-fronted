@@ -542,9 +542,6 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
                     extension = ".svg"
                 }
 
-                // Log save event to Langfuse (flags the trace)
-                logSaveToLangfuse(filename, format, sessionId)
-
                 // Handle download
                 let url: string
                 if (
@@ -575,23 +572,6 @@ export function DiagramProvider({ children }: { children: React.ReactNode }) {
 
         // Export diagram - callback will be handled in handleDiagramExport
         drawioRef.current.exportDiagram({ format: drawioFormat })
-    }
-
-    // Log save event to Langfuse (just flags the trace, doesn't send content)
-    const logSaveToLangfuse = async (
-        filename: string,
-        format: string,
-        sessionId?: string,
-    ) => {
-        try {
-            await fetch("/api/log-save", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ filename, format, sessionId }),
-            })
-        } catch (error) {
-            console.warn("Failed to log save to Langfuse:", error)
-        }
     }
 
     // 切换协作模式

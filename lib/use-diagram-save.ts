@@ -5,9 +5,6 @@ import type { DrawIoEmbedRef } from "react-drawio"
 import { toast } from "sonner"
 import { editDiagram } from "@/api/diagramController"
 
-// 辅助函数：睡眠/延时
-const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
-
 export interface SaveOptions {
     diagramId: string
     userId: string
@@ -151,7 +148,7 @@ export function useDiagramSave(drawioRef: React.RefObject<DrawIoEmbedRef | null>
     )
 
     /**
-     * 保存图表到后端 (串行流程)
+     * 保存图表到后端 (并行优化)
      */
     const saveDiagram = useCallback(
         async ({
@@ -165,35 +162,40 @@ export function useDiagramSave(drawioRef: React.RefObject<DrawIoEmbedRef | null>
                 let pngUrl: string | null = null
                 let svgUrl: string | null = null
 
-                // 1. 处理 PNG
-                try {
-                    const pngData = await exportDiagram("png")
-                    const pngFile = dataToFile(
-                        pngData,
-                        `${title}.png`,
-                        "image/png",
-                    )
-                    pngUrl = await uploadFile(pngFile, diagramId, userId, "png")
-                } catch (e) {
-                    console.error("PNG 处理失败:", e)
+                // 并行导出和上传 PNG/SVG
+                const [pngResult, svgResult] = await Promise.allSettled([
+                    exportDiagram("png").then((pngData) => {
+                        const pngFile = dataToFile(
+                            pngData,
+                            `${title}.png`,
+                            "image/png",
+                        )
+                        return uploadFile(pngFile, diagramId, userId, "png")
+                    }),
+                    exportDiagram("svg").then((svgData) => {
+                        const svgFile = dataToFile(
+                            svgData,
+                            `${title}.svg`,
+                            "image/svg+xml",
+                        )
+                        return uploadFile(svgFile, diagramId, userId, "svg")
+                    }),
+                ])
+
+                // 处理结果
+                if (pngResult.status === "fulfilled" && pngResult.value) {
+                    pngUrl = pngResult.value
+                } else {
+                    console.warn("PNG 处理失败:", pngResult)
                 }
 
-                await sleep(100) // 缓冲
-
-                // 2. 处理 SVG
-                try {
-                    const svgData = await exportDiagram("svg")
-                    const svgFile = dataToFile(
-                        svgData,
-                        `${title}.svg`,
-                        "image/svg+xml",
-                    )
-                    svgUrl = await uploadFile(svgFile, diagramId, userId, "svg")
-                } catch (e) {
-                    console.error("SVG 处理失败:", e)
+                if (svgResult.status === "fulfilled" && svgResult.value) {
+                    svgUrl = svgResult.value
+                } else {
+                    console.warn("SVG 处理失败:", svgResult)
                 }
 
-                // 3. 更新图表信息 (XML)
+                // 更新图表信息 (XML)
                 console.log(
                     "[useDiagramSave] 📤 准备调用 editDiagram API，参数:",
                     {
@@ -217,7 +219,18 @@ export function useDiagramSave(drawioRef: React.RefObject<DrawIoEmbedRef | null>
                 )
 
                 if (response?.code === 0) {
-                    toast.success("图表保存成功！", { id: "save-diagram" })
+                    // 根据结果给出不同提示
+                    if (pngUrl && svgUrl) {
+                        toast.success("图表保存成功！", { id: "save-diagram" })
+                    } else if (pngUrl || svgUrl) {
+                        toast.success("图表保存成功（预览图部分生成失败）", {
+                            id: "save-diagram",
+                        })
+                    } else {
+                        toast.success("图表保存成功（无预览图）", {
+                            id: "save-diagram",
+                        })
+                    }
                     console.log("[useDiagramSave] ✅ 图表保存成功")
                     return true
                 } else {
@@ -309,7 +322,7 @@ export function useDiagramSave(drawioRef: React.RefObject<DrawIoEmbedRef | null>
 }
 
 /**
- * 将导出数据转换为 File 对象
+ * 将导出数据转换为 File 对象（优化版）
  * 支持两种格式：
  * 1. Base64 data URL (data:xxx;base64,...) - PNG 等格式
  * 2. 纯文本字符串 - SVG 等格式
@@ -322,25 +335,16 @@ function dataToFile(data: string, filename: string, mimeType: string): File {
 
         // 判断是否是 base64 data URL
         if (data.startsWith("data:")) {
-            // Base64 data URL 格式 (PNG)
+            // Base64 data URL 格式 (PNG) - 使用更高效的转换方法
             const base64Data = data.includes(",") ? data.split(",")[1] : data
-            const byteCharacters = atob(base64Data)
-            const byteNumbers = new Array(byteCharacters.length)
-            for (let i = 0; i < byteCharacters.length; i++) {
-                byteNumbers[i] = byteCharacters.charCodeAt(i)
-            }
-            const byteArray = new Uint8Array(byteNumbers)
-            return new File(
-                [new Blob([byteArray], { type: mimeType })],
-                filename,
-                {
-                    type: mimeType,
-                },
+            // 使用 Uint8Array.from 避免创建中间数组
+            const byteArray = Uint8Array.from(atob(base64Data), (c) =>
+                c.charCodeAt(0),
             )
-        } else {
-            // 纯文本格式 (SVG)
-            return new File([data], filename, { type: mimeType })
+            return new File([byteArray], filename, { type: mimeType })
         }
+        // 纯文本格式 (SVG)
+        return new File([data], filename, { type: mimeType })
     } catch (e) {
         console.error("数据转换失败:", e)
         return new File([""], filename, { type: mimeType })
